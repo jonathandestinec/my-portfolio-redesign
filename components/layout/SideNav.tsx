@@ -8,12 +8,18 @@ import { Wordmark } from "./Wordmark";
 import { isExternal, socialLinks, type NavLink } from "./nav-links";
 import { useNavHidden } from "./nav-visibility";
 
-type Props = { variant: "home" | "index" | "detail"; links?: NavLink[]; back?: NavLink };
+type Props = {
+  variant: "home" | "index" | "detail";
+  links?: NavLink[];
+  back?: NavLink;
+};
 
 export function SideNav({ variant, links = [], back }: Props) {
   const hidden = useNavHidden();
   const reduce = useReducedMotion();
-  const ids = links.filter((l) => l.href.startsWith("#")).map((l) => l.href.slice(1));
+  const ids = links
+    .filter((l) => l.href.startsWith("#"))
+    .map((l) => l.href.slice(1));
   const active = useActiveSection(ids);
   const linkClass = "text-[15px] leading-5 transition-colors hover:text-ink";
 
@@ -28,7 +34,7 @@ export function SideNav({ variant, links = [], back }: Props) {
           : { opacity: 1, filter: "blur(0px)" }
       }
       transition={{ duration: reduce ? 0 : 0.25 }}
-      className="fixed top-0 hidden h-svh w-[240px] flex-col justify-center py-16 pl-[120px] md:sticky md:flex"
+      className="fixed top-0 hidden h-svh w-[240px] flex-col justify-start pt-16 pb-10 pl-8 lg:pl-[120px] md:sticky md:flex"
     >
       <div className="mb-8">
         {variant === "detail" && back ? (
@@ -63,7 +69,9 @@ export function SideNav({ variant, links = [], back }: Props) {
             <a
               href={l.href}
               download={l.download ? "" : undefined}
-              {...(isExternal(l.href) ? { target: "_blank", rel: "noreferrer" } : {})}
+              {...(isExternal(l.href)
+                ? { target: "_blank", rel: "noreferrer" }
+                : {})}
               className={`${linkClass} text-ink-muted`}
             >
               {l.label}

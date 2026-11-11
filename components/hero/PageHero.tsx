@@ -16,7 +16,7 @@ export function renderRichText(rt: RichText): ReactNode {
 }
 
 const big =
-  "font-display text-[clamp(2rem,4.2vw,3.25rem)] leading-[1.15] tracking-[-0.02em]";
+  "font-display text-[clamp(1.875rem,3vw,2.75rem)] leading-[1.2] tracking-[-0.02em]";
 
 type Major = {
   variant: "major";

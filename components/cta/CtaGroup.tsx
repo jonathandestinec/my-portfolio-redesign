@@ -12,6 +12,9 @@ export function CtaGroup() {
   const reduce = useReducedMotion();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pointerType = useRef("");
+  const openAtDown = useRef(false);
+  const suppressFocus = useRef(false);
+  const pill = useRef<HTMLAnchorElement>(null);
 
   const clear = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -42,7 +45,9 @@ export function CtaGroup() {
       onPointerLeave={(e) => {
         if (e.pointerType !== "touch") hideSoon();
       }}
-      onFocus={show}
+      onFocus={() => {
+        if (!suppressFocus.current) show();
+      }}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
           clear();
@@ -53,10 +58,17 @@ export function CtaGroup() {
         if (e.key === "Escape") {
           clear();
           setOpen(false);
+          // Chips unmount on close; keep focus on the pill instead of dropping to body.
+          if (document.activeElement !== pill.current) {
+            suppressFocus.current = true;
+            pill.current?.focus({ preventScroll: true });
+            suppressFocus.current = false;
+          }
         }
       }}
     >
       <a
+        ref={pill}
         href={site.calendarUrl}
         target="_blank"
         rel="noreferrer"
@@ -64,9 +76,10 @@ export function CtaGroup() {
         aria-controls="cta-more"
         onPointerDown={(e) => {
           pointerType.current = e.pointerType;
+          openAtDown.current = open;
         }}
         onClick={(e) => {
-          if (pointerType.current === "touch" && !open) {
+          if (pointerType.current === "touch" && !openAtDown.current) {
             e.preventDefault();
             show();
           }

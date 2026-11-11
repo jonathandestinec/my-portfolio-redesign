@@ -1,17 +1,14 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import { useSyncExternalStore } from "react";
 
-// Curved arrow, drawn in a 48x32 box. "up-left" tip at top-left; "left" tip at mid-left.
+const subscribe = () => () => {};
+
+// Curved arrow in a 48x32 box. "up-left" tip at top-left; "left" tip at mid-left.
 const paths = {
-  "up-left": {
-    d: "M44 26 C 30 30, 14 24, 6 6 M6 6 L4 16 M6 6 L15 10",
-    flip: false,
-  },
-  left: {
-    d: "M44 20 C 30 26, 16 22, 5 14 M5 14 L14 12 M5 14 L12 22",
-    flip: false,
-  },
+  "up-left": "M44 26 C 30 30, 14 24, 6 6 M6 6 L4 16 M6 6 L15 10",
+  left: "M44 20 C 30 26, 16 22, 5 14 M5 14 L14 12 M5 14 L12 22",
 } as const;
 
 export function HandNote({
@@ -22,7 +19,13 @@ export function HandNote({
   arrow?: "up-left" | "left";
 }) {
   const reduce = useReducedMotion();
-  const p = paths[arrow];
+  // Server HTML (and no-JS) shows the arrow fully drawn; the draw-in only starts after mount.
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
+  const animate = mounted && !reduce;
   return (
     <div className="flex -rotate-[4deg] items-center gap-1 font-hand text-[20px] leading-none text-ink-muted">
       <svg
@@ -34,15 +37,17 @@ export function HandNote({
         className="shrink-0"
       >
         <motion.path
-          d={p.d}
+          d={paths[arrow]}
           stroke="currentColor"
           strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
-          initial={reduce ? false : { pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
+          initial={false}
+          animate={animate ? undefined : { pathLength: 1 }}
+          whileInView={animate ? { pathLength: 1 } : undefined}
           viewport={{ once: true, amount: 0.8 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
+          {...(animate ? { style: { pathLength: 0 } } : {})}
         />
       </svg>
       <span>{text}</span>

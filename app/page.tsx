@@ -2,9 +2,9 @@ import { Section } from "@/components/blocks/Section";
 import { CtaGroup } from "@/components/cta/CtaGroup";
 import { HandNote } from "@/components/hero/HandNote";
 import { PageHero } from "@/components/hero/PageHero";
-import { site } from "@/content/site";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { homeLinks } from "@/components/layout/nav-links";
+import { site } from "@/content/site";
 
 // Temporary test page for the shell; replaced by the real home in a later task.
 export default function Home() {

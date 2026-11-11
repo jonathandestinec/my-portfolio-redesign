@@ -25,7 +25,30 @@ test("touch: first tap reveals, does not navigate", async ({
 }) => {
   test.skip(!isMobile);
   await page.goto("/");
-  await page.getByRole("link", { name: "Book a call" }).tap();
+  const pill = page.getByRole("link", { name: "Book a call" });
+  let popups = 0;
+  page.on("popup", () => popups++);
+  await pill.tap();
+  await page.waitForTimeout(800);
+  expect(popups).toBe(0);
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: "Email" })).toBeVisible();
+  const popup = page.waitForEvent("popup", { timeout: 5000 });
+  await pill.tap();
+  await popup;
+  expect(popups).toBe(1);
+});
+
+test("escape from a chip returns focus to the pill", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile);
+  await page.goto("/");
+  await page.getByRole("link", { name: "Book a call" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Email" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("link", { name: "Email" })).toBeHidden();
+  await expect(page.getByRole("link", { name: "Book a call" })).toBeFocused();
 });
