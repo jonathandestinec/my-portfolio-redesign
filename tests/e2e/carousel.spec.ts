@@ -85,6 +85,26 @@ test("tabbing to a slide link moves the carousel to it", async ({
     .toBeLessThanOrEqual(2);
 });
 
+test("clicking a peeking card only brings it into view", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect
+    .poll(async () => (await region(page).boundingBox())!.x)
+    .toBeLessThanOrEqual(1);
+  const urlBefore = page.url();
+  await region(page)
+    .getByRole("link", { name: "AgroHub · Browse lots" })
+    .click({ position: { x: 40, y: 40 } });
+  await expect(region(page).locator('[aria-current="true"]')).toContainText(
+    "Browse lots",
+  );
+  expect(page.url()).toBe(urlBefore);
+});
+
 test("carousel is full bleed and the active card is centred", async ({
   page,
   isMobile,

@@ -178,7 +178,11 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
                     href={slide.href}
                     draggable={false}
                     aria-label={slide.tag}
-                    onFocus={() => goTo(i)}
+                    onFocus={(e) => {
+                      // Keyboard focus only: pointer focus fires on mousedown and
+                      // would activate the card before the click, or fight a drag.
+                      if (e.currentTarget.matches(":focus-visible")) goTo(i);
+                    }}
                     onClick={(e) => {
                       // A peeking neighbour brings itself into view before it navigates.
                       if (!active) {
