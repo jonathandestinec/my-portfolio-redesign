@@ -23,8 +23,8 @@ This is the real content for the site, replacing the placeholders described in t
 
 | Years | Role · Company | Summary |
 |---|---|---|
-| **(start month TBD)** – Present | Software Development Intern · Welup Digital | Ongoing software development internship. |
-| **(start month TBD)** – Present | AI & Automations Engineering · GIZ | Ongoing AI and automation engineering programme. |
+| Aug 2026 – Present | Software Development Intern · Welup Digital | Ongoing software development internship. |
+| Aug 2026 – Present | AI & Automations Engineering · GIZ | Ongoing AI and automation engineering programme. |
 | Aug 2024 – Present | Front-End Developer · Nexorra Studio (remote) | Client web apps in React/Next.js/TypeScript; UI performance work; Zustand/Redux state and Socket.io realtime. |
 | 2025 | Frontend Developer · Caretrax (remote) | UI components for a health and care web app; API integration with the team. |
 | 2024 – 2025 | Frontend Developer · JoeNadiv Concepts | Responsive business web app; SEO and page-load improvements. |
@@ -74,8 +74,24 @@ Shown below the carousel as a `RowList` ("Also built"). Each row gets a role tag
 
 Mofnet Enterprises (not built yet), Arinze Zikora portfolio (excluded at owner's request), Horizon Banking, Neko Hub, Socio, Huddle (only a landing page so far), the Positivus landing page, basic-postgres-crud, the GitHub profile viewer, plus tutorials and todo apps.
 
+## Live-site cross-check (2026-11-11)
+
+Every URL loads (HTTP 200) and was visited with Playwright at 1440×900. Each site matches its description above.
+
+| Site | Matches? | Notes for the portfolio |
+|---|---|---|
+| AgroHub | Yes | Strong hero ("Sell together. Get paid on delivery."). Good cover. |
+| Rossyz | Yes | Bespoke clothing, Benin City; editorial serif hero. Good cover. |
+| RefillRx | Yes | Pharmacy refill for Mani, Benin City; illustrated dark hero. Good cover. |
+| FASCO | Yes | Storefront in ₦ with brand strip. **The live site still shows "Lorem ipsum" filler text** in Deals and New Arrivals — worth fixing before recruiters click through. |
+| AnimeVault | Yes | The public page is only the "Connect AniList account" gate. Weak cover: needs a signed-in screenshot from the owner, or a designed cover. |
+| Chatt | Yes | The public page is only the login form. Weak cover: needs a signed-in chat screenshot, or a designed cover. |
+| Chip Anna Putt | Yes | Golf hero, shop/lessons/donate/videos. Good cover. |
+| Bubbles Bay | Yes | Malete, Kwara; dark automotive hero. Good cover. |
+| Thymus Energy | Yes | DMCC Dubai petroleum trading. Good cover. |
+| Saje Food Court | Yes | The hero is mostly dark at first paint (intro animation); capture after a delay. |
+| BAM Hire | Yes | Staffing site with press/insights cards. Good cover. |
+
 ## Images
 
-None of the repos contain project screenshots. This cloud session also can't reach `*.vercel.app`; the network blocks it.
-
-**Plan:** now that the live URLs are known, capture screenshots with Playwright at 1440×900 and 2× scale. That needs either the hosts allowed in this environment's network settings, or the owner running the capture script locally (the plan will include `scripts/capture-screenshots.ts`). Until then, each project uses a generated paper-style cover showing its name.
+Screenshots are captured from the live URLs above by `scripts/capture-screenshots.ts` (Playwright, 1440×900 at 2× scale, after the network goes idle plus a short delay) into `public/work/<slug>/`. Project pages also get one or two below-the-fold captures. AnimeVault and Chatt use a designed paper-style cover until the owner supplies signed-in screenshots.
