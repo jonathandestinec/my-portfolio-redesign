@@ -59,3 +59,13 @@ a.dotted {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Lets a child escape the 760px column to span the viewport. */
+.bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+body {
+  overflow-x: clip;
+}

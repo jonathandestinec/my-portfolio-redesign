@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Caveat, Funnel_Display, Funnel_Sans, Geist_Mono } from "next/font/google";
+import { NavVisibilityProvider } from "@/components/layout/nav-visibility";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import "./globals.css";
 
@@ -36,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        {children}
+        <NavVisibilityProvider>{children}</NavVisibilityProvider>
       </body>
     </html>
   );
