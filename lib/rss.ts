@@ -24,10 +24,12 @@ export function buildRss(posts: Post[], base: string): string {
     })
     .join('\n')
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Destine Jonathan — Writing</title>
     <link>${base}/blog</link>
+    <atom:link href="${base}/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <language>en</language>
     <description>Notes on building fullstack apps and automations.</description>
 ${items}
   </channel>

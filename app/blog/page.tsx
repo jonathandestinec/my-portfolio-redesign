@@ -20,7 +20,7 @@ export default async function BlogIndex() {
         statements={[["Notes on building fullstack apps and automations."]]}
       />
       {groups.map(([year, posts]) => (
-        <section key={year} id={`y${year}`} className="scroll-mt-8 pb-10">
+        <section key={year} id={`y${year}`} className="scroll-mt-16 pb-10">
           <h2 className="pb-3 text-[13px] font-normal text-ink-faint">{year}</h2>
           <PostRows posts={posts} />
         </section>

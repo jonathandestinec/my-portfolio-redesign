@@ -5,14 +5,14 @@ import { MetaTable } from "@/components/blocks/MetaTable";
 import { Prose } from "@/components/blog/Prose";
 import { PageHero } from "@/components/hero/PageHero";
 import { SiteShell } from "@/components/layout/SiteShell";
-import { formatDate, getAllPosts, listSlugs } from "@/lib/posts";
+import { formatDate, getAllPosts, listPublishedSlugs, listSlugs } from "@/lib/posts";
 
 // First request for an unlisted slug must wait for the full render so notFound() yields a real 404.
 export const ensureStatic = "navigation";
 
 // `dynamicParams` is not allowed with cacheComponents; unknown slugs 404 via notFound() in load().
 export function generateStaticParams() {
-  return listSlugs().map((slug) => ({ slug }));
+  return listPublishedSlugs().map((slug) => ({ slug }));
 }
 
 type Props = { params: Promise<{ slug: string }> };

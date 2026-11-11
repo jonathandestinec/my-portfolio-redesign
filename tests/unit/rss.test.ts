@@ -25,5 +25,8 @@ describe('buildRss', () => {
     expect(xml).toContain('R&amp;D &lt;x&gt;')
     expect(xml).toContain('<link>https://x.test/blog</link>')
     expect(xml).toContain('<title>Destine Jonathan — Writing</title>')
+    expect(xml).toContain('xmlns:atom="http://www.w3.org/2005/Atom"')
+    expect(xml).toContain('<atom:link href="https://x.test/blog/rss.xml" rel="self" type="application/rss+xml"/>')
+    expect(xml).toContain('<language>en</language>')
   })
 })

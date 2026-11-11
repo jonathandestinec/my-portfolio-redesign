@@ -35,7 +35,9 @@ export function StackGrid({ items }: { items: StackItem[] }) {
   return (
     <div>
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <HandNote text="( hover to play )" arrow={false} />
+        <div className="[@media(hover:none)]:hidden">
+          <HandNote text="( hover to play )" arrow={false} />
+        </div>
         <div
           role="tablist"
           aria-label="Filter stack"

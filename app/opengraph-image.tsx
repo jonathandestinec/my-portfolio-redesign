@@ -5,5 +5,5 @@ export const size = ogSize
 export const contentType = ogContentType
 
 export default function Image() {
-  return renderOg('FullStack Developer & Automation Engineer')
+  return renderOg('I build fullstack web apps and the automations behind them.')
 }

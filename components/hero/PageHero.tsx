@@ -37,8 +37,10 @@ export function PageHero(props: Major | Minor) {
   if (props.variant === "minor") {
     return (
       <header className="pb-8">
-        <Wordmark size="sm" />
-        <h1 className="mt-8 font-display text-[clamp(1.75rem,3.2vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
+        <div className="hidden md:block">
+          <Wordmark size="sm" />
+        </div>
+        <h1 className="md:mt-8 font-display text-[clamp(1.75rem,3.2vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
           {props.title}
         </h1>
         {props.body ? (

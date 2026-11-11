@@ -9,7 +9,7 @@ export function Accordion({ items }: { items: { q: string; a: ReactNode }[] }) {
             {it.q}
             <span
               aria-hidden="true"
-              className="shrink-0 text-ink-faint transition-transform duration-200 group-open:rotate-45"
+              className="shrink-0 text-ink-faint transition-transform duration-200 motion-reduce:transition-none group-open:rotate-45"
             >
               +
             </span>

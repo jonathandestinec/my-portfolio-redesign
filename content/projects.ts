@@ -88,14 +88,5 @@ export const projects: Project[] = [
         caption: 'Browse lots on a phone',
       },
     ],
-    // TODO(content): confirm with owner
-    timeline: {
-      columns: ['Spec', 'Identity & auth', 'Lots & offers', 'Payments & payouts', 'i18n & polish'],
-      rows: [
-        { track: 'Design', start: 0, span: 3 },
-        { track: 'Build', start: 1, span: 4 },
-        { track: 'Test', start: 2, span: 3 },
-      ],
-    },
   },
 ]

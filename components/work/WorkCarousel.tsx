@@ -145,7 +145,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
         className="rounded-2xl focus-visible:outline-offset-4"
         style={mounted && bleed ? { marginLeft: -bleed.left, width: bleed.width } : undefined}
       >
-        <div className="overflow-x-clip py-1">
+        <div data-bleed className="overflow-x-clip py-1">
           <motion.div
             drag="x"
             dragConstraints={{ left: -maxDrag, right: 0 }}
@@ -170,7 +170,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
                 <div
                   key={slide.href + slide.tag}
                   aria-current={active ? "true" : undefined}
-                  className={`shrink-0 transition-opacity duration-300 ${
+                  className={`shrink-0 transition-opacity duration-300 motion-reduce:transition-none ${
                     mounted && !active ? "opacity-60" : ""
                   }`}
                 >
@@ -215,7 +215,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
                   </Link>
                   <div className="mt-2 h-5">
                     {active ? (
-                      <span className="inline-block rounded bg-accent px-1.5 py-0.5 text-[11px] leading-none text-white">
+                      <span className="inline-block rounded bg-accent px-1.5 py-0.5 text-[11px] leading-none text-paper">
                         {slide.tag}
                       </span>
                     ) : null}
@@ -232,7 +232,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
             aria-label="Previous slide"
             disabled={index === 0}
             onClick={() => goTo(index - 1)}
-            className="h-9 w-9 rounded-full border border-line text-ink transition-colors hover:bg-paper-raised disabled:cursor-default disabled:text-ink-faint disabled:hover:bg-transparent"
+            className="h-9 w-9 rounded-full border border-line text-ink transition-colors motion-reduce:transition-none hover:bg-paper-raised disabled:cursor-default disabled:text-ink-faint disabled:hover:bg-transparent"
           >
             <span aria-hidden="true">←</span>
           </button>
@@ -241,7 +241,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
             aria-label="Next slide"
             disabled={index === slides.length - 1}
             onClick={() => goTo(index + 1)}
-            className="h-9 w-9 rounded-full border border-line text-ink transition-colors hover:bg-paper-raised disabled:cursor-default disabled:text-ink-faint disabled:hover:bg-transparent"
+            className="h-9 w-9 rounded-full border border-line text-ink transition-colors motion-reduce:transition-none hover:bg-paper-raised disabled:cursor-default disabled:text-ink-faint disabled:hover:bg-transparent"
           >
             <span aria-hidden="true">→</span>
           </button>

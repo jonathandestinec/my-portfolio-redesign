@@ -19,6 +19,11 @@ test('og images', async ({ request }) => {
     expect(r.headers()['content-type']).toBe('image/png')
   }
 })
+test('og images 404 for unknown slugs', async ({ request }) => {
+  for (const u of ['/work/nope/opengraph-image', '/blog/nope/opengraph-image']) {
+    expect((await request.get(u)).status()).toBe(404)
+  }
+})
 test('titles', async ({ page }) => {
   await page.goto('/work/agrohub')
   await expect(page).toHaveTitle('AgroHub — Destine Jonathan')

@@ -6,7 +6,7 @@ test("hover reveals chips", async ({ page, isMobile }) => {
   await page.getByRole("link", { name: "Book a call" }).first().hover();
   await expect(page.getByRole("link", { name: "Email" })).toBeVisible();
   await expect(
-    page.getByRole("main").getByRole("link", { name: /Résumé/ }),
+    page.getByRole("main").locator("header").getByRole("link", { name: /Résumé/ }),
   ).toHaveAttribute("href", "/resume.pdf");
 });
 

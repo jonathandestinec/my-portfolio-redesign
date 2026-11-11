@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getAllPosts, listSlugs } from '@/lib/posts'
+import { getAllPosts, listPublishedSlugs } from '@/lib/posts'
 import { ogContentType, ogSize, renderOg } from '@/lib/og'
 
 export const alt = 'Post by Destine Jonathan'
@@ -7,7 +7,7 @@ export const size = ogSize
 export const contentType = ogContentType
 
 export function generateStaticParams() {
-  return listSlugs().map((slug) => ({ slug }))
+  return listPublishedSlugs().map((slug) => ({ slug }))
 }
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {

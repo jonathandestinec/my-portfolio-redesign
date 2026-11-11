@@ -8,7 +8,7 @@ import { ContribGrid } from "@/components/github/ContribGrid";
 import { HandNote } from "@/components/hero/HandNote";
 import { PageHero } from "@/components/hero/PageHero";
 import { SiteShell } from "@/components/layout/SiteShell";
-import { homeLinks } from "@/components/layout/nav-links";
+import { homeLinks, isExternal, socialLinks } from "@/components/layout/nav-links";
 import { ScrollBlur } from "@/components/motion/ScrollBlur";
 import { StackGrid } from "@/components/stack/StackGrid";
 import { WorkCarousel } from "@/components/work/WorkCarousel";
@@ -109,6 +109,26 @@ export default async function Home() {
           <p className="mt-6 text-[15px] text-ink-muted">
             <InlineLink href={`mailto:${site.email}`}>{site.email}</InlineLink>
           </p>
+          {/* Plain anchors: reachable on phones and without JS, where the menu sheet is not. */}
+          <ul
+            data-contact-links
+            className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[15px] text-ink-muted"
+          >
+            {socialLinks.map((l) => (
+              <li key={l.label}>
+                <a
+                  href={l.href}
+                  download={l.download ? "" : undefined}
+                  {...(isExternal(l.href)
+                    ? { target: "_blank", rel: "noreferrer" }
+                    : {})}
+                  className="underline decoration-line underline-offset-4 hover:text-ink hover:decoration-ink"
+                >
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </ScrollBlur>
       </Section>
 

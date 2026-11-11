@@ -1,5 +1,8 @@
 import { expect, test } from 'vitest'
-import { groupByYear, listSlugs, parseMeta, type Post } from '@/lib/posts'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { groupByYear, listPublishedSlugs, listSlugs, parseMeta, type Post } from '@/lib/posts'
 import { readingMinutes } from '@/lib/reading-time'
 
 const p = (date: string): Post => ({
@@ -32,3 +35,15 @@ test('reading time strips a multi-line export', () =>
   expect(
     readingMinutes("export const meta = {\n  title: 'a long title here',\n  summary: 'many words '.repeat(300),\n}\n\n" + 'word '.repeat(220)),
   ).toBe(1))
+
+test('listPublishedSlugs excludes drafts', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'posts-'))
+  const meta = (draft: boolean) => `export const meta = { title: 'T', date: '2026-01-01', summary: 's', tags: ['draft: true'], draft: ${draft} }\n\nBody draft: true\n`
+  fs.writeFileSync(path.join(dir, 'live.mdx'), meta(false))
+  fs.writeFileSync(path.join(dir, 'wip.mdx'), meta(true))
+  expect(listSlugs(dir)).toEqual(['live', 'wip'])
+  expect(listPublishedSlugs(dir)).toEqual(['live'])
+  fs.rmSync(dir, { recursive: true })
+})
+test('listPublishedSlugs includes the seeded posts', () =>
+  expect(listPublishedSlugs()).toEqual(expect.arrayContaining(['n8n-chat-intake'])))

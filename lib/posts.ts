@@ -24,6 +24,14 @@ export function listSlugs(dir: string = BLOG_DIR): string[] {
     .sort()
 }
 
+/** Slugs of posts that are not drafts; use for static params and OG routes. Reads the `draft` flag from the meta export. */
+export function listPublishedSlugs(dir: string = BLOG_DIR): string[] {
+  return listSlugs(dir).filter((slug) => {
+    const src = fs.readFileSync(/*turbopackIgnore: true*/ path.join(dir, `${slug}.mdx`), 'utf8')
+    return !/^export const meta\s*=\s*\{[^]*?[{,]\s*draft:\s*true\s*[,}]/.test(src)
+  })
+}
+
 export function parseMeta(slug: string, raw: unknown): PostMeta {
   const r = PostMeta.safeParse(raw)
   if (!r.success) {

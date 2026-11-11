@@ -8,6 +8,8 @@ test("agrohub case study", async ({ page, isMobile }) => {
     "https://agrohub-theta.vercel.app",
   );
   await expect(page.getByText("Next project")).toHaveCount(0);
+  // The timeline stays hidden until the owner confirms the phases.
+  await expect(page.getByText("How it's shipping")).toHaveCount(0);
   // On phones the back link lives in the menu sheet.
   if (isMobile) await page.getByRole("button", { name: "Menu" }).click();
   await expect(
