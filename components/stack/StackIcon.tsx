@@ -62,20 +62,35 @@ const strokeProps = {
   strokeLinejoin: "round",
 } as const;
 
-export function StackIcon({ slug, className = "h-4 w-4" }: { slug: string; className?: string }) {
+export function StackIcon({
+  slug,
+  className = "h-4 w-4",
+}: {
+  slug: string;
+  className?: string;
+}) {
   if (slug === "terminal") {
     return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className} {...strokeProps}>
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className={className}
+        {...strokeProps}
+      >
         <path d="M4 17l6-6-6-6" />
         <path d="M12 19h8" />
       </svg>
     );
   }
-  const path = ICONS[slug];
-  if (!path) {
+  if (!Object.hasOwn(ICONS, slug)) {
     // 'key' and any unknown slug fall back to a key glyph.
     return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className} {...strokeProps}>
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className={className}
+        {...strokeProps}
+      >
         <circle cx="7.5" cy="15.5" r="4.5" />
         <path d="M10.7 12.3L21 2" />
         <path d="M17 6l3 3" />
@@ -83,8 +98,14 @@ export function StackIcon({ slug, className = "h-4 w-4" }: { slug: string; class
       </svg>
     );
   }
+  const path = ICONS[slug];
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
       <path d={path} />
     </svg>
   );

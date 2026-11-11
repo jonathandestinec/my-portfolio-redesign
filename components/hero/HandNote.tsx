@@ -16,7 +16,7 @@ export function HandNote({
   arrow = "up-left",
 }: {
   text: string;
-  arrow?: "up-left" | "left";
+  arrow?: "up-left" | "left" | false;
 }) {
   const reduce = useReducedMotion();
   // Server HTML (and no-JS) shows the arrow fully drawn; the draw-in only starts after mount.
@@ -28,28 +28,30 @@ export function HandNote({
   const animate = mounted && !reduce;
   return (
     <div className="flex -rotate-[4deg] items-center gap-1 font-hand text-[20px] leading-none text-ink-muted">
-      <svg
-        width="48"
-        height="32"
-        viewBox="0 0 48 32"
-        fill="none"
-        aria-hidden="true"
-        className="shrink-0"
-      >
-        <motion.path
-          d={paths[arrow]}
-          stroke="currentColor"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={false}
-          animate={animate ? undefined : { pathLength: 1 }}
-          whileInView={animate ? { pathLength: 1 } : undefined}
-          viewport={{ once: true, amount: 0.8 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          {...(animate ? { style: { pathLength: 0 } } : {})}
-        />
-      </svg>
+      {arrow ? (
+        <svg
+          width="48"
+          height="32"
+          viewBox="0 0 48 32"
+          fill="none"
+          aria-hidden="true"
+          className="shrink-0"
+        >
+          <motion.path
+            d={paths[arrow]}
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={false}
+            animate={animate ? undefined : { pathLength: 1 }}
+            whileInView={animate ? { pathLength: 1 } : undefined}
+            viewport={{ once: true, amount: 0.8 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            {...(animate ? { style: { pathLength: 0 } } : {})}
+          />
+        </svg>
+      ) : null}
       <span>{text}</span>
     </div>
   );

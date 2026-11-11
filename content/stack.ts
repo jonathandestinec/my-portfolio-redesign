@@ -9,7 +9,7 @@ export const stackCategories: { id: StackCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'frontend', label: 'Frontend' },
   { id: 'backend', label: 'Backend' },
-  { id: 'tools', label: 'Tools / automation' },
+  { id: 'tools', label: 'Tools' },
   { id: 'design', label: 'Design' },
 ]
 

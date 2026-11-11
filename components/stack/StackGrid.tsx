@@ -17,6 +17,7 @@ export function StackGrid({ items }: { items: StackItem[] }) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const visible = filterStack(items, active);
   const tabId = (id: Cat) => `${uid}-tab-${id}`;
+  const panelId = `${uid}-panel`;
 
   function onKeyDown(e: KeyboardEvent, index: number) {
     const last = stackCategories.length - 1;
@@ -34,8 +35,12 @@ export function StackGrid({ items }: { items: StackItem[] }) {
   return (
     <div>
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <HandNote text="( hover to play )" arrow="left" />
-        <div role="tablist" aria-label="Filter stack" className="flex flex-wrap gap-1">
+        <HandNote text="( hover to play )" arrow={false} />
+        <div
+          role="tablist"
+          aria-label="Filter stack"
+          className="flex flex-wrap gap-1"
+        >
           {stackCategories.map((c, i) => {
             const selected = c.id === active;
             return (
@@ -48,11 +53,14 @@ export function StackGrid({ items }: { items: StackItem[] }) {
                 type="button"
                 role="tab"
                 aria-selected={selected}
+                aria-controls={panelId}
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActive(c.id)}
                 onKeyDown={(e) => onKeyDown(e, i)}
                 className={`rounded-md px-3 py-1.5 text-[15px] transition-colors ${
-                  selected ? "bg-paper-raised text-ink" : "text-ink-muted hover:text-ink"
+                  selected
+                    ? "bg-paper-raised text-ink"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 {c.label}
@@ -61,30 +69,37 @@ export function StackGrid({ items }: { items: StackItem[] }) {
           })}
         </div>
       </div>
-      <motion.ul
+      <motion.div
+        id={panelId}
         role="tabpanel"
         aria-labelledby={tabId(active)}
+        tabIndex={0}
         layout={!reduce}
-        className="flex flex-wrap gap-2"
       >
-        <AnimatePresence initial={false} mode="popLayout">
-          {visible.map((s) => (
-            <motion.li
-              key={s.name}
-              layout={!reduce}
-              initial={reduce ? false : { opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, scale: 0.9 }}
-              transition={{ duration: reduce ? 0 : 0.2 }}
-              whileHover={reduce ? undefined : { rotate: [0, -4, 4, 0] }}
-              className="flex items-center gap-2 rounded-md border border-line px-3 py-1.5 text-[15px] text-ink-muted"
-            >
-              <StackIcon slug={s.icon} />
-              {s.name}
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </motion.ul>
+        <ul className="flex flex-wrap gap-2">
+          <AnimatePresence initial={false} mode="popLayout">
+            {visible.map((s) => (
+              <motion.li
+                key={s.name}
+                layout={!reduce}
+                initial={reduce ? false : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={
+                  reduce
+                    ? { opacity: 0, transition: { duration: 0 } }
+                    : { opacity: 0, scale: 0.9 }
+                }
+                transition={{ duration: reduce ? 0 : 0.2 }}
+                whileHover={reduce ? undefined : { rotate: [0, -4, 4, 0] }}
+                className="flex items-center gap-2 rounded-md border border-line px-3 py-1.5 text-[15px] text-ink-muted"
+              >
+                <StackIcon slug={s.icon} />
+                {s.name}
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ul>
+      </motion.div>
     </div>
   );
 }
