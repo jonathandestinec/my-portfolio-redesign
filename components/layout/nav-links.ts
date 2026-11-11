@@ -6,6 +6,8 @@ export const homeLinks: NavLink[] = [
   { href: "#works", label: "Works" },
   { href: "#experience", label: "Experience" },
   { href: "#stack", label: "Stack" },
+  { href: "#writing", label: "Writing" },
+  { href: "#contact", label: "Contact" },
 ];
 
 export const socialLinks: (NavLink & { download?: boolean })[] = [

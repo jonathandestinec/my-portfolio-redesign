@@ -7,7 +7,7 @@ import { site } from "@/content/site";
 const chipCls =
   "inline-block rounded-full border border-line px-3.5 py-1.5 text-[14px] text-ink hover:bg-paper-raised";
 
-export function CtaGroup() {
+export function CtaGroup({ id = "cta-more" }: { id?: string }) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,7 +73,7 @@ export function CtaGroup() {
         target="_blank"
         rel="noreferrer"
         aria-expanded={open}
-        aria-controls="cta-more"
+        aria-controls={id}
         onPointerDown={(e) => {
           pointerType.current = e.pointerType;
           openAtDown.current = open;
@@ -89,7 +89,7 @@ export function CtaGroup() {
       >
         Book a call
       </a>
-      <span id="cta-more" className="flex items-center gap-2">
+      <span id={id} className="flex items-center gap-2">
         <AnimatePresence>
           {open
             ? chips.map((c, i) => (

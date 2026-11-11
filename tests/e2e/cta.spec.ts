@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("hover reveals chips", async ({ page, isMobile }) => {
   test.skip(isMobile);
   await page.goto("/");
-  await page.getByRole("link", { name: "Book a call" }).hover();
+  await page.getByRole("link", { name: "Book a call" }).first().hover();
   await expect(page.getByRole("link", { name: "Email" })).toBeVisible();
   await expect(
     page.getByRole("main").getByRole("link", { name: /Résumé/ }),
@@ -13,7 +13,7 @@ test("hover reveals chips", async ({ page, isMobile }) => {
 test("keyboard focus reveals, Escape hides", async ({ page, isMobile }) => {
   test.skip(isMobile);
   await page.goto("/");
-  await page.getByRole("link", { name: "Book a call" }).focus();
+  await page.getByRole("link", { name: "Book a call" }).first().focus();
   await expect(page.getByRole("link", { name: "Email" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("link", { name: "Email" })).toBeHidden();
@@ -25,7 +25,7 @@ test("touch: first tap reveals, does not navigate", async ({
 }) => {
   test.skip(!isMobile);
   await page.goto("/");
-  const pill = page.getByRole("link", { name: "Book a call" });
+  const pill = page.getByRole("link", { name: "Book a call" }).first();
   let popups = 0;
   page.on("popup", () => popups++);
   await pill.tap();
@@ -45,10 +45,10 @@ test("escape from a chip returns focus to the pill", async ({
 }) => {
   test.skip(isMobile);
   await page.goto("/");
-  await page.getByRole("link", { name: "Book a call" }).focus();
+  await page.getByRole("link", { name: "Book a call" }).first().focus();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Email" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("link", { name: "Email" })).toBeHidden();
-  await expect(page.getByRole("link", { name: "Book a call" })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Book a call" }).first()).toBeFocused();
 });
