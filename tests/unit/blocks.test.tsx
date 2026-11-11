@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { expect, test } from "vitest";
+import { useEffect } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { expect, test, vi } from "vitest";
 import { Accordion } from "@/components/blocks/Accordion";
 import { InfoGrid } from "@/components/blocks/InfoGrid";
 import { MetaTable } from "@/components/blocks/MetaTable";
@@ -17,7 +19,9 @@ test("RowList renders link rows in a list", () => {
 });
 
 test("RowList external links open in a new tab", () => {
-  render(<RowList rows={[{ label: "a", title: "Ext", href: "https://e.com" }]} />);
+  render(
+    <RowList rows={[{ label: "a", title: "Ext", href: "https://e.com" }]} />,
+  );
   const a = screen.getByRole("link", { name: /Ext/ });
   expect(a).toHaveAttribute("target", "_blank");
   expect(a).toHaveAttribute("rel", expect.stringContaining("noreferrer"));
@@ -26,7 +30,10 @@ test("RowList external links open in a new tab", () => {
 test("Timeline places bars", () => {
   const { container } = render(
     <Timeline
-      t={{ columns: ["a", "b", "c"], rows: [{ track: "Build", start: 2, span: 2 }] }}
+      t={{
+        columns: ["a", "b", "c"],
+        rows: [{ track: "Build", start: 2, span: 2 }],
+      }}
     />,
   );
   expect(container.querySelector("[data-bar]")).toHaveStyle({
@@ -48,7 +55,41 @@ test("InfoGrid, MetaTable, Accordion render", () => {
 });
 
 test("ScrollBlur SSR output has no blur", () => {
-  expect(renderToString(<ScrollBlur><img alt="" /></ScrollBlur>)).not.toMatch(
-    /blur|opacity|style/,
+  expect(
+    renderToString(
+      <ScrollBlur>
+        <span>x</span>
+      </ScrollBlur>,
+    ),
+  ).not.toMatch(/blur|opacity|style/);
+});
+
+test("ScrollBlur hydrates without remounting children", async () => {
+  let mounts = 0;
+  function Probe() {
+    useEffect(() => {
+      mounts++;
+    }, []);
+    return <span>probe</span>;
+  }
+  const ui = (
+    <ScrollBlur>
+      <Probe />
+    </ScrollBlur>
   );
+  const container = document.createElement("div");
+  container.innerHTML = renderToString(ui);
+  document.body.appendChild(container);
+  const err = vi.spyOn(console, "error").mockImplementation(() => {});
+  const before = container.querySelector("span");
+  (
+    globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+  ).IS_REACT_ACT_ENVIRONMENT = true;
+  await act(async () => {
+    hydrateRoot(container, ui);
+  });
+  expect(mounts).toBe(1);
+  expect(container.querySelector("span")).toBe(before);
+  expect(err).not.toHaveBeenCalled();
+  err.mockRestore();
 });

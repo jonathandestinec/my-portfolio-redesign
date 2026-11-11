@@ -15,7 +15,6 @@ export function ScrollBlur({
   className,
 }: {
   children: ReactNode;
-  as?: "div";
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -38,15 +37,13 @@ export function ScrollBlur({
     [0.4, 1, 1, 0.4],
   );
 
-  if (!mounted || reduce) {
-    return (
-      <div ref={ref} className={className}>
-        {children}
-      </div>
-    );
-  }
+  const animated = mounted && !reduce;
   return (
-    <motion.div ref={ref} className={className} style={{ filter, opacity }}>
+    <motion.div
+      ref={ref}
+      className={className}
+      style={animated ? { filter, opacity } : undefined}
+    >
       {children}
     </motion.div>
   );

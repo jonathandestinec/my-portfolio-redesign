@@ -7,7 +7,11 @@ test("home readable without JS", async ({ page }) => {
   await expect(page.locator("h1, [data-hero-lead]").first()).toBeVisible();
   const hidden = await page.$$eval(
     "main *",
-    (els) => els.filter((e) => getComputedStyle(e).opacity === "0").length,
+    (els) =>
+      els.filter((e) => {
+        const cs = getComputedStyle(e);
+        return cs.filter !== "none" || !(parseFloat(cs.opacity) >= 1);
+      }).length,
   );
   expect(hidden).toBe(0);
 });
