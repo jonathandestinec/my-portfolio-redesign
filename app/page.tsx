@@ -1,4 +1,8 @@
 import { Section } from "@/components/blocks/Section";
+import { CtaGroup } from "@/components/cta/CtaGroup";
+import { HandNote } from "@/components/hero/HandNote";
+import { PageHero } from "@/components/hero/PageHero";
+import { site } from "@/content/site";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { homeLinks } from "@/components/layout/nav-links";
 
@@ -6,7 +10,14 @@ import { homeLinks } from "@/components/layout/nav-links";
 export default function Home() {
   return (
     <SiteShell variant="home" links={homeLinks}>
-      <h1 className="font-display text-4xl">destine jonathan</h1>
+      <PageHero
+        variant="major"
+        lead={site.hero.lead}
+        statements={site.hero.statements}
+        note={<HandNote text="check this out :)" arrow="up-left" />}
+        actions={<CtaGroup />}
+        status={site.hero.status}
+      />
       <Section id="works" title="Works" hideNav>
         <div className="min-h-[120vh]">Works</div>
       </Section>

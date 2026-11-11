@@ -16,7 +16,9 @@ test("toggle sets dark theme and survives reload", async ({ page }) => {
   await expect(html).toHaveAttribute("data-theme", "dark");
 });
 
-test("saved dark theme does not flash light on first paint", async ({ page }) => {
+test("saved dark theme does not flash light on first paint", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     localStorage.setItem("theme", "dark");
     const w = window as unknown as {
@@ -39,11 +41,16 @@ test("saved dark theme does not flash light on first paint", async ({ page }) =>
   await page.goto("/");
   const first = await page.evaluate(
     () =>
-      (window as unknown as { __firstTheme?: { value: string; bodyExisted: boolean } })
-        .__firstTheme,
+      (
+        window as unknown as {
+          __firstTheme?: { value: string; bodyExisted: boolean };
+        }
+      ).__firstTheme,
   );
   expect(first).toEqual({ value: "dark", bodyExisted: false });
-  const png = await page.screenshot({ clip: { x: 5, y: 5, width: 1, height: 1 } });
+  const png = await page.screenshot({
+    clip: { x: 5, y: 5, width: 1, height: 1 },
+  });
   const r = await page.evaluate(async (b64) => {
     const img = new Image();
     img.src = "data:image/png;base64," + b64;
@@ -59,6 +66,8 @@ test("saved dark theme does not flash light on first paint", async ({ page }) =>
 
 test("body uses the Funnel Sans font", async ({ page }) => {
   await page.goto("/");
-  const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+  const family = await page.evaluate(
+    () => getComputedStyle(document.body).fontFamily,
+  );
   expect(family).toMatch(/Funnel[ _]Sans/);
 });
