@@ -78,3 +78,13 @@ a.dotted {
 body {
   overflow-x: clip;
 }
+
+/* Shiki dual themes: @shikijs/rehype inlines the light colours and exposes the
+   dark ones as --shiki-dark / --shiki-dark-bg; !important beats the inline style. */
+.shiki {
+  background-color: var(--paper-raised) !important;
+}
+[data-theme="dark"] .shiki,
+[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark) !important;
+}
