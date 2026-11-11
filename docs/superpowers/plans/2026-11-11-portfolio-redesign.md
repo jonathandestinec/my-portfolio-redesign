@@ -492,7 +492,7 @@ test('API failure → sample, never throws', async () => {
 
 **Files:**
 - Modify: `next.config.ts`
-- Create: `mdx-components.tsx`, `lib/posts.ts`, `lib/reading-time.ts`, `components/blog/{PostRow,Prose}.tsx`, `app/blog/page.tsx`, `app/blog/[slug]/page.tsx`, `content/blog/{shipping-agrohub-escrow,n8n-chat-intake}.mdx`
+- Create: `mdx-components.tsx`, `lib/posts.ts`, `lib/reading-time.ts`, `components/blog/{PostRow,Prose}.tsx`, `app/blog/page.tsx`, `app/blog/[slug]/page.tsx`, `content/blog/{agrohub-payment-held-until-delivery,n8n-chat-intake}.mdx`
 - Test: `tests/unit/posts.test.ts`, `tests/e2e/blog.spec.ts`
 
 **Interfaces:**
@@ -530,12 +530,12 @@ groupByYear(posts: Post[]): [year: string, posts: Post[]][]       // years desc
 test('invalid frontmatter names the file', () => expect(() => parseMeta('bad', { title: '' })).toThrow('content/blog/bad.mdx'))
 test('groups by year desc', () => expect(groupByYear([p('2025-01-01'), p('2026-03-01'), p('2026-01-01')]).map(([y, ps]) => [y, ps.length])).toEqual([['2026', 2], ['2025', 1]]))
 test('reading time ignores code and exports', () => expect(readingMinutes('export const meta = {}\n' + 'word '.repeat(440) + '\n```\n' + 'x '.repeat(5000) + '\n```')).toBe(2))
-test('listSlugs finds seeded posts', () => expect(listSlugs()).toEqual(expect.arrayContaining(['shipping-agrohub-escrow', 'n8n-chat-intake'])))
+test('listSlugs finds seeded posts', () => expect(listSlugs()).toEqual(expect.arrayContaining(['agrohub-payment-held-until-delivery', 'n8n-chat-intake'])))
 ```
 
 ```ts
 test('blog index lists posts and opens one', async ({ page }) => { await page.goto('/blog')
-  await page.getByRole('link', { name: /AgroHub/i }).first().click(); await expect(page).toHaveURL(/\/blog\/shipping-agrohub-escrow$/)
+  await page.getByRole('link', { name: /AgroHub/i }).first().click(); await expect(page).toHaveURL(/\/blog\/agrohub-payment-held-until-delivery$/)
   await expect(page.locator('article h1, h1')).toBeVisible() })
 test('unknown post 404s', async ({ page }) => { const r = await page.goto('/blog/nope'); expect(r!.status()).toBe(404) })
 ```
@@ -690,7 +690,7 @@ test('builds a one-page PDF with the name and no phone', async () => {
 
 ```ts
 test('sitemap lists routes', async ({ request }) => { const t = await (await request.get('/sitemap.xml')).text()
-  for (const p of ['/playground', '/blog', '/work/agrohub', '/blog/shipping-agrohub-escrow']) expect(t).toContain(p) })
+  for (const p of ['/playground', '/blog', '/work/agrohub', '/blog/agrohub-payment-held-until-delivery']) expect(t).toContain(p) })
 test('rss valid-ish', async ({ request }) => { const r = await request.get('/blog/rss.xml'); expect(r.headers()['content-type']).toContain('xml')
   expect(await r.text()).toContain('<item>') })
 test('og image', async ({ request }) => { const r = await request.get('/opengraph-image'); expect(r.headers()['content-type']).toBe('image/png') })
@@ -712,7 +712,7 @@ test('titles', async ({ page }) => { await page.goto('/work/agrohub'); await exp
 - [ ] **Step 1: Write the tests**
 
 ```ts
-for (const path of ['/', '/work/agrohub', '/playground', '/blog', '/blog/shipping-agrohub-escrow'])
+for (const path of ['/', '/work/agrohub', '/playground', '/blog', '/blog/agrohub-payment-held-until-delivery'])
   test(`no horizontal scroll on ${path}`, async ({ page }) => { await page.goto(path)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0) })
 ```
