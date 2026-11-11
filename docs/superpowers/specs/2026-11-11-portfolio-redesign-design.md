@@ -148,7 +148,7 @@ All Motion effects check `useReducedMotion()`: no blur, no wiggle, no drag inert
 
 ## 6. Data
 
-Types live in `content/types.ts`; all content is placeholder until the owner supplies real data. Placeholder text must be obviously marked (e.g. "Project One", `TODO(content)` comments).
+Types live in `content/types.ts`. Real content comes from `2026-11-11-content-inventory.md`; anything still unconfirmed there gets an obvious placeholder (`TODO(content)` comments).
 
 - **`content/site.ts`** — `{ firstName, lastName, role, email, calendarUrl, resumePath, socials: {github, linkedin, x}, githubUsername, hero: { lead, statements, status } }`.
 - **`content/projects.ts`** — `Project[]`: `{ slug, name, context, summary, cover: {src, alt}, role, stack[], year, links: {live?, repo?}, images: {src, alt, caption?}[], timeline? }`. The carousel tag reads `{name} ({context})`. Array order = carousel order; "next project" wraps around.
@@ -240,6 +240,4 @@ CMS, comments, analytics, site search, newsletter, i18n, testimonials/FAQ on hom
 
 ## 14. Open items for the owner (non-blocking)
 
-- Real name spelling for the wordmark, email, calendar URL, social handles, GitHub username.
-- Real projects, experience, stack list, résumé PDF, blog posts.
-- A `GITHUB_TOKEN` (read-only, no scopes needed for public contributions) in the deployment environment.
+See the **(confirm)** markers in `2026-11-11-content-inventory.md`. Also needed: a `GITHUB_TOKEN` (read-only, no scopes) in the deployment environment.
