@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { ArrowLink } from "@/components/cta/ArrowLink";
 import { PageHero } from "@/components/hero/PageHero";
 import { SiteShell } from "@/components/layout/SiteShell";
+
+export const metadata: Metadata = { title: "Not found" };
 
 export default function NotFound() {
   return (

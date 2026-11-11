@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Caveat, Funnel_Display, Funnel_Sans, Geist_Mono } from "next/font/google";
 import { NavVisibilityProvider } from "@/components/layout/nav-visibility";
 import { ThemeScript } from "@/components/layout/ThemeScript";
+import { site } from "@/content/site";
+import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const display = Funnel_Display({
@@ -14,6 +16,9 @@ const hand = Caveat({ variable: "--font-hand-src", subsets: ["latin"] });
 const mono = Geist_Mono({ variable: "--font-mono-src", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
+  description: site.role,
+  alternates: { types: { "application/rss+xml": "/blog/rss.xml" } },
   title: {
     default: "Destine Jonathan — FullStack Developer & Automation Engineer",
     template: "%s — Destine Jonathan",
