@@ -53,7 +53,7 @@ Screenshots and video contact sheets are in `docs/superpowers/specs/refs/`:
 
 | Route | Variant | Contents |
 |---|---|---|
-| `/` | major | Hero → Works (carousel, `data-nav="hide"`) → Experience → Stack → GitHub activity → Writing (latest 3) → Contact |
+| `/` | major | Hero → Works (carousel, `data-nav="hide"`) → Also built (collaborations `RowList`) → Experience → Stack → GitHub activity → Writing (latest 3) → Contact |
 | `/work/[slug]` | minor | Title, paragraph, MetaTable (role, stack, year, links), optional Timeline, preview images (ScrollBlur), "Next project →", closing CTA |
 | `/blog` | major | Hero ("Writing." + grey statement), posts as RowList (date · title + summary · reading time), grouped by year |
 | `/blog/[slug]` | minor | Title, date, reading time, tags, MDX article in reading column, "← All writing" |
@@ -123,7 +123,7 @@ All components are server components unless marked **(client)**.
 
 ### CTAs
 
-- **`CtaGroup`** **(client)** — "Book a call" dark pill linking to `site.calendarUrl` (opens in new tab). On pointer hover, keyboard focus, or first tap on touch devices, two small chips — **Email** (`mailto:`) and **Résumé ↗** (`/resume.pdf`) — slide out beside it with Motion stagger. Collapses on pointer leave (with ~150ms grace), `Escape`, or focus leaving the group. Disclosure semantics: trigger exposes `aria-expanded` and `aria-controls`. On touch: first tap reveals, second tap on the pill follows the link.
+- **`CtaGroup`** **(client)** — "Book a call" dark pill linking to `site.calendarUrl` (opens in new tab). On pointer hover, keyboard focus, or first tap on touch devices, two small chips — **Email** (`mailto:`) and **Résumé ↓** (`/resume.pdf`, downloads) — slide out beside it with Motion stagger. Collapses on pointer leave (with ~150ms grace), `Escape`, or focus leaving the group. Disclosure semantics: trigger exposes `aria-expanded` and `aria-controls`. On touch: first tap reveals, second tap on the pill follows the link.
 - **`ArrowLink`** — text link with underlined label + "→" that nudges 2px on hover.
 - **`InlineLink`** — dotted-underline link.
 
@@ -150,14 +150,16 @@ All Motion effects check `useReducedMotion()`: no blur, no wiggle, no drag inert
 
 Types live in `content/types.ts`. Real content comes from `2026-11-11-content-inventory.md`; anything still unconfirmed there gets an obvious placeholder (`TODO(content)` comments).
 
-- **`content/site.ts`** — `{ firstName, lastName, role, email, calendarUrl, resumePath, socials: {github, linkedin, x}, githubUsername, hero: { lead, statements, status } }`.
+- **`content/site.ts`** — `{ firstName, lastName, role, email, calendarUrl, socials: {github, linkedin, x}, githubUsername, hero: { lead, statements, status } }`.
+- **`content/collaborations.ts`** — `Collaboration[]`: `{ name, role: "Built end-to-end" | "Collaborated · fullstack" | "Collaborated · frontend" | "Frontend", summary, url? }`. Rendered as the "Also built" `RowList` (label = role tag, title = name, body = summary, aside = "Visit ↗").
 - **`content/projects.ts`** — `Project[]`: `{ slug, name, context, summary, cover: {src, alt}, role, stack[], year, links: {live?, repo?}, images: {src, alt, caption?}[], timeline? }`. The carousel tag reads `{name} ({context})`. Array order = carousel order; "next project" wraps around.
 - **`content/experience.ts`** — `Role[]`: `{ start, end | "Present", title, company, companyUrl?, summary, location? }`.
 - **`content/stack.ts`** — `StackItem[]`: `{ name, category: "frontend"|"backend"|"design"|"tools", icon }`. Icons are inline SVG components (simple-icons paths or similar), rendered monochrome via `currentColor`.
 - **`content/blog/*.mdx`** — frontmatter `{ title, date (ISO), summary, tags[], draft? }`, validated with zod at build time. Drafts are excluded in production. Reading time is computed from word count (≈ 220 wpm).
 - **MDX pipeline** — `@next/mdx` with posts loaded via dynamic `import()` of `content/blog/<slug>.mdx` and frontmatter exported/parsed per post; syntax highlighting with Shiki (`@shikijs/rehype`, build-time). Fall back to `next-mdx-remote` only if the bundled Next 16 docs show `@next/mdx` cannot support this pattern.
 - **GitHub contributions** — `lib/github.ts` calls GitHub GraphQL `user(login).contributionsCollection.contributionCalendar` with `GITHUB_TOKEN` (server-only env var), cached and revalidated every 24h. With no token or a failed request, it returns a deterministic seeded placeholder calendar flagged `isSample: true`, rendered with a small "sample data" caption.
-- **Static assets** — `/public/resume.pdf` (placeholder), `/public/work/<slug>/*` images.
+- **Résumé PDF (generated, never hand-edited)** — `app/resume.pdf/route.ts` renders a one-page A4 résumé with `@react-pdf/renderer` from the same content files (`site`, `experience` + education, `stack`, the featured `projects`). It's statically generated at build time, so it's always in sync with the site, and it's served with `Content-Disposition: attachment; filename="Destine-Jonathan-Resume.pdf"` so clicking it downloads the file. Layout: paper/ink typography that matches the site, in black and white so it prints cleanly. Phone number omitted. A Vitest test checks that the route returns a valid PDF (`%PDF` header, non-zero size) that includes the owner's name.
+- **Static assets** — `/public/work/<slug>/*` images.
 
 ## 7. Theming implementation
 
@@ -230,7 +232,8 @@ components/
   blog/     PostRow, Prose, mdx-components
 content/    site.ts, projects.ts, experience.ts, stack.ts, types.ts, blog/*.mdx
 lib/        posts.ts, github.ts, reading-time.ts, use-active-section.ts
-public/     resume.pdf, work/<slug>/*
+app/resume.pdf/route.ts, lib/resume/ResumeDocument.tsx
+public/     work/<slug>/*
 tests/      unit/*, e2e/*
 ```
 
