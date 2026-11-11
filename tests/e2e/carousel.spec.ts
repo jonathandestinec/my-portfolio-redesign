@@ -33,8 +33,7 @@ test("prev/next buttons move slides and disable at the ends", async ({
   await expect(next).toBeDisabled();
 });
 
-// Needs /work/agrohub, which arrives with Task 13.
-test.fixme("click active card opens case study", async ({ page }) => {
+test("click active card opens case study", async ({ page }) => {
   await page.goto("/");
   await region(page).locator('[aria-current="true"] a').click();
   await expect(page).toHaveURL(/\/work\/agrohub$/);

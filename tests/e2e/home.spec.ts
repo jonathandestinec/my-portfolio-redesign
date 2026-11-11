@@ -31,8 +31,7 @@ test("experience lists Welup first", async ({ page }) => {
   );
 });
 
-// Playground route arrives in Task 13.
-test.fixme("pet projects link", async ({ page }) => {
+test("pet projects link", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: /Pet projects/ }).click();
   await expect(page).toHaveURL(/\/playground$/);

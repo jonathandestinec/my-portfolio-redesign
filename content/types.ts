@@ -1,4 +1,4 @@
-export type Img = { src: string; alt: string }
+export type Img = { src: string; alt: string; width?: number; height?: number }
 
 export type RichText = Array<string | { text: string; href: string }>
 

@@ -54,26 +54,36 @@ export const projects: Project[] = [
     images: [
       {
         src: '/work/agrohub/landing.png',
+        width: 1600,
+        height: 1000,
         alt: 'AgroHub landing page: Sell together. Get paid on delivery.',
         caption: 'Landing page',
       },
       {
         src: '/work/agrohub/lots.png',
+        width: 1600,
+        height: 1000,
         alt: 'AgroHub public catalogue of harvest lots available to buyers',
         caption: 'Browse lots',
       },
       {
         src: '/work/agrohub/prices.png',
+        width: 1600,
+        height: 1000,
         alt: 'AgroHub price board showing weekly crop prices',
         caption: 'Price board',
       },
       {
         src: '/work/agrohub/landing-phone.png',
+        width: 1170,
+        height: 1992,
         alt: 'AgroHub landing page at phone width',
         caption: 'Landing on a phone',
       },
       {
         src: '/work/agrohub/lots-phone.png',
+        width: 1170,
+        height: 1992,
         alt: 'AgroHub lot catalogue at phone width',
         caption: 'Browse lots on a phone',
       },
