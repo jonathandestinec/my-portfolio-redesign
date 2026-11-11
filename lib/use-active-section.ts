@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 
 /** Returns the id of the last listed section crossing the reading band, or null before any has. */
 export function useActiveSection(ids: string[]): string | null {
-  const [active, setActive] = useState<string | null>(null);
+  const [state, setState] = useState<{ key: string; id: string | null }>({
+    key: "",
+    id: null,
+  });
   const key = ids.join("|");
 
   useEffect(() => {
@@ -17,7 +20,7 @@ export function useActiveSection(ids: string[]): string | null {
           else seen.delete(entry.target.id);
         }
         const current = list.filter((id) => seen.has(id)).pop();
-        if (current) setActive(current);
+        setState({ key, id: current ?? null });
       },
       { rootMargin: "-35% 0px -55% 0px" },
     );
@@ -28,5 +31,6 @@ export function useActiveSection(ids: string[]): string | null {
     return () => observer.disconnect();
   }, [key]);
 
-  return active;
+  // Ignore a result recorded for a previous id list.
+  return state.key === key ? state.id : null;
 }
