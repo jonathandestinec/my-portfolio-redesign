@@ -1,15 +1,64 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { waitForCarouselBleed, waitForHydration } from "./helpers";
 
-for (const path of [
+const paths = [
   "/",
   "/work/agrohub",
   "/playground",
   "/blog",
   "/blog/agrohub-payment-held-until-delivery",
-])
-  test(`no horizontal scroll on ${path}`, async ({ page }) => {
-    await page.goto(path);
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
-    ).toBeLessThanOrEqual(0);
+];
+
+async function ready(page: Page, path: string) {
+  await page.goto(path);
+  await waitForHydration(page);
+  if (path === "/") await waitForCarouselBleed(page);
+}
+
+const docOverflow = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+
+// body{overflow-x:clip} can hide overflow from scrollWidth, so also check each
+// element. Skipped by design: the full-bleed carousel ([data-bleed]) and
+// anything inside a box that scrolls or clips its own overflow (code blocks).
+const overflowing = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("main *")]
+      .filter((e) => !e.closest("[data-bleed]"))
+      .filter((e) => {
+        for (let p = e.parentElement; p && p.tagName !== "MAIN"; p = p.parentElement) {
+          if (getComputedStyle(p).overflowX !== "visible") return false;
+        }
+        return true;
+      })
+      .filter((e) => e.getBoundingClientRect().right > innerWidth + 1)
+      .map((e) => `${e.tagName.toLowerCase()}.${String(e.className).slice(0, 60)}`),
+  );
+
+for (const path of paths)
+  test(`no horizontal overflow on ${path}`, async ({ page }) => {
+    await ready(page, path);
+    expect(await docOverflow(page)).toBeLessThanOrEqual(0);
+    expect(await overflowing(page)).toEqual([]);
   });
+
+test.describe("800x900", () => {
+  test.use({ viewport: { width: 800, height: 900 } });
+  test.skip(({ isMobile }) => isMobile, "tablet width runs on desktop project");
+  for (const path of ["/", "/work/agrohub"])
+    test(`no horizontal overflow on ${path}`, async ({ page }) => {
+      await ready(page, path);
+      expect(await docOverflow(page)).toBeLessThanOrEqual(0);
+      expect(await overflowing(page)).toEqual([]);
+    });
+});
+
+test("overflow check has teeth", async ({ page }) => {
+  await ready(page, "/blog");
+  await page.evaluate(() => {
+    const d = document.createElement("div");
+    d.style.cssText = "width:2000px;height:10px";
+    document.querySelector("main")!.append(d);
+  });
+  expect((await overflowing(page)).length).toBeGreaterThan(0);
+});
