@@ -5,6 +5,8 @@ import { PageHero } from "@/components/hero/PageHero";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { homeLinks } from "@/components/layout/nav-links";
 import { site } from "@/content/site";
+import { homeSlides } from "@/lib/content";
+import { WorkCarousel } from "@/components/work/WorkCarousel";
 
 // Temporary test page for the shell; replaced by the real home in a later task.
 export default function Home() {
@@ -19,7 +21,7 @@ export default function Home() {
         status={site.hero.status}
       />
       <Section id="works" title="Works" hideNav>
-        <div className="min-h-[120vh]">Works</div>
+        <WorkCarousel slides={homeSlides()} />
       </Section>
       <Section id="experience" title="Experience">
         <div className="min-h-[120vh]">Experience</div>
