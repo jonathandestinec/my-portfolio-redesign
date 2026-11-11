@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section } from "@/components/blocks/Section";
 import { RowList } from "@/components/blocks/RowList";
 import { ArrowLink } from "@/components/cta/ArrowLink";
@@ -14,7 +15,7 @@ import { WorkCarousel } from "@/components/work/WorkCarousel";
 import { education, experience } from "@/content/experience";
 import { site } from "@/content/site";
 import { stack } from "@/content/stack";
-import { homeSlides } from "@/lib/content";
+import { homeSlides, rangeLabel } from "@/lib/content";
 import { getContributions } from "@/lib/github-cached";
 import { formatDate, getAllPosts } from "@/lib/posts";
 
@@ -44,7 +45,7 @@ export default async function Home() {
         <ScrollBlur>
           <RowList
             rows={experience.map((r) => ({
-              label: `${r.start} – ${r.end}`,
+              label: rangeLabel(r.start, r.end),
               title: `${r.title} · ${r.company}`,
               body: r.summary,
               aside: r.location ? (
@@ -114,9 +115,9 @@ export default async function Home() {
       <footer className="mt-8 flex flex-wrap gap-x-3 gap-y-1 border-t border-line pt-6 text-[13px] text-ink-faint">
         <span>© 2026 Destine Jonathan</span>
         <span aria-hidden>·</span>
-        <a href="/playground" className="hover:text-ink">
+        <Link href="/playground" className="hover:text-ink">
           Playground
-        </a>
+        </Link>
         <span aria-hidden>·</span>
         <a href="/blog/rss.xml" className="hover:text-ink">
           RSS

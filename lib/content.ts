@@ -34,6 +34,10 @@ export function homeSlides(): { image: Img; tag: string; href: string }[] {
   }))
 }
 
+export function rangeLabel(start: string, end: string): string {
+  return start === end ? start : `${start} – ${end}`
+}
+
 export function filterStack(items: StackItem[], cat: StackCategory | 'all'): StackItem[] {
   return cat === 'all' ? items : items.filter((i) => i.category === cat)
 }
