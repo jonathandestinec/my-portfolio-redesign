@@ -7,9 +7,37 @@ import {
   monthLabels,
   fetchContributions,
   parseGithubCalendar,
+  parsePublicCalendar,
   sampleCalendar,
 } from "@/lib/github";
 import fixture from "./fixtures/github-calendar.json";
+
+/** Mimics github.com/users/<login>/contributions: a row per weekday, tooltips after the table. */
+function publicHtml(start = "2025-11-05", days = 371) {
+  const t0 = Date.parse(start + "T00:00:00Z");
+  const cells: string[] = [];
+  const tips: string[] = [];
+  let total = 0;
+  for (let i = 0; i < days; i++) {
+    const date = new Date(t0 + i * 86_400_000).toISOString().slice(0, 10);
+    const count = i % 5 === 0 ? 0 : (i % 13) + 1;
+    total += count;
+    const level = count === 0 ? 0 : Math.min(4, Math.ceil(count / 4));
+    const id = `contribution-day-component-${new Date(date).getUTCDay()}-${i}`;
+    cells.push(
+      `<td tabindex="0" data-ix="${i}" aria-selected="false" style="width: 10px" data-date="${date}" id="${id}" data-level="${level}" role="gridcell" data-view-component="true" class="ContributionCalendar-day"></td>`,
+    );
+    tips.push(
+      `<tool-tip id="tooltip-${i}" for="${id}" popover="manual" data-direction="n" data-type="label" data-view-component="true" class="sr-only position-absolute">${
+        count === 0 ? "No contributions" : `${count} contribution${count === 1 ? "" : "s"}`
+      } on ${date}.</tool-tip>`,
+    );
+  }
+  return {
+    total,
+    html: `<h2 id="js-contribution-activity-description" class="f4 text-normal mb-2">\n      ${total.toLocaleString("en-US")}\n      contributions\n        in the last year\n    </h2><table><tbody>${cells.join("")}</tbody></table>${tips.join("")}`,
+  };
+}
 
 describe("github calendar", () => {
   test("parses GraphQL", () => {
@@ -34,13 +62,41 @@ describe("github calendar", () => {
     expect(a.isSample).toBe(true);
   });
 
-  test("no token → sample, no fetch, silent", async () => {
-    const f = vi.fn();
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    expect((await fetchContributions("u", undefined, f as never)).isSample).toBe(true);
-    expect(f).not.toHaveBeenCalled();
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
+  test("parses the public contributions page", () => {
+    const { html, total } = publicHtml();
+    const c = parsePublicCalendar(html);
+    expect(c.isSample).toBe(false);
+    expect(c.total).toBe(total);
+    expect(c.weeks.flat()).toHaveLength(371);
+    // Weeks are Sunday-first; the partial first week starts on a Wednesday.
+    expect(dayRow(c.weeks[0][0].date)).toBe(3);
+    expect(c.weeks.slice(1).every((w) => dayRow(w[0].date) === 0)).toBe(true);
+    expect(c.weeks[0][0]).toEqual({ date: "2025-11-05", count: 0, level: 0 });
+    expect(c.weeks[0][1].count).toBe(2);
+  });
+
+  test("public page parse throws on an unrelated page", () => {
+    expect(() => parsePublicCalendar("<html>sign in</html>")).toThrow();
+  });
+
+  test("no token → real calendar from the public page, no auth header", async () => {
+    const { html } = publicHtml();
+    const f = vi.fn().mockResolvedValue(new Response(html, { status: 200 }));
+    const c = await fetchContributions("jonathandestinec", undefined, f);
+    expect(c.isSample).toBe(false);
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("https://github.com/users/jonathandestinec/contributions");
+    expect(init.headers.Authorization).toBeUndefined();
+  });
+
+  test("token fails → falls back to the public page", async () => {
+    const { html } = publicHtml();
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("bad creds", { status: 401 }))
+      .mockResolvedValueOnce(new Response(html, { status: 200 }));
+    expect((await fetchContributions("u", "t", f)).isSample).toBe(false);
+    expect(f).toHaveBeenCalledTimes(2);
   });
 
   test("API failure → sample, never throws, warns once", async () => {

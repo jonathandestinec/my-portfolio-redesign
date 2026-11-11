@@ -20,7 +20,7 @@ Uses [Bun](https://bun.sh).
 
 Copy `.env.example` to `.env.local`.
 
-- `GITHUB_TOKEN` (optional): a read-only token with no scopes, used to read the public contribution calendar. If it is missing or GitHub fails, the grid shows sample data labelled "sample data" (cached for minutes only, so it recovers quickly).
+- `GITHUB_TOKEN` (optional): a read-only token with no scopes, used for the GraphQL contribution calendar. Without it (or if that call fails) the site reads the public calendar at `github.com/users/<login>/contributions`. Only if both fail does the grid show data labelled "sample data" (cached for minutes only, so it recovers quickly).
 - `NEXT_PUBLIC_SITE_URL`: the public origin, for example `https://example.com`. Drives canonical URLs, sitemap, robots, RSS and OG URLs. Defaults to a placeholder domain when empty.
 
 ## Editing content

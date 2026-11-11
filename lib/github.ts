@@ -89,27 +89,90 @@ export function sampleCalendar(seed: string, endDate: string): Calendar {
   return { total, weeks, isSample: true };
 }
 
+/**
+ * Parses the public calendar fragment GitHub serves at
+ * https://github.com/users/<login>/contributions (no token needed). Each day is a
+ * <td data-date data-level id> and its count sits in a <tool-tip for="id">.
+ */
+export function parsePublicCalendar(html: string): Calendar {
+  const counts = new Map<string, number>();
+  for (const m of html.matchAll(/<tool-tip\b[^>]*\bfor="([^"]+)"[^>]*>([^<]*)<\/tool-tip>/g)) {
+    const text = m[2].trim();
+    const n = /^No contributions/i.test(text) ? 0 : Number(/^([\d,]+)\s+contributions?/i.exec(text)?.[1]?.replace(/,/g, ""));
+    if (Number.isFinite(n)) counts.set(m[1], n);
+  }
+
+  const days: Day[] = [];
+  for (const m of html.matchAll(/<td\b[^>]*\bdata-date="(\d{4}-\d{2}-\d{2})"[^>]*>/g)) {
+    const tag = m[0];
+    const level = Number(/\bdata-level="(\d)"/.exec(tag)?.[1]);
+    if (!(level >= 0 && level <= 4)) bad();
+    const id = /\bid="([^"]+)"/.exec(tag)?.[1];
+    const attr = /\bdata-count="(\d+)"/.exec(tag)?.[1];
+    const count = attr !== undefined ? Number(attr) : id !== undefined ? counts.get(id) : undefined;
+    if (count === undefined) bad();
+    days.push({ date: m[1], count, level: level as Level });
+  }
+  if (days.length < 300) bad();
+  days.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+  // Columns are Sunday-first weeks; the first one may be partial.
+  const weeks: Day[][] = [];
+  for (const d of days) {
+    if (weeks.length === 0 || dayRow(d.date) === 0) weeks.push([]);
+    weeks[weeks.length - 1].push(d);
+  }
+  const stated = /([\d,]+)\s+contributions?\s+in the last year/i.exec(html)?.[1];
+  const total = stated ? Number(stated.replace(/,/g, "")) : days.reduce((n, d) => n + d.count, 0);
+  return { total, weeks, isSample: false };
+}
+
+async function fetchGraphql(username: string, token: string, fetchImpl: typeof fetch): Promise<Calendar> {
+  const res = await fetchImpl("https://api.github.com/graphql", {
+    method: "POST",
+    headers: { Authorization: `bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: QUERY, variables: { login: username } }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (res.status !== 200) throw new Error(`GraphQL HTTP ${res.status}`);
+  const json = await res.json();
+  if (Array.isArray(json?.errors) && json.errors.length) throw new Error("GraphQL errors");
+  return parseGithubCalendar(json);
+}
+
+async function fetchPublic(username: string, fetchImpl: typeof fetch): Promise<Calendar> {
+  const res = await fetchImpl(`https://github.com/users/${encodeURIComponent(username)}/contributions`, {
+    headers: { Accept: "text/html", "User-Agent": "portfolio-contributions" },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (res.status !== 200) throw new Error(`public page HTTP ${res.status}`);
+  return parsePublicCalendar(await res.text());
+}
+
+/**
+ * Real contributions: the GraphQL API when a token is set, otherwise (or if that
+ * fails) the public calendar page. Sample data only if both fail; never throws.
+ */
 export async function fetchContributions(
   username: string,
   token: string | undefined,
   fetchImpl: typeof fetch = fetch,
 ): Promise<Calendar> {
-  if (!token) return sampleCalendar(username, SAMPLE_END);
-  try {
-    const res = await fetchImpl("https://api.github.com/graphql", {
-      method: "POST",
-      headers: { Authorization: `bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ query: QUERY, variables: { login: username } }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if (Array.isArray(json?.errors) && json.errors.length) throw new Error("GraphQL errors");
-    return parseGithubCalendar(json);
-  } catch (err) {
-    console.warn(`[github] contributions fetch failed, using sample data: ${(err as Error).message}`);
-    return sampleCalendar(username, SAMPLE_END);
+  const errors: string[] = [];
+  if (token) {
+    try {
+      return await fetchGraphql(username, token, fetchImpl);
+    } catch (err) {
+      errors.push((err as Error).message);
+    }
   }
+  try {
+    return await fetchPublic(username, fetchImpl);
+  } catch (err) {
+    errors.push((err as Error).message);
+  }
+  console.warn(`[github] contributions fetch failed, using sample data: ${errors.join("; ")}`);
+  return sampleCalendar(username, SAMPLE_END);
 }
 
 /** Grid row (0 = Sunday .. 6 = Saturday) for an ISO date, in UTC. */

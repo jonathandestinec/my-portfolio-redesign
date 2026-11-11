@@ -321,8 +321,10 @@ body {
   color: var(--ink);
   pointer-events: none;
 }
+/* The note hangs ~39px below its line. Push what follows down by that much so
+   the gap from the note to the next block equals the normal paragraph gap. */
 .lead p:has(.note) {
-  margin-bottom: calc(56px - 1.15em);
+  margin-bottom: 40px;
 }
 .note__arrow {
   position: absolute;
