@@ -7,7 +7,7 @@ import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const display = Funnel_Display({
-  weight: ["500", "600"],
+  weight: ["400", "500"],
   variable: "--font-display-src",
   subsets: ["latin"],
 });

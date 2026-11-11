@@ -3,254 +3,201 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  type PanInfo,
-} from "motion/react";
-import {
   useCallback,
   useEffect,
   useRef,
   useState,
-  useSyncExternalStore,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent,
 } from "react";
-import type { Img } from "@/content/types";
+import type { CarouselSlide } from "@/lib/content";
 
-type Slide = { image: Img; tag: string; href: string };
+const CLICK_SLOP = 6;
+const EASE = "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
 
-const GAP = 24;
-const DRAG_CLICK_THRESHOLD = 6;
-const SPRING = { type: "spring", stiffness: 300, damping: 35 } as const;
-
-const subscribe = () => () => {};
-
-export function WorkCarousel({ slides }: { slides: Slide[] }) {
-  const reduce = useReducedMotion();
-  // Server HTML and no-JS render un-bled, undimmed; those apply only after mount.
-  const mounted = useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const firstCardRef = useRef<HTMLDivElement>(null);
-  const [bleed, setBleed] = useState<{ left: number; width: number } | null>(null);
-  const [step, setStep] = useState(0);
+/**
+ * Works strip, after the reference: a fixed blue frame and label sit in the
+ * middle of the page while the slides move underneath it. Drag or swipe with
+ * momentum, click a neighbour to bring it in, arrow keys when focused, and
+ * click the framed slide (or its label) to open it.
+ */
+export function WorkCarousel({
+  slides,
+  label = "Selected work",
+}: {
+  slides: CarouselSlide[];
+  label?: string;
+}) {
   const [index, setIndex] = useState(0);
-  const indexRef = useRef(0);
-  const x = useMotionValue(0);
-  const dragged = useRef(false);
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const [step, setStep] = useState(0);
+  const [reduce, setReduce] = useState(false);
 
-  // Full bleed: the column is not centred in the viewport, so measure how far
-  // its left edge is from the viewport edge and pull the carousel back by that.
+  const trackRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const drag = useRef({ id: -1, x0: 0, moved: false, trail: [] as [number, number][] });
+
+  const last = slides.length - 1;
+  const clamp = useCallback((i: number) => Math.max(0, Math.min(last, i)), [last]);
+
+  // Distance between slide starts: one slide plus the gap.
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    // clientWidth excludes a classic scrollbar, unlike 100vw.
+    const track = trackRef.current;
+    if (!track) return;
     const measure = () => {
-      const left = el.getBoundingClientRect().left;
-      const width = document.documentElement.clientWidth;
-      setBleed((b) => (b && b.left === left && b.width === width ? b : { left, width }));
+      const first = track.children[0] as HTMLElement | undefined;
+      if (!first) return;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      setStep(first.offsetWidth + gap);
     };
+    measure();
     const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    ro.observe(document.documentElement);
-    window.addEventListener("resize", measure);
-    let live = true;
-    document.fonts?.ready.then(() => live && measure());
+    ro.observe(track);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onMq = () => setReduce(mq.matches);
+    onMq();
+    mq.addEventListener("change", onMq);
     return () => {
-      live = false;
       ro.disconnect();
-      window.removeEventListener("resize", measure);
+      mq.removeEventListener("change", onMq);
     };
   }, []);
 
-  // Card pitch (width + gap) follows the CSS width, so observe a real card.
-  useEffect(() => {
-    const el = firstCardRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setStep(el.offsetWidth + GAP));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    drag.current = { id: e.pointerId, x0: e.clientX, moved: false, trail: [[e.timeStamp, e.clientX]] };
+    setPressed(true);
+  }
 
-  // Keep the active card centred when the pitch changes (resize).
-  useEffect(() => {
-    if (step) x.jump(-indexRef.current * step);
-  }, [step, x]);
-
-  const goTo = useCallback(
-    (i: number) => {
-      if (!Number.isFinite(i)) return;
-      const next = Math.max(0, Math.min(slides.length - 1, i));
-      indexRef.current = next;
-      setIndex(next);
-      if (!step) return;
-      animate(x, -next * step, reduce ? { duration: 0 } : SPRING);
-    },
-    [slides.length, step, x, reduce],
-  );
-
-  const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (!step) return;
-    // Let a flick nudge the target a little (at most 0.3 of a card), and never
-    // skip more than one card per gesture.
-    const v = Number.isFinite(info.velocity.x) ? info.velocity.x : 0;
-    const nudge = reduce ? 0 : Math.max(-0.3 * step, Math.min(0.3 * step, v * 0.15));
-    const target = Math.round(-(x.get() + nudge) / step);
-    const from = indexRef.current;
-    goTo(Math.max(from - 1, Math.min(from + 1, target)));
-  };
-
-  // onDragEnd is deferred by Motion until after the browser's click, so the
-  // "was this a drag?" flag has to be set while the pointer is still moving.
-  const onDrag = (_: unknown, info: PanInfo) => {
-    if (Math.abs(info.offset.x) > DRAG_CLICK_THRESHOLD) dragged.current = true;
-  };
-
-  const onClickCapture = (e: MouseEvent) => {
-    if (dragged.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      dragged.current = false;
+  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    if (d.id !== e.pointerId) return;
+    let delta = e.clientX - d.x0;
+    if (!d.moved && Math.abs(delta) < CLICK_SLOP) return;
+    if (!d.moved) {
+      d.moved = true;
+      setDragging(true);
+      setPressed(false);
+      trackRef.current?.setPointerCapture(e.pointerId);
     }
-  };
+    // Rubber band past the first and last slide.
+    if ((index === 0 && delta > 0) || (index === last && delta < 0)) delta *= 0.35;
+    d.trail.push([e.timeStamp, e.clientX]);
+    if (d.trail.length > 6) d.trail.shift();
+    setDx(delta);
+  }
 
-  const onKeyDown = (e: KeyboardEvent) => {
-    dragged.current = false;
-    if (e.key === "ArrowRight") {
+  function onPointerEnd(e: PointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    if (d.id !== e.pointerId) return;
+    d.id = -1;
+    setPressed(false);
+    if (!d.moved) return;
+    const [t0, x0] = d.trail[0];
+    const dt = Math.max(1, e.timeStamp - t0);
+    const velocity = (e.clientX - x0) / dt; // px per ms
+    const projected = dx + velocity * 220;
+    const moveBy = step ? Math.round(-projected / step) : 0;
+    setIndex((i) => clamp(i + moveBy));
+    setDx(0);
+    setDragging(false);
+  }
+
+  function onSlideClick(e: MouseEvent<HTMLAnchorElement>, i: number) {
+    if (drag.current.moved) {
       e.preventDefault();
-      goTo(indexRef.current + 1);
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      goTo(indexRef.current - 1);
+      drag.current.moved = false;
+      return;
     }
-  };
+    if (i !== index) {
+      e.preventDefault();
+      setIndex(i);
+    }
+  }
 
-  const maxDrag = Math.max(0, (slides.length - 1) * step);
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      setIndex((i) => clamp(i + (e.key === "ArrowRight" ? 1 : -1)));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      linkRefs.current[index]?.click();
+    }
+  }
+
+  const current = slides[index];
+  const offset = -index * step + dx;
 
   return (
-    <div ref={containerRef}>
-      <div
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="AgroHub screens"
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        className="rounded-2xl focus-visible:outline-offset-4"
-        style={mounted && bleed ? { marginLeft: -bleed.left, width: bleed.width } : undefined}
-      >
-        <div data-bleed className="overflow-x-clip py-1">
-          <motion.div
-            drag="x"
-            dragConstraints={{ left: -maxDrag, right: 0 }}
-            dragElastic={0.1}
-            dragMomentum={false}
-            onPointerDown={() => {
-              dragged.current = false;
-            }}
-            onDrag={onDrag}
-            onDragEnd={onDragEnd}
-            onClickCapture={onClickCapture}
-            style={{
-              x,
-              gap: GAP,
-              paddingInline: "calc((100% - min(70vw, 1100px)) / 2)",
-            }}
-            className="flex"
-          >
-            {slides.map((slide, i) => {
-              const active = i === index;
-              return (
-                <div
-                  key={slide.href + slide.tag}
-                  aria-current={active ? "true" : undefined}
-                  className={`shrink-0 transition-opacity duration-300 motion-reduce:transition-none ${
-                    mounted && !active ? "opacity-60" : ""
-                  }`}
-                >
-                  <Link
-                    href={slide.href}
+    <div
+      className="strip"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={label}
+    >
+      <div className="strip__stage">
+        <div
+          ref={trackRef}
+          className={`track${dragging ? " is-dragging" : ""}`}
+          tabIndex={0}
+          aria-label={`${label}: use left and right arrow keys to browse, Enter to open`}
+          onKeyDown={onKeyDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerEnd}
+          onPointerCancel={onPointerEnd}
+          style={{
+            transform: `translate3d(${offset}px, 0, 0)`,
+            transition: dragging || reduce ? "none" : EASE,
+          }}
+        >
+          {slides.map((s, i) => (
+            <div
+              key={`${s.image.src}-${i}`}
+              className={`slide${i === index ? " is-current" : ""}${i === index && pressed ? " is-pressed" : ""}`}
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${slides.length}: ${s.tag}`}
+            >
+              <Link
+                ref={(el) => {
+                  linkRefs.current[i] = el;
+                }}
+                href={s.href}
+                tabIndex={-1}
+                draggable={false}
+                className="slide__link"
+                onClick={(e) => onSlideClick(e, i)}
+              >
+                <div className="slide__cover">
+                  <Image
+                    src={s.image.src}
+                    alt={s.image.alt}
+                    fill
                     draggable={false}
-                    aria-label={slide.tag}
-                    onFocus={(e) => {
-                      // Keyboard focus only: pointer focus fires on mousedown and
-                      // would activate the card before the click, or fight a drag.
-                      if (e.currentTarget.matches(":focus-visible")) goTo(i);
-                    }}
-                    onClick={(e) => {
-                      // A peeking neighbour brings itself into view before it navigates.
-                      if (!active) {
-                        e.preventDefault();
-                        goTo(i);
-                      }
-                    }}
-                    className="block"
-                  >
-                    <div
-                      ref={i === 0 ? firstCardRef : undefined}
-                      className={`relative aspect-[16/10] w-[min(70vw,1100px)] overflow-hidden rounded-2xl border border-line bg-paper-raised ${
-                        active ? "outline outline-1 outline-accent outline-offset-0" : ""
-                      }`}
-                    >
-                      <Image
-                        src={slide.image.src}
-                        alt={slide.image.alt}
-                        fill
-                        sizes="70vw"
-                        preload={i === 0}
-                        draggable={false}
-                        className="object-cover object-top"
-                        onError={(e) => {
-                          // Missing file: leave the calm paper well, not a broken icon.
-                          e.currentTarget.style.opacity = "0";
-                        }}
-                      />
-                    </div>
-                  </Link>
-                  <div className="mt-2 h-5">
-                    {active ? (
-                      <span className="inline-block rounded bg-accent px-1.5 py-0.5 text-[11px] leading-none text-paper">
-                        {slide.tag}
-                      </span>
-                    ) : null}
-                  </div>
+                    priority={i === 0}
+                    sizes="(max-width: 679px) calc(100vw - 80px), (max-width: 1119px) calc(100vw - 112px), 960px"
+                    className={s.phone ? "object-contain py-[6%]" : "object-cover object-top"}
+                  />
                 </div>
-              );
-            })}
-          </motion.div>
+              </Link>
+            </div>
+          ))}
         </div>
-
-        <div className="mt-3 flex justify-end gap-2 pr-4 md:pr-8">
-          <button
-            type="button"
-            aria-label="Previous slide"
-            disabled={index === 0}
-            onClick={() => goTo(index - 1)}
-            className="h-9 w-9 rounded-full border border-line text-ink transition-colors motion-reduce:transition-none hover:bg-paper-raised disabled:cursor-default disabled:text-ink-faint disabled:hover:bg-transparent"
-          >
-            <span aria-hidden="true">←</span>
-          </button>
-          <button
-            type="button"
-            aria-label="Next slide"
-            disabled={index === slides.length - 1}
-            onClick={() => goTo(index + 1)}
-            className="h-9 w-9 rounded-full border border-line text-ink transition-colors motion-reduce:transition-none hover:bg-paper-raised disabled:cursor-default disabled:text-ink-faint disabled:hover:bg-transparent"
-          >
-            <span aria-hidden="true">→</span>
-          </button>
+        <div className="frame" aria-hidden="false">
+          <div className="frame__outline" />
+          <Link href={current.href} className="frame__label" tabIndex={-1}>
+            <span key={index} className="frame__name">
+              {current.tag}
+            </span>
+          </Link>
         </div>
-
-        <p aria-live="polite" className="sr-only">
-          {slides[index]?.tag}
-        </p>
       </div>
+      <p className="sr-only" aria-live="polite">
+        {current.tag}, slide {index + 1} of {slides.length}
+      </p>
     </div>
   );
 }

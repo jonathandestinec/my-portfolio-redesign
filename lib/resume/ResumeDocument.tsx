@@ -105,7 +105,7 @@ export function ResumeDocument({ data }: { data: ResumeData }) {
           ))}
         </Section>
 
-        <Text style={s.foot}>More projects: {siteUrl}/playground</Text>
+        <Text style={s.foot}>More projects: {siteUrl}/works</Text>
       </Page>
     </Document>
   )

@@ -18,11 +18,14 @@ export function getNextProject(slug: string): Project | null {
   return projects[(i + 1) % projects.length]
 }
 
-export function homeSlides(): { image: Img; tag: string; href: string }[] {
+export type CarouselSlide = { image: Img; tag: string; href: string; phone?: boolean }
+
+export function homeSlides(): CarouselSlide[] {
   if (projects.length === 1) {
     const p = projects[0]
     return p.slides.map((s) => ({
       image: { src: s.src, alt: s.alt },
+      phone: s.phone,
       tag: `${p.name} · ${s.screen}`,
       href: `/work/${p.slug}`,
     }))

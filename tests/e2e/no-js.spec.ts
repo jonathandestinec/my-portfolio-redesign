@@ -2,33 +2,39 @@ import { expect, test } from "@playwright/test";
 
 test.use({ javaScriptEnabled: false });
 
-test("home readable without JS", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.locator("h1, [data-hero-lead]").first()).toBeVisible();
-  const hidden = await page.$$eval(
-    "main *",
-    (els) =>
-      els.filter((e) => {
-        const cs = getComputedStyle(e);
-        return cs.filter !== "none" || !(parseFloat(cs.opacity) >= 1);
-      }).length,
-  );
-  expect(hidden).toBe(0);
+for (const path of ["/", "/experience", "/work/agrohub"])
+  test(`${path} is fully visible without JS (nothing waits on the reveal)`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.locator("h1").first()).toBeVisible();
+    const hidden = await page.$$eval(
+      "main *, footer *",
+      (els) =>
+        els.filter((e) => {
+          if (e.closest(".note, .frame__name, .slide")) return false; // decorative animations / dimmed slides
+          const cs = getComputedStyle(e);
+          return cs.filter !== "none" || !(parseFloat(cs.opacity) >= 1);
+        }).length,
+    );
+    expect(hidden).toBe(0);
+  });
+
+test("experience cards open without JS", async ({ page }) => {
+  await page.goto("/experience");
+  const card = page.locator("#giz");
+  await card.locator("summary").click();
+  await expect(card.locator(".entry__more")).toBeVisible();
 });
 
-test("contact section links exist without JS", async ({ page }) => {
-  await page.goto("/");
-  const contact = page.locator("#contact");
-  const expected: [string, string][] = [
-    ["Résumé", "/resume.pdf"],
-    ["GitHub", "https://github.com/jonathandestinec"],
-    ["LinkedIn", "https://linkedin.com/in/jonathandestinec"],
-    ["X", "https://x.com/destine0_"],
+test("contact links exist without JS", async ({ page }) => {
+  await page.goto("/contact");
+  const expected: [RegExp, string][] = [
+    [/Download PDF/, "/resume.pdf"],
+    [/github\.com\/jonathandestinec/, "https://github.com/jonathandestinec"],
+    [/linkedin\.com/, "https://linkedin.com/in/jonathandestinec"],
+    [/x\.com/, "https://x.com/destine0_"],
   ];
+  const main = page.locator("main");
   for (const [name, href] of expected) {
-    const a = contact.getByRole("link", { name, exact: true });
-    await expect(a).toHaveCount(1);
-    await expect(a).toHaveAttribute("href", href);
+    await expect(main.getByRole("link", { name })).toHaveAttribute("href", href);
   }
-  await expect(contact.getByRole("link", { name: "Résumé" })).toHaveAttribute("download", "");
 });

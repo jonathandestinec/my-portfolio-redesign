@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import { MetaTable } from "@/components/blocks/MetaTable";
+import { Facts } from "@/components/blocks/Facts";
 import { Prose } from "@/components/blog/Prose";
-import { PageHero } from "@/components/hero/PageHero";
+import { Intro } from "@/components/hero/Lead";
 import { SiteShell } from "@/components/layout/SiteShell";
+import { Wordmark } from "@/components/layout/Wordmark";
 import { formatDate, getAllPosts, listPublishedSlugs, listSlugs } from "@/lib/posts";
 
 // First request for an unlisted slug must wait for the full render so notFound() yields a real 404.
@@ -36,27 +37,27 @@ export default async function PostPage({ params }: Props) {
   const post = await load(slug);
   const { default: Body } = await import(`@/content/blog/${slug}.mdx`);
   return (
-    <SiteShell
-      variant="detail"
-      back={{ href: "/blog", label: "← All writing" }}
-    >
-      <PageHero
-        variant="minor"
-        title={post.title}
-        body={post.summary}
-        meta={
-          <MetaTable
-            rows={[
-              ["Date", formatDate(post.date, true)],
-              ["Reading time", `${post.readingMinutes} min read`],
-              ["Tags", post.tags.join(", ") || "—"],
-            ]}
-          />
-        }
-      />
-      <Prose>
-        <Body />
-      </Prose>
+    <SiteShell current="/blog" back={{ href: "/blog", label: "← All writing" }}>
+      <Intro narrow logo={<Wordmark />}>
+        <div className="lead">
+          <h1>
+            <span className="hl">{post.title}</span>
+          </h1>
+          <p>{post.summary}</p>
+        </div>
+      </Intro>
+      <div className="col flex flex-col gap-4 pt-8">
+        <Facts
+          rows={[
+            ["Date", formatDate(post.date, true)],
+            ["Reading time", `${post.readingMinutes} min read`],
+            ["Tags", post.tags.join(", ") || "—"],
+          ]}
+        />
+        <Prose>
+          <Body />
+        </Prose>
+      </div>
     </SiteShell>
   );
 }

@@ -44,3 +44,15 @@ export const stack: StackItem[] = [
   t('Vercel', 'vercel'),
   d('Figma', 'figma'),
 ]
+
+// TODO(content): drafted descriptions for the Stack page; confirm or rewrite.
+export const stackNotes: Record<StackCategory, string> = {
+  frontend:
+    'Next.js and React with TypeScript for almost everything, styled with Tailwind. Server data through TanStack Query; client state in Zustand, or Redux on larger existing apps. Astro for content-heavy sites.',
+  backend:
+    'Postgres through Prisma or Drizzle for most products, MongoDB where a project already uses it. Node, Express or Bun for APIs, Socket.io for realtime, and Clerk, Auth0 or my own JWT/OAuth for sign-in.',
+  tools:
+    'n8n for automations: webhooks, CRMs, email, AI steps. Docker Compose for local services, Git and GitHub for everything, Vercel for deploys.',
+  design:
+    'Figma to read designers’ files closely, and to sketch my own screens before I build them.',
+}

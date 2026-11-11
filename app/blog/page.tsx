@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { Section } from "@/components/blocks/Section";
 import { PostRows } from "@/components/blog/PostRow";
-import { PageHero } from "@/components/hero/PageHero";
+import { Intro, Lead } from "@/components/hero/Lead";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { getAllPosts, groupByYear } from "@/lib/posts";
 
@@ -11,19 +12,21 @@ export const metadata: Metadata = {
 
 export default async function BlogIndex() {
   const groups = groupByYear(await getAllPosts());
-  const links = groups.map(([y]) => ({ href: `#y${y}`, label: y }));
   return (
-    <SiteShell variant="index" links={links} back={{ href: "/", label: "← Home" }}>
-      <PageHero
-        variant="major"
-        lead="Writing."
-        statements={[["Notes on building fullstack apps and automations."]]}
-      />
+    <SiteShell current="/blog" sections={groups.map(([y]) => ({ href: `#y${y}`, label: y }))}>
+      <Intro narrow>
+        <Lead
+          title="Writing."
+          statements={[
+            ["Notes on building fullstack apps and automations."],
+            ["Mostly what broke, and how I fixed it."],
+          ]}
+        />
+      </Intro>
       {groups.map(([year, posts]) => (
-        <section key={year} id={`y${year}`} className="scroll-mt-16 pb-10">
-          <h2 className="pb-3 text-[13px] font-normal text-ink-faint">{year}</h2>
+        <Section key={year} id={`y${year}`} title={year} label>
           <PostRows posts={posts} />
-        </section>
+        </Section>
       ))}
     </SiteShell>
   );

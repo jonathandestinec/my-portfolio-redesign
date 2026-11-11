@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('sitemap lists routes', async ({ request }) => {
   const t = await (await request.get('/sitemap.xml')).text()
-  for (const p of ['/playground', '/blog', '/work/agrohub', '/blog/agrohub-payment-held-until-delivery']) expect(t).toContain(p)
+  for (const p of ['/works', '/experience', '/education', '/stack', '/contact', '/blog', '/work/agrohub', '/blog/agrohub-payment-held-until-delivery']) expect(t).toContain(p)
 })
 test('robots links sitemap', async ({ request }) => {
   expect(await (await request.get('/robots.txt')).text()).toContain('sitemap.xml')
@@ -29,8 +29,10 @@ test('titles', async ({ page }) => {
   await expect(page).toHaveTitle('AgroHub — Destine Jonathan')
   await page.goto('/blog')
   await expect(page).toHaveTitle('Writing — Destine Jonathan')
-  await page.goto('/playground')
-  await expect(page).toHaveTitle('Pet projects & experiments — Destine Jonathan')
+  await page.goto('/works')
+  await expect(page).toHaveTitle('Works — Destine Jonathan')
+  await page.goto('/experience')
+  await expect(page).toHaveTitle('Experience — Destine Jonathan')
   await page.goto('/')
   await expect(page).toHaveTitle('Destine Jonathan — FullStack Developer & Automation Engineer')
 })

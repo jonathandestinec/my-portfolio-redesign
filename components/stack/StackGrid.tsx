@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import { HandNote } from "@/components/hero/HandNote";
 import { stackCategories } from "@/content/stack";
 import type { StackCategory, StackItem } from "@/content/types";
 import { filterStack } from "@/lib/content";
@@ -34,9 +33,11 @@ export function StackGrid({ items }: { items: StackItem[] }) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mb-5 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="[@media(hover:none)]:hidden">
-          <HandNote text="( hover to play )" arrow={false} />
+          <span className="inline-block -rotate-[4deg] font-hand text-[18px] leading-none text-ink-muted">
+            ( hover to play )
+          </span>
         </div>
         <div
           role="tablist"
@@ -59,9 +60,9 @@ export function StackGrid({ items }: { items: StackItem[] }) {
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActive(c.id)}
                 onKeyDown={(e) => onKeyDown(e, i)}
-                className={`rounded-md px-3 py-1.5 text-[15px] transition-colors ${
+                className={`h-7 rounded-full px-3 text-[13px] font-medium transition-colors ${
                   selected
-                    ? "bg-paper-raised text-ink"
+                    ? "bg-[var(--pale-hover)] text-ink"
                     : "text-ink-muted hover:text-ink"
                 }`}
               >
@@ -78,7 +79,7 @@ export function StackGrid({ items }: { items: StackItem[] }) {
         tabIndex={0}
         layout={!reduce}
       >
-        <ul className="flex flex-wrap gap-2">
+        <ul className="flex flex-wrap gap-1.5">
           <AnimatePresence initial={false} mode="popLayout">
             {visible.map((s) => (
               <motion.li
@@ -93,7 +94,7 @@ export function StackGrid({ items }: { items: StackItem[] }) {
                 }
                 transition={{ duration: reduce ? 0 : 0.2 }}
                 whileHover={reduce ? undefined : { rotate: [0, -4, 4, 0] }}
-                className="flex items-center gap-2 rounded-md border border-line px-3 py-1.5 text-[15px] text-ink-muted"
+                className="flex h-8 items-center gap-2 rounded-lg border border-line px-2.5 text-[14px] text-ink-muted"
               >
                 <StackIcon slug={s.icon} />
                 {s.name}

@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    return [{ source: "/playground", destination: "/works", permanent: true }];
+  },
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   turbopack: {
     rules: {

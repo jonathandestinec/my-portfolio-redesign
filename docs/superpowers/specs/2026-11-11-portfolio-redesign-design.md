@@ -1,5 +1,32 @@
 # Portfolio Redesign — Design Spec
 
+> **Revision 2 (2026-11-11), supersedes the sections below where they conflict.**
+> The first build drifted from the reference because it was made from screenshots, not the
+> live site. Revision 2 takes its values from the reference's own stylesheet:
+>
+> - **Type:** display lead Funnel Display 26px (≥680px: 32px) / 1.15, weight 400, −0.03em, ink at 70%;
+>   first line ink 85% weight 500. Body Funnel Sans 15/22; meta 13–14px. No 600 weights anywhere.
+> - **Layout:** one centred 600px column (lead 560px), 20px gutter; full-bleed work strip; bordered
+>   14px-radius cards and lists; sections 80px apart; footer 112px above a hairline legal row.
+> - **Nav:** desktop (≥1120px) fixed sidebar at top 92 / left 80, 160px wide, 13px weight-500 links,
+>   hidden while the strip covers it. Phones/tablets: wordmark + theme + "Menu" on the page itself,
+>   transparent and not sticky; the menu opens a full-screen sheet.
+> - **Every menu link is its own page:** /works, /experience, /education, /stack, /blog (Writing),
+>   /contact. /playground redirects to /works.
+> - **CTA:** "Book a call" pill, "Email me" and "Résumé ↓" laid out side by side. No hover/tap reveal.
+> - **Hand note:** "check this out :)" hangs under the AgroHub link at the end of the last hero line,
+>   with the arrow pointing up at it (reference `.note`).
+> - **Blur:** one-time reveal only. Elements below the fold start at opacity 0 + blur(10px) and
+>   sharpen once as they enter (70ms stagger, max 350ms); nothing on screen at load is blurred and
+>   nothing re-blurs. No edge blur. Reduced motion / no JS: no blur at all.
+> - **Work strip:** fixed blue frame + label in the centre; slides translate underneath (inactive at 60%
+>   opacity); pointer drag with momentum, click a neighbour to bring it in, arrows/Enter when focused.
+> - **Experience & Education:** bordered cards with a logo, title, dates and summary; each opens in
+>   place (`<details>`) to show details and highlights; the Experience/Education pages add the stack
+>   and a company link, and open the card named in the URL hash.
+> - **Case study:** wordmark, "Name: tagline" lead, story paragraphs, facts table, wide hero image,
+>   then titled chapters with screenshots; the sidebar lists the chapters.
+
 - **Date:** 2026-11-11
 - **Status:** Draft — awaiting owner review
 - **Stack:** Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · TypeScript · bun · Motion

@@ -1,87 +1,102 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
 import { useActiveSection } from "@/lib/use-active-section";
 import { ThemeToggle } from "./ThemeToggle";
 import { Wordmark } from "./Wordmark";
-import { isExternal, socialLinks, type NavLink } from "./nav-links";
+import {
+  externalProps,
+  pageLinks,
+  resumeLink,
+  socialLinks,
+  type NavLink,
+} from "./nav-links";
 import { useNavHidden } from "./nav-visibility";
 
-type Props = {
-  variant: "home" | "index" | "detail";
-  links?: NavLink[];
+export type ShellNav = {
+  /** href of the page being shown, e.g. "/experience" ("/" on home). */
+  current?: string;
+  /** Detail pages show a back link in place of the page list. */
   back?: NavLink;
+  /** In-page anchors (case studies, writing years). */
+  sections?: NavLink[];
 };
 
-export function SideNav({ variant, links = [], back }: Props) {
+export function SideNav({ current, back, sections = [] }: ShellNav) {
   const hidden = useNavHidden();
-  const reduce = useReducedMotion();
-  const ids = links
-    .filter((l) => l.href.startsWith("#"))
-    .map((l) => l.href.slice(1));
-  const active = useActiveSection(ids);
-  const linkClass = "text-[15px] leading-5 transition-colors hover:text-ink";
+  const active = useActiveSection(sections.map((s) => s.href.slice(1)));
 
   return (
-    <motion.nav
+    <nav
       aria-label="Primary"
       inert={hidden}
-      initial={false}
-      animate={
-        hidden
-          ? { opacity: 0, filter: reduce ? "blur(0px)" : "blur(4px)" }
-          : { opacity: 1, filter: "blur(0px)" }
-      }
-      transition={{ duration: reduce ? 0 : 0.25 }}
-      className="fixed top-0 hidden h-svh w-[240px] flex-col justify-start pt-16 pb-10 pl-8 lg:pl-[120px] md:sticky md:flex"
+      className={`sidebar${hidden ? " is-hidden" : ""}`}
     >
-      <div className="mb-8">
-        {variant === "detail" && back ? (
-          <Link href={back.href} className={`${linkClass} whitespace-nowrap text-ink-muted`}>
-            {back.label}
-          </Link>
-        ) : (
-          <Wordmark size="md" />
-        )}
-      </div>
-      {links.length > 0 && (
-        <ul className="flex flex-col gap-2.5">
-          {links.map((l) => {
-            const isActive = l.href === `#${active}`;
-            return (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  aria-current={isActive ? "true" : undefined}
-                  className={`${linkClass} ${isActive ? "text-ink" : "text-ink-muted"}`}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            );
-          })}
+      {back ? (
+        <ul className="sidebar__group">
+          <li>
+            <Link href={back.href} className="sidebar__link whitespace-nowrap">
+              {back.label}
+            </Link>
+          </li>
         </ul>
+      ) : (
+        <div>
+          <Wordmark side current={current === "/"} />
+        </div>
       )}
-      <ul className={`flex flex-col gap-2.5 ${links.length > 0 ? "mt-8" : ""}`}>
-        {socialLinks.map((l) => (
-          <li key={l.label}>
-            <a
+
+      {sections.length > 0 ? (
+        <ul className="sidebar__group">
+          {sections.map((s) => (
+            <li key={s.href}>
+              <a
+                href={s.href}
+                aria-current={s.href === `#${active}` ? "location" : undefined}
+                className="sidebar__link"
+              >
+                {s.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <ul className="sidebar__group">
+        {pageLinks.map((l) => (
+          <li key={l.href}>
+            <Link
               href={l.href}
-              download={l.download ? "" : undefined}
-              {...(isExternal(l.href)
-                ? { target: "_blank", rel: "noreferrer" }
-                : {})}
-              className={`${linkClass} text-ink-muted`}
+              aria-current={current === l.href ? "page" : undefined}
+              className="sidebar__link"
             >
+              {l.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <ul className="sidebar__group">
+        <li>
+          <a href={resumeLink.href} download className="sidebar__link">
+            {resumeLink.label}
+          </a>
+        </li>
+      </ul>
+
+      <ul className="sidebar__group">
+        {socialLinks.map((l) => (
+          <li key={l.href}>
+            <a href={l.href} {...externalProps(l.href)} className="sidebar__link">
               {l.label}
             </a>
           </li>
         ))}
       </ul>
-      <div className="mt-8">
+
+      <div>
         <ThemeToggle />
       </div>
-    </motion.nav>
+    </nav>
   );
 }

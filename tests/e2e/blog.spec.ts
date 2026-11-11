@@ -11,14 +11,14 @@ test('blog index lists posts and opens one', async ({ page }) => {
   await expect(page).toHaveURL(/\/blog\/agrohub-payment-held-until-delivery$/)
   await expect(page.getByRole('heading', { level: 1, name: /AgroHub/i })).toBeVisible()
   await openMenuIfCollapsed(page)
-  await expect(page.getByRole('link', { name: /All writing/ })).toHaveText('← All writing')
+  await expect(page.getByRole('link', { name: /All writing/ }).first()).toHaveText('← All writing')
 })
-test('blog index back link has a single arrow (mobile menu)', async ({ page }) => {
+test('blog index is marked current in the menu', async ({ page }) => {
   await page.goto('/blog')
-  const menu = page.getByRole('button', { name: 'Menu' })
-  test.skip(!(await menu.isVisible()), 'side nav shows the wordmark instead of a back link on desktop')
-  await menu.click()
-  await expect(page.getByRole('link', { name: /Home/ })).toHaveText('← Home')
+  await openMenuIfCollapsed(page)
+  const dialog = page.getByRole('dialog')
+  const menu = (await dialog.isVisible()) ? dialog : page.getByRole('navigation', { name: 'Primary' })
+  await expect(menu.getByRole('link', { name: 'Writing', exact: true })).toHaveAttribute('aria-current', 'page')
 })
 test('unknown post 404s', async ({ page }) => {
   const r = await page.goto('/blog/nope')

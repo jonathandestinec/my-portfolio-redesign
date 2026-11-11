@@ -1,148 +1,89 @@
 import Link from "next/link";
-import { Section } from "@/components/blocks/Section";
-import { RowList } from "@/components/blocks/RowList";
-import { ArrowLink } from "@/components/cta/ArrowLink";
-import { CtaGroup } from "@/components/cta/CtaGroup";
-import { InlineLink } from "@/components/cta/InlineLink";
+import { EducationList, RoleList } from "@/components/blocks/Entries";
+import { Bleed, Section } from "@/components/blocks/Section";
+import { PostRows } from "@/components/blog/PostRow";
+import { Cta } from "@/components/cta/Actions";
 import { ContribGrid } from "@/components/github/ContribGrid";
-import { HandNote } from "@/components/hero/HandNote";
-import { PageHero } from "@/components/hero/PageHero";
+import { Intro, Lead } from "@/components/hero/Lead";
 import { SiteShell } from "@/components/layout/SiteShell";
-import { homeLinks, isExternal, socialLinks } from "@/components/layout/nav-links";
-import { ScrollBlur } from "@/components/motion/ScrollBlur";
 import { StackGrid } from "@/components/stack/StackGrid";
 import { WorkCarousel } from "@/components/work/WorkCarousel";
 import { education, experience } from "@/content/experience";
 import { site } from "@/content/site";
 import { stack } from "@/content/stack";
-import { homeSlides, rangeLabel } from "@/lib/content";
+import { homeSlides } from "@/lib/content";
 import { getContributions } from "@/lib/github-cached";
-import { formatDate, getAllPosts } from "@/lib/posts";
+import { getAllPosts } from "@/lib/posts";
 
 export default async function Home() {
   const [cal, posts] = await Promise.all([getContributions(), getAllPosts()]);
-  const latest = posts.slice(0, 3);
 
   return (
-    <SiteShell variant="home" links={homeLinks}>
-      <PageHero
-        variant="major"
-        lead={site.hero.lead}
-        statements={site.hero.statements}
-        note={<HandNote text="check this out :)" arrow="up-left" />}
-        actions={<CtaGroup />}
-        status={site.hero.status}
-      />
+    <SiteShell current="/">
+      <Intro narrow>
+        <Lead title={site.hero.lead} statements={site.hero.statements}>
+          <Cta notes={site.hero.status} />
+        </Lead>
+      </Intro>
 
-      <Section id="works" title="Works" hideNav>
+      <Bleed id="works" label="Works">
         <WorkCarousel slides={homeSlides()} />
-        <div className="mt-8">
-          <ArrowLink href="/playground">Pet projects &amp; experiments</ArrowLink>
+      </Bleed>
+      <p className="col -mt-2" data-reveal>
+        <Link href="/works" className="text-link">
+          All works, pet projects &amp; experiments →
+        </Link>
+      </p>
+
+      <Section
+        id="experience"
+        title="Experience"
+        label
+        more={{ href: "/experience", label: "More on my experience" }}
+      >
+        <RoleList roles={experience} />
+      </Section>
+
+      <Section
+        id="education"
+        title="Education"
+        label
+        more={{ href: "/education", label: "More on my education" }}
+      >
+        <EducationList items={education} />
+      </Section>
+
+      <Section
+        id="stack"
+        title="Stack"
+        sub="What I reach for, day to day."
+        more={{ href: "/stack", label: "How I use them" }}
+      >
+        <div className="cards">
+          <div className="card">
+            <div className="card__body">
+              <StackGrid items={stack} />
+            </div>
+          </div>
+          <div className="card">
+            <div className="card__body">
+              <span className="medium">GitHub activity</span>
+              <div className="overflow-x-auto">
+                <ContribGrid cal={cal} />
+              </div>
+            </div>
+          </div>
         </div>
       </Section>
 
-      <Section id="experience" title="Experience">
-        <ScrollBlur>
-          <RowList
-            rows={experience.map((r) => ({
-              label: rangeLabel(r.start, r.end),
-              title: `${r.title} · ${r.company}`,
-              body: r.summary,
-              aside: r.location ? (
-                <span className="text-[13px] text-ink-faint">{r.location}</span>
-              ) : undefined,
-            }))}
-          />
-          <h3 className="mb-4 mt-12 text-[13px] text-ink-faint">Education</h3>
-          <RowList
-            rows={education.map((e) => ({
-              label: e.date,
-              title: `${e.course} · ${e.institution}`,
-              aside: (
-                <span className="text-[13px] text-ink-faint">{e.location}</span>
-              ),
-            }))}
-          />
-        </ScrollBlur>
+      <Section
+        id="writing"
+        title="Writing"
+        sub="Notes from building things."
+        more={{ href: "/blog", label: "All writing" }}
+      >
+        <PostRows posts={posts.slice(0, 3)} summaries={false} />
       </Section>
-
-      <Section id="stack" title="Stack">
-        <ScrollBlur>
-          <StackGrid items={stack} />
-        </ScrollBlur>
-      </Section>
-
-      <Section id="activity" title="GitHub activity">
-        <ScrollBlur>
-          <ContribGrid cal={cal} />
-        </ScrollBlur>
-      </Section>
-
-      <Section id="writing" title="Writing">
-        <ScrollBlur>
-          <RowList
-            rows={latest.map((p) => ({
-              label: formatDate(p.date, true),
-              title: p.title,
-              href: `/blog/${p.slug}`,
-              aside: (
-                <span className="text-[13px] text-ink-faint">
-                  {p.readingMinutes} min
-                </span>
-              ),
-            }))}
-          />
-          <div className="mt-6">
-            <ArrowLink href="/blog">All writing</ArrowLink>
-          </div>
-        </ScrollBlur>
-      </Section>
-
-      <Section id="contact" title="Contact">
-        <ScrollBlur>
-          <p className="font-display text-[clamp(1.875rem,3vw,2.75rem)] font-medium leading-[1.2] tracking-[-0.02em] text-ink-muted">
-            Have a role in mind? Let&apos;s talk.
-          </p>
-          <div className="mt-6">
-            <CtaGroup id="cta-more-contact" />
-          </div>
-          <p className="mt-6 text-[15px] text-ink-muted">
-            <InlineLink href={`mailto:${site.email}`}>{site.email}</InlineLink>
-          </p>
-          {/* Plain anchors: reachable on phones and without JS, where the menu sheet is not. */}
-          <ul
-            data-contact-links
-            className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[15px] text-ink-muted"
-          >
-            {socialLinks.map((l) => (
-              <li key={l.label}>
-                <a
-                  href={l.href}
-                  download={l.download ? "" : undefined}
-                  {...(isExternal(l.href)
-                    ? { target: "_blank", rel: "noreferrer" }
-                    : {})}
-                  className="underline decoration-line underline-offset-4 hover:text-ink hover:decoration-ink"
-                >
-                  {l.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </ScrollBlur>
-      </Section>
-
-      <footer className="mt-8 flex flex-wrap gap-x-3 gap-y-1 border-t border-line pt-6 text-[13px] text-ink-faint">
-        <span>© 2026 Destine Jonathan</span>
-        <span aria-hidden>·</span>
-        <Link href="/playground" className="hover:text-ink">
-          Playground
-        </Link>
-        <span aria-hidden>·</span>
-        <a href="/blog/rss.xml" className="hover:text-ink">
-          RSS
-        </a>
-      </footer>
     </SiteShell>
   );
 }

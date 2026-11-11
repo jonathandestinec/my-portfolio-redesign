@@ -5,11 +5,16 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Wordmark } from "./Wordmark";
-import { isExternal, socialLinks, type NavLink } from "./nav-links";
+import {
+  externalProps,
+  pageLinks,
+  resumeLink,
+  socialLinks,
+} from "./nav-links";
+import type { ShellNav } from "./SideNav";
 
-type Props = { links?: NavLink[]; back?: NavLink };
-
-export function MobileNav({ links = [], back }: Props) {
+/** Phones and tablets: wordmark + menu button that sit on the page and scroll away (not sticky). */
+export function MobileNav({ current, back }: Pick<ShellNav, "current" | "back">) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -66,7 +71,7 @@ export function MobileNav({ links = [], back }: Props) {
     document.body.style.overflow = "hidden";
 
     // Leaving the phone layout while open would otherwise lock desktop scrolling.
-    const mq = window.matchMedia("(min-width: 768px)");
+    const mq = window.matchMedia("(min-width: 1120px)");
     const onChange = (e: MediaQueryListEvent) => {
       if (e.matches) setOpen(false);
     };
@@ -83,16 +88,12 @@ export function MobileNav({ links = [], back }: Props) {
   }, [open]);
 
   const close = () => setOpen(false);
-  const item = "text-2xl text-ink";
 
   return (
-    <div className="sticky top-0 z-40 md:hidden">
-      <nav
-        aria-label="Mobile"
-        className="flex items-center justify-between bg-paper px-4 py-3"
-      >
-        <Wordmark size="sm" />
-        <div className="flex items-center gap-2">
+    <>
+      <nav aria-label="Mobile" className="col topbar">
+        <Wordmark current={current === "/"} />
+        <div className="topbar__tools">
           <ThemeToggle />
           <button
             ref={button}
@@ -100,7 +101,7 @@ export function MobileNav({ links = [], back }: Props) {
             aria-haspopup="dialog"
             aria-expanded={open}
             onClick={() => setOpen(true)}
-            className="rounded-full bg-pill px-4 py-2 text-[15px] text-pill-ink"
+            className="button button--pale"
           >
             Menu
           </button>
@@ -113,52 +114,58 @@ export function MobileNav({ links = [], back }: Props) {
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="fixed inset-0 z-50 flex h-svh flex-col bg-paper px-4 py-4"
+            className="sheet"
           >
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={close}
-                className="rounded-full border border-line px-4 py-2 text-[15px] text-ink"
-              >
+            <div className="col topbar">
+              <Wordmark current={current === "/"} />
+              <button type="button" onClick={close} className="button button--pale">
                 Close
               </button>
             </div>
-            <ul className="mt-8 flex flex-col gap-4">
-              {back && (
+            <div className="col flex flex-col gap-10 pb-12 pt-10">
+              <ul className="sheet__links">
+                {back ? (
+                  <li>
+                    <Link href={back.href} onClick={close}>
+                      {back.label}
+                    </Link>
+                  </li>
+                ) : null}
                 <li>
-                  <Link href={back.href} onClick={close} className={item}>
-                    {back.label}
+                  <Link href="/" onClick={close} aria-current={current === "/" ? "page" : undefined}>
+                    Home
                   </Link>
                 </li>
-              )}
-              {links.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} onClick={close} className={item}>
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <ul className="mt-10 flex flex-col gap-3">
-              {socialLinks.map((l) => (
-                <li key={l.label}>
-                  <a
-                    href={l.href}
-                    download={l.download ? "" : undefined}
-                    {...(isExternal(l.href)
-                      ? { target: "_blank", rel: "noreferrer" }
-                      : {})}
-                    className="text-lg text-ink-muted"
-                  >
-                    {l.label}
+                {pageLinks.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      onClick={close}
+                      aria-current={current === l.href ? "page" : undefined}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <ul className="flex flex-col gap-2 text-ink-muted">
+                <li>
+                  <a href={resumeLink.href} download className="text-link">
+                    {resumeLink.label}
                   </a>
                 </li>
-              ))}
-            </ul>
+                {socialLinks.map((l) => (
+                  <li key={l.href}>
+                    <a href={l.href} {...externalProps(l.href)} className="text-link">
+                      {l.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>,
           document.body,
         )}
-    </div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 # Destine Jonathan, portfolio
 
-Personal portfolio for Destine Jonathan, a FullStack Developer & Automation Engineer. It has a home page (works carousel, experience, stack, GitHub activity, writing, contact), an AgroHub case study, a playground of pet projects, a small MDX blog with RSS, a generated résumé PDF, and Open Graph images. Built with Next.js 16 (App Router, `cacheComponents`), React 19, Tailwind CSS and Motion. It works without JavaScript and honours reduced motion.
+Personal portfolio for Destine Jonathan, a FullStack Developer & Automation Engineer. It has a home page (works strip, experience, education, stack, GitHub activity, writing), a page for every menu entry (Works, Experience, Education, Stack, Writing, Contact), an AgroHub case study, a small MDX blog with RSS, a generated résumé PDF, and Open Graph images. Built with Next.js 16 (App Router, `cacheComponents`), React 19, Tailwind CSS and Motion. It works without JavaScript and honours reduced motion.
 
 ## Scripts
 
@@ -27,7 +27,7 @@ Copy `.env.example` to `.env.local`.
 
 - `content/site.ts`: name, role, hero text, email, social links.
 - `content/projects.ts`: case studies and carousel slides. The optional `timeline` field renders a "How it's shipping" block; it is unset until confirmed.
-- `content/experience.ts`, `content/stack.ts`, `content/playground.ts`: the other home and playground sections.
+- `content/experience.ts` (roles and education: logo, details, highlights, stack), `content/stack.ts`, `content/playground.ts` (client and experiment lists on /works). Logos live in `public/logos/`. Lines marked `TODO(content)` are drafts to confirm.
 - `content/blog/*.mdx`: posts. Each starts with `export const meta = { title, date, summary, tags, draft }`. Set `draft: true` to keep a post out of the blog, sitemap, RSS and static params in production.
 - The résumé at `/resume.pdf` is generated from the same content.
 

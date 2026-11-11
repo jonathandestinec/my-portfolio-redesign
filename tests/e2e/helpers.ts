@@ -8,19 +8,11 @@ export async function waitForHydration(page: Page) {
   });
 }
 
-/** On the home page, the carousel's full-bleed style lands after mount. */
-export async function waitForCarouselBleed(page: Page) {
-  await page
-    .locator('[role="region"][aria-roledescription="carousel"][style*="margin-left"]')
-    .waitFor();
-}
-
-/** Computed blur radii (px) of every element under <main>. */
-export async function blurRadii(page: Page): Promise<number[]> {
-  return page.$$eval("main *", (els) =>
-    els.flatMap((e) => {
-      const m = getComputedStyle(e).filter.match(/blur\(([\d.]+)px\)/);
-      return m ? [parseFloat(m[1])] : [];
-    }),
-  );
+/** Scrolls the whole page in wheel steps so every reveal fires. */
+export async function scrollThrough(page: Page) {
+  const h = await page.evaluate(() => document.body.scrollHeight);
+  for (let y = 0; y < h; y += 400) {
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(40);
+  }
 }

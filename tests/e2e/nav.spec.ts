@@ -1,26 +1,56 @@
 import { expect, test } from "@playwright/test";
 
-test("active link follows scroll", async ({ page, isMobile }) => {
-  test.skip(isMobile, "links live in the mobile sheet on phones");
-  await page.goto("/");
-  await page.locator("#experience").scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  await expect(page.getByRole("link", { name: "Experience" })).toHaveAttribute(
-    "aria-current",
-    "true",
-  );
+const pages: [string, string][] = [
+  ["Works", "/works"],
+  ["Experience", "/experience"],
+  ["Education", "/education"],
+  ["Stack", "/stack"],
+  ["Writing", "/blog"],
+  ["Contact", "/contact"],
+];
+
+test("every sidebar link opens its own page and is marked current", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the sidebar is desktop-only");
+  for (const [name, path] of pages) {
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Primary" });
+    await nav.getByRole("link", { name, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    await expect(
+      page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name, exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+  }
 });
 
-test("nav hides over works", async ({ page, isMobile }) => {
-  test.skip(isMobile, "SideNav is hidden below md");
+test("sidebar is fixed beside the column and hides over the work strip", async ({ page, isMobile }) => {
+  test.skip(isMobile);
   await page.goto("/");
-  await page
-    .locator("#works")
-    .evaluate((e) => e.scrollIntoView({ block: "center" }));
-  await page.waitForTimeout(500);
   const nav = page.locator('nav[aria-label="Primary"]');
+  await expect(nav).toHaveCSS("position", "fixed");
+  await page.locator(".strip").evaluate((e) => e.scrollIntoView({ block: "center" }));
   await expect(nav).toHaveCSS("opacity", "0");
   await expect(nav).toHaveAttribute("inert", "");
+});
+
+test("phone top bar is transparent and scrolls away", async ({ page, isMobile }) => {
+  test.skip(!isMobile);
+  await page.goto("/");
+  const bar = page.getByRole("navigation", { name: "Mobile" });
+  await expect(bar).toHaveCSS("position", "static");
+  await expect(bar).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.mouse.wheel(0, 800);
+  await expect
+    .poll(async () => (await bar.boundingBox())!.y)
+    .toBeLessThan(-50);
+});
+
+test("mobile menu links go to pages", async ({ page, isMobile }) => {
+  test.skip(!isMobile);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Menu" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "Education" }).click();
+  await expect(page).toHaveURL(/\/education$/);
+  await expect(page.getByRole("dialog")).toBeHidden();
 });
 
 test("mobile menu opens and closes", async ({ page, isMobile }) => {
@@ -38,9 +68,8 @@ test("mobile menu traps focus", async ({ page, isMobile }) => {
   test.skip(!isMobile);
   await page.goto("/");
   await page.getByRole("button", { name: "Menu" }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  for (let i = 0; i < 12; i++) {
+  await expect(page.getByRole("dialog")).toBeVisible();
+  for (let i = 0; i < 14; i++) {
     await page.keyboard.press("Tab");
     const inside = await page.evaluate(
       () => !!document.activeElement?.closest('[role="dialog"]'),

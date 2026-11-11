@@ -30,11 +30,11 @@ export function ThemeToggle() {
       aria-label="Toggle dark mode"
       aria-pressed={dark}
       onClick={toggle}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-muted hover:text-ink"
+      className="button button--pale icon-button"
     >
       <svg
-        width="18"
-        height="18"
+        width="15"
+        height="15"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
