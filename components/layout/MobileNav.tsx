@@ -128,7 +128,7 @@ export function MobileNav({ links = [], back }: Props) {
               {back && (
                 <li>
                   <Link href={back.href} onClick={close} className={item}>
-                    ← {back.label}
+                    {back.label}
                   </Link>
                 </li>
               )}

@@ -26,4 +26,9 @@ test('reading time ignores code and exports', () =>
     readingMinutes('export const meta = {}\n' + 'word '.repeat(440) + '\n```\n' + 'x '.repeat(5000) + '\n```'),
   ).toBe(2))
 test('listSlugs finds seeded posts', () =>
-  expect(listSlugs()).toEqual(expect.arrayContaining(['shipping-agrohub-escrow', 'n8n-chat-intake'])))
+  expect(listSlugs()).toEqual(expect.arrayContaining(['agrohub-payment-held-until-delivery', 'n8n-chat-intake'])))
+
+test('reading time strips a multi-line export', () =>
+  expect(
+    readingMinutes("export const meta = {\n  title: 'a long title here',\n  summary: 'many words '.repeat(300),\n}\n\n" + 'word '.repeat(220)),
+  ).toBe(1))

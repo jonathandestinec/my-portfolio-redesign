@@ -8,13 +8,13 @@ So the rule is simple to say. The buyer pays 100% upfront through AgroHub. The p
 
 ## Delivery has to end somewhere
 
-A held payment is only fair if it cannot be held forever. When the officer marks a delivery, the buyer can confirm it. If the buyer never does, the payment releases by itself 3 days after the officer's mark. An admin can also decide a disputed order. Those are the only ways out of the held state.
+A held payment is only fair if it cannot be held forever. When the officer marks a delivery, the buyer can confirm it. If the buyer never does, the payment releases by itself 3 days after the officer's mark. An admin can also decide a disputed order. Buyer confirmation, the 3-day auto-release and an admin decision are how a delivered order completes.
 
 ## Money is integers
 
 Every amount in the system is an integer number of kobo. Every percentage is an integer number of basis points, so 1000 means 10%. There are no floats anywhere, and one small module does all the arithmetic and formatting. That is boring on purpose. Splitting a payment between a cooperative and a dozen farmers is exactly the place where a stray decimal turns into a missing kobo.
 
-Here is the shape of a cut, as a sketch rather than the production code:
+Here is the shape of a cut, as a sketch rather than the production code. The 3% and 5% are example rates: the platform fee and the cooperative's cut are admin settings, and they are locked to a lot when it is approved.
 
 ```ts
 // all values are integer kobo; rates are integer basis points
@@ -27,7 +27,7 @@ const cooperativeCut = cut(total, 500) // 5%
 const farmers = total - platformFee - cooperativeCut
 ```
 
-The last line matters. The remainder goes to the farmers instead of being computed separately, so the pieces always add up to the amount paid.
+In this sketch the last line matters: the farmers take the remainder instead of having it computed separately, so the pieces always add up to the amount paid. The real split between farmers works differently. Each share is floored, then the leftover kobo are handed out by largest fractional part, with ties going to the lower index. The goal is the same: no kobo appears or disappears.
 
 ## Terms are locked at approval
 

@@ -11,9 +11,7 @@ export const metadata: Metadata = {
 
 export default async function BlogIndex() {
   const groups = groupByYear(await getAllPosts());
-  const links = [
-    ...groups.map(([y]) => ({ href: `#y${y}`, label: y })),
-  ];
+  const links = groups.map(([y]) => ({ href: `#y${y}`, label: y }));
   return (
     <SiteShell variant="index" links={links} back={{ href: "/", label: "← Home" }}>
       <PageHero

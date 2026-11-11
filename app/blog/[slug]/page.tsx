@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { MetaTable } from "@/components/blocks/MetaTable";
 import { Prose } from "@/components/blog/Prose";
@@ -16,13 +17,13 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ slug: string }> };
 
-async function load(slug: string) {
+const load = cache(async (slug: string) => {
   if (!listSlugs().includes(slug)) notFound();
   const posts = await getAllPosts();
   const post = posts.find((p) => p.slug === slug);
   if (!post) notFound();
   return post;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

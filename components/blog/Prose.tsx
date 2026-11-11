@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 // Typography for MDX output. Styled via descendant selectors so MDX needs no
 // component overrides. Shiki dual-theme spans carry --shiki-light/--shiki-dark.
 const cls = [
-  "prose max-w-[680px] text-[17px] leading-[1.7] text-ink-muted",
+  "max-w-[680px] text-[17px] leading-[1.7] text-ink-muted",
   "[&_p]:my-5",
   "[&_h2]:mt-12 [&_h2]:mb-4 [&_h2]:font-display [&_h2]:text-[1.5rem] [&_h2]:font-semibold [&_h2]:leading-[1.25] [&_h2]:text-ink",
   "[&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:font-display [&_h3]:text-[1.2rem] [&_h3]:font-semibold [&_h3]:text-ink",
