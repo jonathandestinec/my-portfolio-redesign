@@ -34,10 +34,10 @@
   --color-accent: var(--accent);
   --color-pill: var(--pill);
   --color-pill-ink: var(--pill-ink);
-  --font-display: var(--font-display);
-  --font-sans: var(--font-sans);
-  --font-hand: var(--font-hand);
-  --font-mono: var(--font-mono);
+  --font-display: var(--font-display-src);
+  --font-sans: var(--font-sans-src);
+  --font-hand: var(--font-hand-src);
+  --font-mono: var(--font-mono-src);
 }
 
 body {

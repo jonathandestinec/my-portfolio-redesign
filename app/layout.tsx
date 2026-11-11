@@ -5,12 +5,12 @@ import "./globals.css";
 
 const display = Funnel_Display({
   weight: ["500", "600"],
-  variable: "--font-display",
+  variable: "--font-display-src",
   subsets: ["latin"],
 });
-const sans = Funnel_Sans({ variable: "--font-sans", subsets: ["latin"] });
-const hand = Caveat({ variable: "--font-hand", subsets: ["latin"] });
-const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
+const sans = Funnel_Sans({ variable: "--font-sans-src", subsets: ["latin"] });
+const hand = Caveat({ variable: "--font-hand-src", subsets: ["latin"] });
+const mono = Geist_Mono({ variable: "--font-mono-src", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
