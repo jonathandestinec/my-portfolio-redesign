@@ -74,22 +74,22 @@ Side nav contents:
 
 | Token | Light | Dark |
 |---|---|---|
-| `--paper` (bg) | `#F1EEE8` | `#171614` |
-| `--paper-raised` (cards) | `#F6F4EF` | `#1F1D1A` |
-| `--ink` (primary text) | `#1A1A1A` | `#EDEAE3` |
-| `--ink-muted` (two-tone grey) | `#6B6862` | `#A29E96` |
-| `--ink-faint` (meta, legends) | `#8E8A83` | `#7C7870` |
-| `--line` (borders/dividers) | `#E2DED6` | `#2E2B27` |
-| `--accent` (carousel outline/tag, focus) | `#3B5BDB` | `#7C93F0` |
-| `--pill` / `--pill-ink` | `#1A1A1A` / `#F1EEE8` | `#EDEAE3` / `#171614` |
+| `--paper` (bg) | `#F2EFE8` | `#171614` |
+| `--paper-raised` (cards, image wells) | `#E9E5DD` | `#1F1D1A` |
+| `--ink` (primary text) | `#21201D` | `#EDEAE3` |
+| `--ink-muted` (two-tone grey) | `#5D5B55` | `#A29E96` |
+| `--ink-faint` (meta, legends) | `#6E6C65` | `#7C7870` |
+| `--line` (borders/dividers) | `#DFDCD6` | `#2E2B27` |
+| `--accent` (carousel outline/tag, focus) | `#2563EB` | `#7C93F0` |
+| `--pill` / `--pill-ink` | `#21201D` / `#F2EFE8` | `#EDEAE3` / `#171614` |
 | Contribution levels 0–4 | `--line` → `#C9C5BD` → `#9A968F` → `#5E5B56` → `#1A1A1A` | mirrored on dark ramp |
 
-Hex values are starting points; the implementation must verify `--ink-muted` on `--paper` meets WCAG AA (4.5:1) at body sizes in both themes and adjust if not.
+Light values were taken from the reference site's own CSS tokens (`--page`, `--ink`, `--muted`, `--faint`, `--line`, `--blue`, `--art-well`). Hex values are otherwise starting points; the implementation must verify `--ink-muted` on `--paper` meets WCAG AA (4.5:1) at body sizes in both themes and adjust if not.
 
 ### Typography (via `next/font`)
 
-- **Display (hero, titles):** Geist Sans, tight tracking (−0.02em), weights 500/600.
-- **Body / UI:** Inter at 15–17px, weight 400/500.
+- **Display (hero, titles):** Funnel Display (`next/font/google` `Funnel_Display`), tight tracking (−0.02em), weights 500/600. This is the face the reference uses.
+- **Body / UI:** Funnel Sans (`Funnel_Sans`) at 15–17px, weight 400/500. UI labels and meta at 13px.
 - **Hand:** Caveat for handwritten notes.
 - **Mono:** Geist Mono for code blocks and tiny annotations.
 - Scale: hero ~ `clamp(2rem, 4.2vw, 3.25rem)` with line-height 1.15; body 1rem/1.6.
