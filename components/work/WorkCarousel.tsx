@@ -39,7 +39,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const firstCardRef = useRef<HTMLDivElement>(null);
-  const [left, setLeft] = useState<number | null>(null);
+  const [bleed, setBleed] = useState<{ left: number; width: number } | null>(null);
   const [step, setStep] = useState(0);
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
@@ -51,11 +51,20 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const measure = () => setLeft(el.getBoundingClientRect().left);
+    // clientWidth excludes a classic scrollbar, unlike 100vw.
+    const measure = () => {
+      const left = el.getBoundingClientRect().left;
+      const width = document.documentElement.clientWidth;
+      setBleed((b) => (b && b.left === left && b.width === width ? b : { left, width }));
+    };
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    ro.observe(document.documentElement);
     window.addEventListener("resize", measure);
+    let live = true;
+    document.fonts?.ready.then(() => live && measure());
     return () => {
+      live = false;
       ro.disconnect();
       window.removeEventListener("resize", measure);
     };
@@ -113,6 +122,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
+    dragged.current = false;
     if (e.key === "ArrowRight") {
       e.preventDefault();
       goTo(indexRef.current + 1);
@@ -122,7 +132,6 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
     }
   };
 
-  const bled = mounted && left !== null;
   const maxDrag = Math.max(0, (slides.length - 1) * step);
 
   return (
@@ -134,9 +143,9 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
         tabIndex={0}
         onKeyDown={onKeyDown}
         className="rounded-2xl focus-visible:outline-offset-4"
-        style={bled ? { marginLeft: -left, width: "100vw" } : undefined}
+        style={mounted && bleed ? { marginLeft: -bleed.left, width: bleed.width } : undefined}
       >
-        <div className="overflow-hidden py-1">
+        <div className="overflow-x-clip py-1">
           <motion.div
             drag="x"
             dragConstraints={{ left: -maxDrag, right: 0 }}
@@ -168,6 +177,8 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
                   <Link
                     href={slide.href}
                     draggable={false}
+                    aria-label={slide.tag}
+                    onFocus={() => goTo(i)}
                     onClick={(e) => {
                       // A peeking neighbour brings itself into view before it navigates.
                       if (!active) {
@@ -193,7 +204,7 @@ export function WorkCarousel({ slides }: { slides: Slide[] }) {
                         className="object-cover object-top"
                         onError={(e) => {
                           // Missing file: leave the calm paper well, not a broken icon.
-                          e.currentTarget.style.visibility = "hidden";
+                          e.currentTarget.style.opacity = "0";
                         }}
                       />
                     </div>

@@ -43,6 +43,7 @@ test.fixme("click active card opens case study", async ({ page }) => {
 test("swipe on touch moves slide", async ({ page, isMobile }) => {
   test.skip(!isMobile);
   await page.goto("/");
+  const urlBefore = page.url();
   // On a phone the carousel starts below the fold; mouse events need it on screen.
   await region(page).scrollIntoViewIfNeeded();
   const box = (await region(page).boundingBox())!;
@@ -53,6 +54,35 @@ test("swipe on touch moves slide", async ({ page, isMobile }) => {
   await expect(region(page).locator('[aria-current="true"]')).toContainText(
     "Browse lots",
   );
+  expect(page.url()).toBe(urlBefore);
+});
+
+test("tabbing to a slide link moves the carousel to it", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect
+    .poll(async () => (await region(page).boundingBox())!.x)
+    .toBeLessThanOrEqual(1);
+  await region(page).focus();
+  const third = region(page).getByRole("link", { name: "AgroHub · Price board" });
+  for (let i = 0; i < 4 && !(await third.evaluate((el) => el === document.activeElement)); i++) {
+    await page.keyboard.press("Tab");
+  }
+  await expect(third).toBeFocused();
+  await expect(region(page).locator('[aria-current="true"]')).toContainText(
+    "Price board",
+  );
+  // Let the spring settle, then check centring.
+  await expect
+    .poll(async () => {
+      const b = (await third.boundingBox())!;
+      return Math.abs(b.x + b.width / 2 - 720);
+    })
+    .toBeLessThanOrEqual(2);
 });
 
 test("carousel is full bleed and the active card is centred", async ({
