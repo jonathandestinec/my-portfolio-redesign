@@ -111,3 +111,49 @@ export async function fetchContributions(
     return sampleCalendar(username, SAMPLE_END);
   }
 }
+
+/** Grid row (0 = Sunday .. 6 = Saturday) for an ISO date, in UTC. */
+export function dayRow(date: string): number {
+  return new Date(date + "T00:00:00Z").getUTCDay();
+}
+
+export type CellPos = { date: string; col: number; row: number };
+
+/** Weekday-aligned position for every day: a partial first week lands on its true rows. */
+export function cellPositions(weeks: Calendar["weeks"]): CellPos[] {
+  return weeks.flatMap((w, col) => w.map((d) => ({ date: d.date, col, row: dayRow(d.date) })));
+}
+
+export function formatDay(date: string): string {
+  return new Date(date + "T00:00:00Z").toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function contributionLabel(count: number, date: string): string {
+  return `${count} contribution${count === 1 ? "" : "s"} on ${formatDay(date)}`;
+}
+
+/** A label above the first week whose first day is in a new month; skip if < 3 weeks after the previous label. */
+export function monthLabels(weeks: Calendar["weeks"]): { week: number; label: string }[] {
+  const out: { week: number; label: string }[] = [];
+  let prevMonth = "";
+  let lastWeek = -Infinity;
+  weeks.forEach((w, i) => {
+    const first = w[0]?.date;
+    if (!first) return;
+    const month = first.slice(0, 7);
+    if (month === prevMonth) return;
+    prevMonth = month;
+    if (i - lastWeek < 3) return;
+    lastWeek = i;
+    out.push({
+      week: i,
+      label: new Date(first + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short" }),
+    });
+  });
+  return out;
+}

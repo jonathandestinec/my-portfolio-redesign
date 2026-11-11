@@ -1,6 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   SAMPLE_END,
+  cellPositions,
+  contributionLabel,
+  dayRow,
+  monthLabels,
   fetchContributions,
   parseGithubCalendar,
   sampleCalendar,
@@ -66,5 +70,45 @@ describe("github calendar", () => {
     expect(url).toBe("https://api.github.com/graphql");
     expect(init.headers.Authorization).toBe("bearer tok");
     expect(JSON.parse(init.body).variables).toEqual({ login: "u" });
+  });
+});
+
+describe("grid layout helpers", () => {
+  const day = (date: string) => ({ date, count: 1, level: 1 as const });
+  // First week is partial: starts Wednesday 2026-10-28.
+  const partial = [
+    ["2026-10-28", "2026-10-29", "2026-10-30", "2026-10-31"].map(day),
+    ["2026-11-01", "2026-11-02"].map(day),
+  ];
+
+  test("dayRow is the UTC weekday", () => {
+    expect(dayRow("2026-10-28")).toBe(3);
+    expect(dayRow("2026-11-01")).toBe(0);
+    expect(dayRow(SAMPLE_END)).toBe(6);
+  });
+
+  test("partial first week lands on its true rows", () => {
+    const pos = cellPositions(partial);
+    expect(pos[0]).toEqual({ date: "2026-10-28", col: 0, row: 3 });
+    expect(pos[3]).toEqual({ date: "2026-10-31", col: 0, row: 6 });
+    expect(pos[4]).toEqual({ date: "2026-11-01", col: 1, row: 0 });
+  });
+
+  test("labels pluralise correctly", () => {
+    expect(contributionLabel(1, "2026-11-07")).toBe("1 contribution on Nov 7, 2026");
+    expect(contributionLabel(0, "2026-11-07")).toBe("0 contributions on Nov 7, 2026");
+  });
+
+  test("monthLabels marks new months and skips labels under 3 weeks apart", () => {
+    const sun = (d: string) => [day(d)];
+    // weeks start: Oct 25, Nov 1, Nov 8, Nov 15, Dec 6 (Nov->Dec) , Dec 13
+    const weeks = ["2026-10-25", "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06"].map(sun);
+    // Oct@0 labelled, Nov@1 skipped (1 week after), Dec@6 labelled.
+    expect(monthLabels(weeks)).toEqual([
+      { week: 0, label: "Oct" },
+      { week: 6, label: "Dec" },
+    ]);
+    const spaced = ["2026-09-27", "2026-10-04", "2026-10-11", "2026-10-18", "2026-10-25", "2026-11-01"].map(sun);
+    expect(monthLabels(spaced).map((m) => m.label)).toEqual(["Sep", "Nov"]) // Oct is 1 week after Sep, skipped;
   });
 });

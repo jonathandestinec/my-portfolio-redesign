@@ -1,43 +1,18 @@
-import type { Calendar } from "@/lib/github";
+import { cellPositions, contributionLabel, monthLabels, type Calendar } from "@/lib/github";
 import { ContribTooltip } from "./ContribTooltip";
 
 const CELL = 11;
 const GAP = 3;
 const PITCH = CELL + GAP;
 const TOP = 16;
-
-const fmt = (date: string) =>
-  new Date(date + "T00:00:00Z").toLocaleDateString("en-US", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-const monthName = (date: string) =>
-  new Date(date + "T00:00:00Z").toLocaleDateString("en-US", { timeZone: "UTC", month: "short" });
-
-export function monthLabels(weeks: Calendar["weeks"]): { week: number; label: string }[] {
-  const out: { week: number; label: string }[] = [];
-  let prevMonth = "";
-  let lastWeek = -Infinity;
-  weeks.forEach((w, i) => {
-    const first = w[0]?.date;
-    if (!first) return;
-    const month = first.slice(0, 7);
-    if (month === prevMonth) return;
-    prevMonth = month;
-    if (i - lastWeek < 3) return;
-    lastWeek = i;
-    out.push({ week: i, label: monthName(first) });
-  });
-  return out;
-}
+const EDGE = 30;
 
 export function ContribGrid({ cal }: { cal: Calendar }) {
   const width = cal.weeks.length * PITCH - GAP;
   const height = TOP + 7 * PITCH - GAP;
   const n = cal.total;
+  const pos = cellPositions(cal.weeks);
+  let k = 0;
   return (
     <figure className="m-0">
       <ContribTooltip>
@@ -47,31 +22,40 @@ export function ContribGrid({ cal }: { cal: Calendar }) {
           role="img"
           aria-label={`GitHub contributions: ${n} in the last year`}
           tabIndex={0}
-          className="block h-auto w-full rounded outline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          className="contrib block h-auto w-full min-w-[640px] rounded outline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         >
           {monthLabels(cal.weeks).map((m) => (
-            <text key={m.week} x={m.week * PITCH} y={10} fontSize={11} fill="var(--ink-faint)">
+            <text
+              key={m.week}
+              x={m.week * PITCH + (m.week * PITCH > width - EDGE ? CELL : 0)}
+              y={10}
+              fontSize={11}
+              textAnchor={m.week * PITCH > width - EDGE ? "end" : "start"}
+              fill="var(--ink-faint)"
+            >
               {m.label}
             </text>
           ))}
-          {cal.weeks.map((week, wi) =>
-            week.map((d, di) => (
+          {cal.weeks.flat().map((d) => {
+            const { col, row } = pos[k++];
+            return (
               <rect
                 key={d.date}
-                x={wi * PITCH}
-                y={TOP + di * PITCH}
+                x={col * PITCH}
+                y={TOP + row * PITCH}
                 width={CELL}
                 height={CELL}
                 rx={2}
                 fill={`var(--contrib-${d.level})`}
                 data-date={d.date}
                 data-count={d.count}
-                tabIndex={-1}
+                data-col={col}
+                data-row={row}
               >
-                <title>{`${d.count} contribution${d.count === 1 ? "" : "s"} on ${fmt(d.date)}`}</title>
+                <title>{contributionLabel(d.count, d.date)}</title>
               </rect>
-            )),
-          )}
+            );
+          })}
         </svg>
       </ContribTooltip>
       <figcaption className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[13px] text-ink-muted">

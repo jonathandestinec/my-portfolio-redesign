@@ -50,7 +50,7 @@
   --font-mono: var(--font-mono-src);
 }
 
-rect[data-active] {
+.contrib rect[data-active] {
   stroke: var(--accent);
   stroke-width: 1.5;
 }
