@@ -53,8 +53,9 @@ Screenshots and video contact sheets are in `docs/superpowers/specs/refs/`:
 
 | Route | Variant | Contents |
 |---|---|---|
-| `/` | major | Hero → Works (carousel, `data-nav="hide"`) → Also built (collaborations `RowList`) → Experience → Stack → GitHub activity → Writing (latest 3) → Contact |
-| `/work/[slug]` | minor | Title, paragraph, MetaTable (role, stack, year, links), optional Timeline, preview images (ScrollBlur), "Next project →", closing CTA |
+| `/` | major | Hero → Works (AgroHub screens carousel, `data-nav="hide"`, then a small "Pet projects & experiments →" `ArrowLink` to `/playground`) → Experience → Stack → GitHub activity → Writing (latest 3) → Contact |
+| `/work/[slug]` | minor | Title, paragraph, MetaTable (role, stack, year, links), optional Timeline, preview images (ScrollBlur), "Next project →" (hidden while there is only one featured project), closing CTA. v1 has one: `/work/agrohub`. |
+| `/playground` | minor | "Pet projects & experiments": a short intro, then two `RowList` groups, **Client & collaborations** and **Experiments**. Each row: role tag · name · one line · "Visit ↗" / "Code ↗". Not linked from the side nav; reached from the Works link and the footer. |
 | `/blog` | major | Hero ("Writing." + grey statement), posts as RowList (date · title + summary · reading time), grouped by year |
 | `/blog/[slug]` | minor | Title, date, reading time, tags, MDX article in reading column, "← All writing" |
 | `not-found` | minor | Short message + links home / writing |
@@ -129,7 +130,7 @@ All components are server components unless marked **(client)**.
 
 ### Content blocks
 
-- **`WorkCarousel`** **(client)** — full-bleed; active card ~70vw (max ~1100px), 16:10 rounded cover; neighbours peek. Motion `drag="x"` with snap to nearest card, prev/next buttons, ←/→ keys when focused. Active card: 1px `--accent` outline + small accent tag below ("{name} ({context})"). Cards are `<Link>`s to `/work/[slug]`. Wrapped in `HideNavZone`.
+- **`WorkCarousel`** **(client)** — full-bleed; active card ~70vw (max ~1100px), 16:10 rounded cover; neighbours peek. Motion `drag="x"` with snap to nearest card, prev/next buttons, ←/→ keys when focused. Active card: 1px `--accent` outline + small accent tag below ("{name} ({context})"). Cards are `<Link>`s to `/work/[slug]`. Wrapped in `HideNavZone`. **Slides are generic `{ image, tag, href }`.** In v1 the home page feeds it AgroHub's `slides` (one per screen; tag = "AgroHub · {screen}", e.g. "AgroHub · Price board"), all linking to `/work/agrohub`. Once there are 2+ featured projects, it takes each project's cover instead. No component change needed.
 - **`InfoGrid`** — bordered 2×N grid of `{title, body}`.
 - **`RowList`** — rows of `{label, title, body?, aside?, href?}` with hairline dividers. Used for Experience (label = years; title = role · company; body = one-liner; aside = location/type) and blog index (label = date; aside = reading time).
 - **`MetaTable`** — key/value table for project and post meta.
@@ -151,14 +152,14 @@ All Motion effects check `useReducedMotion()`: no blur, no wiggle, no drag inert
 Types live in `content/types.ts`. Real content comes from `2026-11-11-content-inventory.md`; anything still unconfirmed there gets an obvious placeholder (`TODO(content)` comments).
 
 - **`content/site.ts`** — `{ firstName, lastName, role, email, calendarUrl, socials: {github, linkedin, x}, githubUsername, hero: { lead, statements, status } }`.
-- **`content/collaborations.ts`** — `Collaboration[]`: `{ name, role: "Built end-to-end" | "Collaborated · fullstack" | "Collaborated · frontend" | "Frontend", summary, url? }`. Rendered as the "Also built" `RowList` (label = role tag, title = name, body = summary, aside = "Visit ↗").
-- **`content/projects.ts`** — `Project[]`: `{ slug, name, context, summary, cover: {src, alt}, role, stack[], year, links: {live?, repo?}, images: {src, alt, caption?}[], timeline? }`. The carousel tag reads `{name} ({context})`. Array order = carousel order; "next project" wraps around.
+- **`content/playground.ts`** — `PlaygroundItem[]`: `{ name, group: "client" | "experiment", role: "Built end-to-end" | "Collaborated · fullstack" | "Collaborated · frontend" | "Solo", summary, url?, repo? }`. Rendered on `/playground`.
+- **`content/projects.ts`** — featured projects only (v1: AgroHub). `Project[]`: `{ slug, name, context, summary, cover: {src, alt}, slides: {src, alt, screen}[], role, stack[], year, status: "in-progress" | "shipped", links: {live?, repo?}, images: {src, alt, caption?}[], timeline? }`. Array order = carousel order; "next project" wraps around and only renders when there are 2+ projects.
 - **`content/experience.ts`** — `Role[]`: `{ start, end | "Present", title, company, companyUrl?, summary, location? }`.
 - **`content/stack.ts`** — `StackItem[]`: `{ name, category: "frontend"|"backend"|"design"|"tools", icon }`. Icons are inline SVG components (simple-icons paths or similar), rendered monochrome via `currentColor`.
 - **`content/blog/*.mdx`** — frontmatter `{ title, date (ISO), summary, tags[], draft? }`, validated with zod at build time. Drafts are excluded in production. Reading time is computed from word count (≈ 220 wpm).
 - **MDX pipeline** — `@next/mdx` with posts loaded via dynamic `import()` of `content/blog/<slug>.mdx` and frontmatter exported/parsed per post; syntax highlighting with Shiki (`@shikijs/rehype`, build-time). Fall back to `next-mdx-remote` only if the bundled Next 16 docs show `@next/mdx` cannot support this pattern.
 - **GitHub contributions** — `lib/github.ts` calls GitHub GraphQL `user(login).contributionsCollection.contributionCalendar` with `GITHUB_TOKEN` (server-only env var), cached and revalidated every 24h. With no token or a failed request, it returns a deterministic seeded placeholder calendar flagged `isSample: true`, rendered with a small "sample data" caption.
-- **Résumé PDF (generated, never hand-edited)** — `app/resume.pdf/route.ts` renders a one-page A4 résumé with `@react-pdf/renderer` from the same content files (`site`, `experience` + education, `stack`, the featured `projects`). It's statically generated at build time, so it's always in sync with the site, and it's served with `Content-Disposition: attachment; filename="Destine-Jonathan-Resume.pdf"` so clicking it downloads the file. Layout: paper/ink typography that matches the site, in black and white so it prints cleanly. Phone number omitted. A Vitest test checks that the route returns a valid PDF (`%PDF` header, non-zero size) that includes the owner's name.
+- **Résumé PDF (generated, never hand-edited)** — `app/resume.pdf/route.ts` renders a one-page A4 résumé with `@react-pdf/renderer` from the same content files (`site`, `experience` + education, `stack`, the featured `projects`, plus one line pointing to the playground page). It's statically generated at build time, so it's always in sync with the site, and it's served with `Content-Disposition: attachment; filename="Destine-Jonathan-Resume.pdf"` so clicking it downloads the file. Layout: paper/ink typography that matches the site, in black and white so it prints cleanly. Phone number omitted. A Vitest test checks that the route returns a valid PDF (`%PDF` header, non-zero size) that includes the owner's name.
 - **Static assets** — `/public/work/<slug>/*` images.
 
 ## 7. Theming implementation
@@ -230,7 +231,7 @@ components/
   stack/    StackGrid, StackIcon
   github/   ContribGrid, ContribTooltip
   blog/     PostRow, Prose, mdx-components
-content/    site.ts, projects.ts, experience.ts, stack.ts, types.ts, blog/*.mdx
+content/    site.ts, projects.ts, playground.ts, experience.ts, stack.ts, types.ts, blog/*.mdx
 lib/        posts.ts, github.ts, reading-time.ts, use-active-section.ts
 app/resume.pdf/route.ts, lib/resume/ResumeDocument.tsx
 public/     work/<slug>/*

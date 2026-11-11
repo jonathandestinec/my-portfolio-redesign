@@ -45,30 +45,43 @@ Education (shown as rows below experience, and on the résumé):
 
 TypeScript, Zustand, Redux, Socket.io and Auth0 come from the résumé and the repos. They stay in unless the owner removes them.
 
-## Featured projects (carousel, in this order)
+## Featured project (owner decision: AgroHub only)
 
-| # | Project | Repo | What it is | Stack | Live URL |
-|---|---|---|---|---|---|
-| 1 | **AgroHub** (in progress) | `agrohub` | Phone-first platform where Nigerian farmer cooperatives sell members' harvests to bulk buyers. Buyers pay upfront; the money is held until delivery is confirmed, then split automatically to the cooperative and each farmer. Roles: farmer, officer, buyer, admin, board. i18n (English first; Pidgin, Hausa, Yoruba, Igbo planned). | Next.js, Prisma + Postgres (Neon), better-auth (2FA), next-intl, Paystack, S3 storage, Resend, Docker Compose, Vitest + Playwright | https://agrohub-theta.vercel.app |
-| 2 | **Rossyz (TailorFlow)** | `tailorflow-nextjs`, `tailorflow-n8n` | Customer site for a bespoke fashion atelier plus a private business desk. An AI chat intake runs on n8n workflows; staff manage commission slots, orders, production stages and customer updates. | Next.js, n8n | https://tailorflow-theta.vercel.app |
-| 3 | **RefillRx** | `refillrx` | Community pharmacy refill service in Benin City: recurring medicine plans, reminders 3 days before refill, pharmacist chat, pickup status. | Next.js, Supabase (Postgres, Auth, Realtime, RLS), Paystack, Web Push, Resend, Vercel Cron | https://refillrx.vercel.app |
-| 4 | **FASCO Store** | `ecommerce-store` | Figma design turned into a working storefront: catalogue, cart, auth flows, Paystack checkout with verification. | Next.js, Supabase, TanStack Query, Zustand, Paystack | https://ecommerce-store-nine-xi.vercel.app |
-| 5 | **Chatt** | `super-basic-chat-app(-front-end)` | Realtime chat app. | Next.js, Socket.io, Node/Express, MongoDB, JWT, SWR | super-basic-chat-app.vercel.app |
-| 6 | **AnimeVault** | `animevault-development` | Personal anime library tracker. | Next.js, AniList GraphQL API | https://animevault-development-zeta.vercel.app |
+AgroHub is the only major project and the only one featured on the home page. The Works carousel shows **AgroHub screens**: one slide per screen, all linking to `/work/agrohub`. Everything else lives on `/playground`.
 
-## Collaborations and client work
+| Project | Repo | What it is | Stack | Live URL |
+|---|---|---|---|---|
+| **AgroHub** (in progress) | `agrohub` | Phone-first platform where Nigerian farmer cooperatives sell members' harvests to bulk buyers. Buyers pay upfront; the money is held until delivery is confirmed, then split automatically to the cooperative and each farmer. Roles: farmer, officer, buyer, admin, board. i18n (English first; Pidgin, Hausa, Yoruba, Igbo planned). | Next.js, Prisma + Postgres (Neon), better-auth (2FA), next-intl, Paystack, S3 storage, Resend, Docker Compose, Vitest + Playwright | https://agrohub-theta.vercel.app |
 
-Shown below the carousel as a `RowList` ("Also built"). Each row gets a role tag.
+Carousel slides (captured from the live site):
+
+1. Landing — "Sell together. Get paid on delivery." (`/`)
+2. Browse lots (public catalogue)
+3. Price board (weekly crop prices)
+4. Farmer, officer and buyer dashboards — **need a demo login or the owner's screenshots** (behind sign-in). Until then the carousel uses the public screens plus phone-width captures of them (the product is phone-first).
+
+## Playground (`/playground`)
+
+### Client & collaborations
 
 | Project | Role | Notes | Live URL |
 |---|---|---|---|
-| Chip Anna Putt | Built the whole thing (fullstack) | Golf training-kit brand: shop, lessons, members area. Supabase, Zustand, Resend. | https://chipannaputt0.vercel.app |
-| Saje Food Court | Built the whole thing | Restaurant site. | saje-food-court.vercel.app |
-| BAM Hire | Collaborated, fullstack | Staffing agency site. | bamhire.com |
-| Bubbles Bay Auto Spa | Collaborated, fullstack | Car detailing site. | https://bubbles-bay-bay.vercel.app |
-| Thymus Energy FZCO | Collaborated, frontend | Corporate site for a petroleum trading company (trading, logistics, finance, risk pages). | https://www.thymus-energy.com |
-| A3 Fine Jewelry | Collaborated, frontend | Jewelry storefront: shop, categories, wishlist, checkout. | — (no link) |
-| Stephen's Cosmetics | Frontend (from the résumé) | Cart with Zustand; Next.js image optimisation. | — (no link) |
+| Chip Anna Putt | Built end-to-end (fullstack) | Golf training-kit brand: shop, lessons, members area. Supabase, Zustand, Resend. | https://chipannaputt0.vercel.app |
+| Saje Food Court | Built end-to-end | Restaurant site. | https://saje-food-court.vercel.app |
+| BAM Hire | Collaborated · fullstack | Staffing agency site. | https://www.bamhire.com |
+| Bubbles Bay Auto Spa | Collaborated · fullstack | Car detailing studio, Malete, Kwara. | https://bubbles-bay-bay.vercel.app |
+| Thymus Energy FZCO | Collaborated · frontend | Corporate site for a petroleum trading company (trading, logistics, finance, risk pages). | https://www.thymus-energy.com |
+| A3 Fine Jewelry | Collaborated · frontend | Jewelry storefront: shop, categories, wishlist, checkout. | — |
+
+### Experiments
+
+| Project | Notes | Stack | Live URL |
+|---|---|---|---|
+| Rossyz (TailorFlow) | Bespoke fashion atelier site + private desk; AI chat intake on n8n. | Next.js, n8n | https://tailorflow-theta.vercel.app |
+| RefillRx | Pharmacy refill reminders, pharmacist chat, pickup status. | Next.js, Supabase, Paystack, Web Push, Resend | https://refillrx.vercel.app |
+| FASCO Store | Figma design turned into a working storefront with Paystack checkout. | Next.js, Supabase, TanStack Query, Zustand | https://ecommerce-store-nine-xi.vercel.app |
+| AnimeVault | Anime library tracker on the AniList API. | Next.js, AniList GraphQL | https://animevault-development-zeta.vercel.app |
+| Chatt | Realtime chat. | Next.js, Socket.io, Express, MongoDB, JWT | https://super-basic-chat-app.vercel.app |
 
 ## Older or learning projects (not shown)
 
@@ -93,5 +106,8 @@ Every URL loads (HTTP 200) and was visited with Playwright at 1440×900. Each si
 | BAM Hire | Yes | Staffing site with press/insights cards. Good cover. |
 
 ## Images
+
+Only AgroHub needs screenshots in v1 (its carousel slides and case-study images). Playground rows are text-only; no images.
+
 
 Screenshots are captured from the live URLs above by `scripts/capture-screenshots.ts` (Playwright, 1440×900 at 2× scale, after the network goes idle plus a short delay) into `public/work/<slug>/`. Project pages also get one or two below-the-fold captures. AnimeVault and Chatt use a designed paper-style cover until the owner supplies signed-in screenshots.
