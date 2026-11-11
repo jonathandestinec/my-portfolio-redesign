@@ -18,7 +18,7 @@ export function SiteShell({ variant, links, back, children }: Props) {
       <MobileNav links={links} back={back} />
       <div className="md:grid md:grid-cols-[240px_minmax(0,1fr)] lg:grid-cols-[400px_minmax(0,1fr)]">
         <SideNav variant={variant} links={links} back={back} />
-        <main id="content" className="px-4 py-10 md:px-0 md:py-16">
+        <main id="content" className="px-4 py-10 md:pl-0 md:pr-8 md:py-16">
           <div className="max-w-[760px]">{children}</div>
         </main>
       </div>
