@@ -8,10 +8,12 @@ import { site } from "@/content/site";
 import { StackGrid } from "@/components/stack/StackGrid";
 import { stack } from "@/content/stack";
 import { homeSlides } from "@/lib/content";
+import { ContribGrid } from "@/components/github/ContribGrid";
+import { getContributions } from "@/lib/github-cached";
 import { WorkCarousel } from "@/components/work/WorkCarousel";
 
 // Temporary test page for the shell; replaced by the real home in a later task.
-export default function Home() {
+export default async function Home() {
   return (
     <SiteShell variant="home" links={homeLinks}>
       <PageHero
@@ -30,6 +32,9 @@ export default function Home() {
       </Section>
       <Section id="stack" title="Stack">
         <StackGrid items={stack} />
+      </Section>
+      <Section id="activity" title="GitHub activity">
+        <ContribGrid cal={await getContributions()} />
       </Section>
     </SiteShell>
   );
