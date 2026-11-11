@@ -98,7 +98,9 @@ export default async function ProjectPage({ params }: Props) {
                     alt={img.alt}
                     width={w}
                     height={h}
-                    sizes="(min-width: 768px) 900px, 100vw"
+                    sizes={
+                      phone ? "(min-width: 400px) 360px, 100vw" : "(min-width: 768px) 900px, 100vw"
+                    }
                     className={
                       phone
                         ? "mx-auto h-auto w-full max-w-[360px] rounded-[28px]"

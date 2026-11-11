@@ -38,7 +38,7 @@ export function SideNav({ variant, links = [], back }: Props) {
     >
       <div className="mb-8">
         {variant === "detail" && back ? (
-          <Link href={back.href} className={`${linkClass} text-ink-muted`}>
+          <Link href={back.href} className={`${linkClass} whitespace-nowrap text-ink-muted`}>
             {back.label}
           </Link>
         ) : (

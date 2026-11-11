@@ -46,6 +46,7 @@ test("escape from a chip returns focus to the pill", async ({
   test.skip(isMobile);
   await page.goto("/");
   await page.getByRole("link", { name: "Book a call" }).first().focus();
+  await expect(page.getByRole("link", { name: "Email" })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Email" })).toBeFocused();
   await page.keyboard.press("Escape");

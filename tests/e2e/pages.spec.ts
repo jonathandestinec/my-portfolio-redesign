@@ -9,11 +9,10 @@ test("agrohub case study", async ({ page, isMobile }) => {
   );
   await expect(page.getByText("Next project")).toHaveCount(0);
   // On phones the back link lives in the menu sheet.
-  if (!isMobile) {
-    await expect(
-      page.getByRole("link", { name: "← Destine Jonathan" }),
-    ).toBeVisible();
-  }
+  if (isMobile) await page.getByRole("button", { name: "Menu" }).click();
+  await expect(
+    page.getByRole("link", { name: "← Destine Jonathan" }),
+  ).toBeVisible();
 });
 
 test("playground groups", async ({ page }) => {
