@@ -5,6 +5,8 @@ import { PageHero } from "@/components/hero/PageHero";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { homeLinks } from "@/components/layout/nav-links";
 import { site } from "@/content/site";
+import { StackGrid } from "@/components/stack/StackGrid";
+import { stack } from "@/content/stack";
 import { homeSlides } from "@/lib/content";
 import { WorkCarousel } from "@/components/work/WorkCarousel";
 
@@ -27,7 +29,7 @@ export default function Home() {
         <div className="min-h-[120vh]">Experience</div>
       </Section>
       <Section id="stack" title="Stack">
-        <div className="min-h-[120vh]">Stack</div>
+        <StackGrid items={stack} />
       </Section>
     </SiteShell>
   );
