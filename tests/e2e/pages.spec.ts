@@ -32,3 +32,11 @@ test("unknown work 404s", async ({ page }) => {
 test("unknown playground path 404s", async ({ page }) => {
   expect((await page.goto("/playground/x"))!.status()).toBe(404);
 });
+
+test("resume pdf downloads", async ({ request }) => {
+  const res = await request.get("/resume.pdf");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("application/pdf");
+  expect(res.headers()["content-disposition"]).toContain("attachment");
+  expect((await res.body()).subarray(0, 4).toString()).toBe("%PDF");
+});
