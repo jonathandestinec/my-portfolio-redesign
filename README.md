@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Destine Jonathan, portfolio
 
-## Getting Started
+Personal portfolio for Destine Jonathan, a FullStack Developer & Automation Engineer. It has a home page (works carousel, experience, stack, GitHub activity, writing, contact), an AgroHub case study, a playground of pet projects, a small MDX blog with RSS, a generated résumé PDF, and Open Graph images. Built with Next.js 16 (App Router, `cacheComponents`), React 19, Tailwind CSS and Motion. It works without JavaScript and honours reduced motion.
 
-First, run the development server:
+## Scripts
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Uses [Bun](https://bun.sh).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Command | What it does |
+| --- | --- |
+| `bun run dev` | Start the dev server |
+| `bun run build` / `bun run start` | Production build and server |
+| `bun run lint` | ESLint |
+| `bun run typecheck` | `tsc --noEmit` |
+| `bun run test` | Unit tests (Vitest) |
+| `bun run test:e2e` | Playwright, desktop and phone projects (builds and serves on :3100) |
+| `bun run capture` | Re-capture the AgroHub screenshots in `public/work/agrohub/` |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local`.
 
-## Learn More
+- `GITHUB_TOKEN` (optional): a read-only token with no scopes, used to read the public contribution calendar. If it is missing or GitHub fails, the grid shows sample data labelled "sample data" (cached for minutes only, so it recovers quickly).
+- `NEXT_PUBLIC_SITE_URL`: the public origin, for example `https://example.com`. Drives canonical URLs, sitemap, robots, RSS and OG URLs. Defaults to a placeholder domain when empty.
 
-To learn more about Next.js, take a look at the following resources:
+## Editing content
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `content/site.ts`: name, role, hero text, email, social links.
+- `content/projects.ts`: case studies and carousel slides. The optional `timeline` field renders a "How it's shipping" block; it is unset until confirmed.
+- `content/experience.ts`, `content/stack.ts`, `content/playground.ts`: the other home and playground sections.
+- `content/blog/*.mdx`: posts. Each starts with `export const meta = { title, date, summary, tags, draft }`. Set `draft: true` to keep a post out of the blog, sitemap, RSS and static params in production.
+- The résumé at `/resume.pdf` is generated from the same content.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`bun run capture` re-takes the AgroHub screenshots from the live app. Run it after changing what the live app shows.
 
-## Deploy on Vercel
+## Before deploying
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Set the real domain: `NEXT_PUBLIC_SITE_URL` (and replace the placeholder in `lib/site-url.ts`).
+- [ ] Review the two blog posts in `content/blog/` (marked `TODO(content)`), or set `draft: true` on them.
+- [ ] Confirm or restore the AgroHub timeline in `content/projects.ts` (removed because the phases were unconfirmed).
+- [ ] Clean the test lot on the live AgroHub `/lots` page, then re-run `bun run capture`.
+- [ ] Set `GITHUB_TOKEN` so the activity grid shows real data.
