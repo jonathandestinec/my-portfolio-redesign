@@ -263,7 +263,7 @@ body {
 .lead {
   display: flex;
   flex-direction: column;
-  gap: 1.15em;
+  gap: 1.45em;
   font-family: var(--font-display);
   font-size: 26px;
   font-weight: 400;
@@ -271,11 +271,31 @@ body {
   letter-spacing: -0.03em;
   color: var(--lead);
 }
+
+.lead > h1:first-of-type {
+    margin-top: 0.7em;
+  }
+
 @media (width >= 680px) {
   .lead {
     font-size: 32px;
   }
+
+  .lead > h1:first-of-type {
+    margin-top: 1.3em;
+  }
 }
+
+@media (width >= 1120px) {
+  .lead {
+    font-size: 32px;
+  }
+
+  .lead > h1:first-of-type {
+    margin-top: 0em;
+  }
+}
+
 .lead h1,
 .lead p {
   margin: 0;
