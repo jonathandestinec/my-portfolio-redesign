@@ -59,12 +59,21 @@ export function filterStack(items: StackItem[], cat: StackCategory | 'all'): Sta
   return cat === 'all' ? items : items.filter((i) => i.category === cat)
 }
 
+/** True when the project lives on its own domain rather than a *.vercel.app preview URL. */
+export function hasCustomDomain(item: PlaygroundItem): boolean {
+  if (!item.url) return false
+  return !new URL(item.url).hostname.endsWith('.vercel.app')
+}
+
 export function groupPlayground(items: PlaygroundItem[]): {
   client: PlaygroundItem[]
   experiment: PlaygroundItem[]
 } {
+  const clients = items.filter((i) => i.group === 'client')
   return {
-    client: items.filter((i) => i.group === 'client'),
+    // Client work on a custom domain first; Array.prototype.sort is stable, so
+    // each half keeps the order it has in content/playground.ts.
+    client: clients.sort((a, b) => Number(hasCustomDomain(b)) - Number(hasCustomDomain(a))),
     experiment: items.filter((i) => i.group === 'experiment'),
   }
 }

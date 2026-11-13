@@ -4,7 +4,7 @@ import { playground } from '@/content/playground'
 import { projects } from '@/content/projects'
 import { site } from '@/content/site'
 import { stack } from '@/content/stack'
-import { rangeLabel, filterStack, getNextProject, getProject, groupPlayground, heroStatements, homeSlides } from '@/lib/content'
+import { rangeLabel, filterStack, getNextProject, getProject, groupPlayground, hasCustomDomain, heroStatements, homeSlides } from '@/lib/content'
 
 test('carousel shows one cover per project, Huddle first', () => {
   const s = homeSlides()
@@ -27,6 +27,18 @@ test('unknown slug', () => expect(getProject('nope')).toBeUndefined())
 test('stack filter', () => {
   expect(filterStack(stack, 'all')).toHaveLength(stack.length)
   expect(filterStack(stack, 'tools').map((s) => s.name)).toContain('n8n')
+})
+test('client work on custom domains comes before *.vercel.app sites, order kept within each', () => {
+  const { client } = groupPlayground(playground)
+  const flags = client.map(hasCustomDomain)
+  const firstVercel = flags.indexOf(false)
+  expect(firstVercel).toBeGreaterThan(0)
+  expect(flags.slice(firstVercel).every((f) => !f)).toBe(true)
+  const original = playground.filter((i) => i.group === 'client')
+  const inOriginalOrder = (xs: typeof client) =>
+    xs.every((x, i) => i === 0 || original.indexOf(xs[i - 1]) < original.indexOf(x))
+  expect(inOriginalOrder(client.filter(hasCustomDomain))).toBe(true)
+  expect(inOriginalOrder(client.filter((x) => !hasCustomDomain(x)))).toBe(true)
 })
 test('playground groups', () => {
   const g = groupPlayground(playground)
