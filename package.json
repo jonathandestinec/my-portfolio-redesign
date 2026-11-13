@@ -24,6 +24,7 @@
     "react-dom": "19.3.0",
     "shiki": "^4.6.0",
     "simple-icons": "^16.37.0",
+    "stick-it-up": "^0.3.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

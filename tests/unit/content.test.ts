@@ -4,18 +4,17 @@ import { playground } from '@/content/playground'
 import { projects } from '@/content/projects'
 import { site } from '@/content/site'
 import { stack } from '@/content/stack'
-import { rangeLabel, filterStack, getNextProject, getProject, groupPlayground, homeSlides } from '@/lib/content'
+import { rangeLabel, filterStack, getNextProject, getProject, groupPlayground, heroStatements, homeSlides } from '@/lib/content'
 
-test('carousel shows every project\'s screens, each linking to its own case study', () => {
+test('carousel shows one cover per project, Huddle first', () => {
   const s = homeSlides()
-  expect(s[0].tag).toBe('AgroHub · Landing')
-  expect(s.find((x) => x.tag === 'Huddle · Event page')?.href).toBe('/work/huddle')
-  expect(s.length).toBe(projects.reduce((n, p) => n + p.slides.length, 0))
-  for (const x of s) expect(x.href).toBe(`/work/${x.tag.startsWith('Huddle') ? 'huddle' : 'agrohub'}`)
+  expect(s.map((x) => x.tag)).toEqual(projects.map((p) => p.name))
+  expect(s[0]).toMatchObject({ tag: 'Huddle', href: '/work/huddle', image: projects[0].cover })
+  expect(s[1]).toMatchObject({ tag: 'AgroHub', href: '/work/agrohub' })
 })
 test('next project wraps around', () => {
-  expect(getNextProject('agrohub')?.slug).toBe('huddle')
   expect(getNextProject('huddle')?.slug).toBe('agrohub')
+  expect(getNextProject('agrohub')?.slug).toBe('huddle')
 })
 test('every project image file exists', async () => {
   const { existsSync } = await import('node:fs')
@@ -39,7 +38,7 @@ test('no phone numbers in content', () =>
 test('every stack icon is a real simple-icons slug or a built-in', async () => {
   const si = (await import('simple-icons')) as Record<string, unknown>
   for (const { icon } of stack) {
-    if (icon === 'terminal' || icon === 'key') continue
+    if (['terminal', 'key', 'card', 'check'].includes(icon)) continue
     const key = 'si' + icon[0].toUpperCase() + icon.slice(1)
     expect(Object.keys(si).map((k) => k.toLowerCase())).toContain(key.toLowerCase())
   }
@@ -61,11 +60,17 @@ test('every role and course has a unique slug, a logo and drafted details', asyn
   }
 })
 
-test('the hero note sits on the AgroHub link at the end of its line', () => {
-  const last = site.hero.statements.at(-1)!
-  const end = last.at(-1)
-  expect(typeof end).toBe('object')
-  expect(end).toMatchObject({ href: '/work/agrohub', note: 'check this out :)' })
+test('hero names and links the two newest projects, then points at all work', () => {
+  const [intro, lately, more] = heroStatements()
+  expect(intro).toEqual([site.hero.intro])
+  const links = lately.filter((x) => typeof x === 'object')
+  expect(links).toEqual([
+    { text: 'Huddle', href: '/work/huddle' },
+    { text: 'AgroHub', href: '/work/agrohub' },
+  ])
+  expect(lately.join('')).not.toContain('undefined')
+  expect(more.at(-1)).toMatchObject({ href: '/works', note: 'check this out :)' })
+  for (const p of projects) expect(p.blurb.length).toBeGreaterThan(10)
 })
 
 test('logo files exist for every logo src', async () => {

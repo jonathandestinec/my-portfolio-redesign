@@ -1,6 +1,6 @@
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import type { Education, Project, RichText, Role, Site, StackItem } from '@/content/types'
-import { rangeLabel } from '@/lib/content'
+import { heroStatements, rangeLabel } from '@/lib/content'
 
 export type ResumeData = {
   site: Site
@@ -43,7 +43,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function ResumeDocument({ data }: { data: ResumeData }) {
   const { site, siteUrl, projects } = data
   const name = `${site.firstName} ${site.lastName}`.replace(/\b\w/g, (c) => c.toUpperCase())
-  const summary = site.hero.statements.map(flat).join(' ')
+  const summary = heroStatements().map(flat).join(' ')
   const host = (u: string) => u.replace(/^https?:\/\//, '')
   return (
     <Document title={`${name} - Resume`} author={name}>

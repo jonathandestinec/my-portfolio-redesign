@@ -16,16 +16,39 @@ test("hero type matches the reference: weight 400 display, no bold", async ({ pa
   await expect(page.locator(".lead h1 .hl")).toHaveCSS("font-weight", "500");
 });
 
-test("the hand note hangs off the AgroHub link and points at it", async ({ page }) => {
+test("hero links both projects and the note hangs off 'See all my work'", async ({ page }) => {
   await page.goto("/");
+  const lead = page.locator("header.intro .lead");
+  await expect(lead.getByRole("link", { name: "Huddle", exact: true })).toHaveAttribute("href", "/work/huddle");
+  await expect(lead.getByRole("link", { name: "AgroHub", exact: true })).toHaveAttribute("href", "/work/agrohub");
   const link = page.locator("a.note__link");
-  await expect(link).toHaveAttribute("href", "/work/agrohub");
+  await expect(link).toHaveAttribute("href", "/works");
   await expect(link.locator(".note__text")).toHaveText("check this out :)");
   const l = (await link.boundingBox())!;
   const n = (await link.locator(".note").boundingBox())!;
-  // Below the link, starting under it.
   expect(n.y).toBeGreaterThan(l.y + l.height / 2);
   expect(n.x).toBeLessThan(l.x + l.width);
+});
+
+test("hero spacing is even: sticker adds no height, note gap matches paragraph gap", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForTimeout(1500);
+  const g = await page.evaluate(() => {
+    const kids = [...document.querySelectorAll("header.intro .lead > *")].map((e) => e.getBoundingClientRect());
+    const h1 = document.querySelector("header.intro .lead h1")!;
+    const lh = parseFloat(getComputedStyle(h1).lineHeight);
+    const note = document.querySelector(".note")!.getBoundingClientRect();
+    const cta = document.querySelector("header.intro .cta")!.getBoundingClientRect();
+    return {
+      h1: h1.getBoundingClientRect().height,
+      lh,
+      gaps: kids.slice(1, -2).map((r, i) => Math.round(r.top - kids[i].bottom)),
+      noteToCta: Math.round(cta.top - note.bottom),
+    };
+  });
+  expect(Math.abs(g.h1 - g.lh)).toBeLessThanOrEqual(1);
+  expect(new Set(g.gaps).size).toBe(1);
+  expect(Math.abs(g.noteToCta - g.gaps[0])).toBeLessThanOrEqual(1);
 });
 
 test("hero actions are laid out side by side, all visible at once", async ({ page }) => {

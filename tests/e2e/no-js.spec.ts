@@ -10,7 +10,7 @@ for (const path of ["/", "/experience", "/work/agrohub"])
       "main *, footer *",
       (els) =>
         els.filter((e) => {
-          if (e.closest(".note, .frame__name, .slide")) return false; // decorative animations / dimmed slides
+          if (e.closest(".note, .frame__name, .slide, .hero-sticker")) return false; // decorative animations, dimmed slides, sticker shadows
           const cs = getComputedStyle(e);
           return cs.filter !== "none" || !(parseFloat(cs.opacity) >= 1);
         }).length,

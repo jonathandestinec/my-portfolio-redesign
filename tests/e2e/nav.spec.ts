@@ -32,6 +32,19 @@ test("sidebar is fixed beside the column and hides over the work strip", async (
   await expect(nav).toHaveAttribute("inert", "");
 });
 
+test("page links never light up for home sections; chapter links do", async ({ page, isMobile }) => {
+  test.skip(isMobile);
+  await page.goto("/");
+  await page.locator("#education").evaluate((e) => e.scrollIntoView({ block: "center" }));
+  await page.waitForTimeout(300);
+  await expect(page.locator('nav[aria-label="Primary"] [data-in-view]')).toHaveCount(0);
+  await page.goto("/work/huddle");
+  await page.locator("#payments").evaluate((e) => e.scrollIntoView({ block: "center" }));
+  const nav = page.getByRole("navigation", { name: "Primary" });
+  await expect(nav.getByRole("link", { name: "Money goes straight to the organisation" })).toHaveAttribute("data-in-view", "");
+  await expect(nav.getByRole("link", { name: "Experience", exact: true })).not.toHaveAttribute("data-in-view", "");
+});
+
 test("phone top bar is transparent and scrolls away", async ({ page, isMobile }) => {
   test.skip(!isMobile);
   await page.goto("/");

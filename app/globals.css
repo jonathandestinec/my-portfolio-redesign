@@ -199,6 +199,7 @@ body {
   transition: color 0.12s;
 }
 .sidebar__link[aria-current],
+.sidebar__link[data-in-view],
 .sidebar__link:active {
   color: var(--ink);
 }
@@ -302,6 +303,29 @@ body {
     color: var(--ink-strong);
     text-decoration-color: currentColor;
   }
+}
+
+/* Sticker beside the hero greeting: a one-line-tall inline box, so the heading's
+   line height and the gaps around it stay exactly as they are. */
+.hero-sticker {
+  position: relative;
+  display: inline-block;
+  width: 1.9em;
+  height: 1lh;
+  margin-left: 0.3em;
+  vertical-align: top;
+}
+.hero-sticker__art {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: block;
+  width: 1.9em;
+  height: 1.9em;
+  transform: translateY(-50%) rotate(-8deg);
+}
+.hero-sticker__art > svg {
+  display: block;
 }
 
 /* Handwritten note hanging off a link: "check this out :)". */
@@ -824,6 +848,7 @@ body {
   padding-inline: calc(50% - var(--slide-w) / 2);
   cursor: grab;
   touch-action: pan-y pinch-zoom;
+  overscroll-behavior-x: contain;
   user-select: none;
   outline: none;
 }

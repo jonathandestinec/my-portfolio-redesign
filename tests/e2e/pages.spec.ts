@@ -35,7 +35,7 @@ test("works page: featured card plus client and experiment lists", async ({ page
   await page.goto("/works");
   const reads = page.getByRole("link", { name: "Read the case study" });
   await expect(reads).toHaveCount(2);
-  await expect(reads.nth(1)).toHaveAttribute("href", "/work/huddle");
+  await expect(reads.nth(0)).toHaveAttribute("href", "/work/huddle");
   await expect(page.getByRole("heading", { name: "Client & collaborations" })).toBeVisible();
   await expect(page.getByText("Thymus Energy FZCO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Experiments", exact: true })).toBeVisible();

@@ -4,6 +4,7 @@ import { Bleed, Section } from "@/components/blocks/Section";
 import { PostRows } from "@/components/blog/PostRow";
 import { Cta } from "@/components/cta/Actions";
 import { ContribGrid } from "@/components/github/ContribGrid";
+import { HeroSticker } from "@/components/hero/HeroSticker";
 import { Intro, Lead } from "@/components/hero/Lead";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { StackGrid } from "@/components/stack/StackGrid";
@@ -11,7 +12,7 @@ import { WorkCarousel } from "@/components/work/WorkCarousel";
 import { education, experience } from "@/content/experience";
 import { site } from "@/content/site";
 import { stack } from "@/content/stack";
-import { homeSlides } from "@/lib/content";
+import { heroStatements, homeSlides } from "@/lib/content";
 import { getContributions } from "@/lib/github-cached";
 import { getAllPosts } from "@/lib/posts";
 
@@ -21,7 +22,15 @@ export default async function Home() {
   return (
     <SiteShell current="/">
       <Intro narrow>
-        <Lead title={site.hero.lead} statements={site.hero.statements}>
+        <Lead
+          title={
+            <>
+              {site.hero.lead}
+              <HeroSticker />
+            </>
+          }
+          statements={heroStatements()}
+        >
           <Cta notes={site.hero.status} />
         </Lead>
       </Intro>

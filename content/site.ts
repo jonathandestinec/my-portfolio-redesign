@@ -14,14 +14,7 @@ export const site: Site = {
   },
   hero: {
     lead: "Hi, I'm Destine.",
-    statements: [
-      ['I build fullstack web apps and the automations behind them, in Next.js, Postgres and n8n.'],
-      ['Right now I help farmer cooperatives in Nigeria sell together and get paid on delivery.'],
-      [
-        "It's called ",
-        { text: 'AgroHub', href: '/work/agrohub', note: 'check this out :)' },
-      ],
-    ],
+    intro: 'I build fullstack web apps and the automations behind them, in Next.js, Postgres and n8n.',
     status: ['Open to fullstack roles.', 'Based in Nigeria · remote friendly.'],
   },
 }

@@ -13,7 +13,8 @@ export type Site = {
   calendarUrl: string
   githubUsername: string
   socials: { github: string; linkedin: string; x: string }
-  hero: { lead: string; statements: RichText[]; status: string[] }
+  /** Hero statements are built from the projects list (lib/content heroStatements). */
+  hero: { lead: string; intro: string; status: string[] }
 }
 
 export type Slide = Img & { screen: string; phone?: boolean }
@@ -34,6 +35,8 @@ export type Chapter = {
 export type Project = {
   slug: string
   name: string
+  /** Short clause for the home hero, after the name: "Huddle, {blurb}". */
+  blurb: string
   /** Second half of the case-study title: "AgroHub: {tagline}". */
   tagline: string
   context: string
@@ -88,7 +91,7 @@ export type Education = {
 
 export type StackCategory = 'frontend' | 'backend' | 'tools' | 'design'
 
-/** icon = simple-icons slug, or 'terminal' | 'key' */
+/** icon = simple-icons slug, or a built-in: 'terminal' | 'key' | 'card' | 'check' */
 export type StackItem = { name: string; category: StackCategory; icon: string }
 
 export type PlaygroundItem = {

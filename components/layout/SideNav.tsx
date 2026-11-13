@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActiveSection } from "@/lib/use-active-section";
+import { useVisibleSections } from "@/lib/use-active-section";
 import { ThemeToggle } from "./ThemeToggle";
 import { Wordmark } from "./Wordmark";
 import {
@@ -24,7 +24,9 @@ export type ShellNav = {
 
 export function SideNav({ current, back, sections = [] }: ShellNav) {
   const hidden = useNavHidden();
-  const active = useActiveSection(sections.map((s) => s.href.slice(1)));
+  // Only in-page anchors (case-study chapters, writing years) light up while on screen;
+  // the page links open separate pages, so they only mark the current page.
+  const visible = useVisibleSections(sections.map((s) => s.href.slice(1)));
 
   return (
     <nav
@@ -52,7 +54,7 @@ export function SideNav({ current, back, sections = [] }: ShellNav) {
             <li key={s.href}>
               <a
                 href={s.href}
-                aria-current={s.href === `#${active}` ? "location" : undefined}
+                data-in-view={visible.has(s.href.slice(1)) ? "" : undefined}
                 className="sidebar__link"
               >
                 {s.label}

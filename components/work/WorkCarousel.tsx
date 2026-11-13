@@ -15,6 +15,10 @@ import type { CarouselSlide } from "@/lib/content";
 
 const CLICK_SLOP = 6;
 const EASE = "transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
+/** Horizontal wheel distance (px) that moves one slide. */
+const WHEEL_STEP = 30;
+/** A pause this long (ms) between wheel events starts a new gesture. */
+const WHEEL_GESTURE_GAP = 180;
 
 /**
  * Works strip, after the reference: a fixed blue frame and label sit in the
@@ -65,6 +69,38 @@ export function WorkCarousel({
       mq.removeEventListener("change", onMq);
     };
   }, []);
+
+  // Desktop scrolling: a horizontal trackpad swipe (or Shift + mouse wheel) moves
+  // one slide per gesture. Plain vertical wheel keeps scrolling the page.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const w = { acc: 0, last: -Infinity, moved: false };
+    const onWheel = (e: WheelEvent) => {
+      const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      const delta = horizontal ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+      if (!delta) return;
+      e.preventDefault();
+      const quiet = e.timeStamp - w.last > WHEEL_GESTURE_GAP;
+      w.last = e.timeStamp;
+      if (quiet) {
+        w.acc = 0;
+        w.moved = false;
+      }
+      // One move per gesture: trackpad momentum keeps firing after the first step.
+      if (w.moved) return;
+      w.acc += delta;
+      if (Math.abs(w.acc) >= WHEEL_STEP) {
+        // Read the direction now: the updater runs later, after acc is reset.
+        const dir = Math.sign(w.acc);
+        setIndex((i) => clamp(i + dir));
+        w.moved = true;
+        w.acc = 0;
+      }
+    };
+    track.addEventListener("wheel", onWheel, { passive: false });
+    return () => track.removeEventListener("wheel", onWheel);
+  }, [clamp]);
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     if (e.pointerType === "mouse" && e.button !== 0) return;

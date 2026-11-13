@@ -1,9 +1,155 @@
 import type { Project } from './types'
 
 export const projects: Project[] = [
+  // Order matters: newest first. The hero names the first two; the carousel shows every cover.
+  {
+    slug: 'huddle',
+    name: 'Huddle',
+    blurb: 'where churches and communities run events and get paid for them',
+    tagline: 'where organisations bring their people together',
+    context: 'Live',
+    summary:
+      'A modular event platform for churches, community groups, schools and NGOs in Nigeria and Ghana. Organisers create an event, attach Functions (Number Picker, RSVP & Seats, Extra Content) and share one link. Each Function can be free, paid through Paystack, or unlocked with an access code, and the money settles straight to the organisation\u2019s bank.',
+    // TODO(content): story and chapters are drafted from the huddle-app repo (README, PRODUCT.md, v1 spec); confirm wording and whether "built solo" is right.
+    story: [
+      'Huddle is for the people who run church services, community meetings and classes. They already meet on Zoom, Google Meet, Teams or in a room. Huddle runs alongside that meeting and adds the parts those tools lack: numbered turns, seats, recordings and notes behind a payment, and the payment itself.',
+      'An organiser creates an event, picks the Functions it needs from the Function Store, and shares one link, usually on WhatsApp. Attendees open it on their phones and join with just a name and an email. There are no passwords anywhere.',
+      'I built it end to end: the product, the event and dashboard flows, the database, payments and the tests. The first organisation is already running its events on it.',
+    ],
+    chapters: [
+      {
+        id: 'functions',
+        title: 'Functions, mixed per event',
+        text: 'Every event is assembled from Functions. RSVP & Seats handles capacity, Number Picker lets attendees claim their own number, and Extra Content keeps recordings, notes and slides behind a gate. Each Function is gated on its own: free, paid, or unlocked with an access code.',
+        images: [
+          {
+            src: '/work/huddle/features.png',
+            width: 2160,
+            height: 1350,
+            alt: 'Huddle landing page: the Features section listing Number Picker, Vault, Voting & Polls, Q&A Queue, Certificate and RSVP & Seats',
+          },
+        ],
+      },
+      {
+        id: 'one-link',
+        title: 'One link, no passwords',
+        text: 'The event page is the whole attendee experience. It shows when and where the meeting is, a button to join it, and every Function attached to it. Attendees give a name and email once and are signed in with a magic link, so they never stop to create an account.',
+        images: [
+          {
+            src: '/work/huddle/event.png',
+            width: 2160,
+            height: 1350,
+            alt: 'Huddle public event page for In God\u2019s Presence by The Watcher\u2019s Voice, with date, place and a Join the meeting online button',
+          },
+        ],
+      },
+      {
+        id: 'numbers',
+        title: 'Numbers, held and called live',
+        text: 'Tapping a free number holds it for ten minutes while the attendee pays. A database constraint makes sure two people can never claim the same number, and the loser gets a friendly "someone just grabbed it". During the event the host calls numbers from one screen, and every attendee\u2019s phone shows who is up within seconds.',
+        images: [
+          {
+            src: '/work/huddle/event-phone.png',
+            width: 1170,
+            height: 1992,
+            alt: 'Huddle event page on a phone',
+            phone: true,
+          },
+          {
+            src: '/work/huddle/picker-phone.png',
+            width: 1170,
+            height: 1992,
+            alt: 'Huddle Number Picker grid on a phone, numbers 1 to 30 at \u20a6100 each',
+            phone: true,
+          },
+        ],
+      },
+      {
+        id: 'payments',
+        title: 'Money goes straight to the organisation',
+        text: 'Each organisation connects its bank once and gets its own Paystack subaccount. At checkout Paystack splits the payment: the organisation gets its share directly and Huddle\u2019s 5% fee is taken automatically, so Huddle never holds anyone\u2019s money. Payment confirmation is idempotent, so a late or repeated webhook can never grant something twice.',
+        images: [
+          {
+            src: '/work/huddle/event-functions.png',
+            width: 2160,
+            height: 1350,
+            alt: 'Huddle event page showing a \u20a6100 Number Picker and a free Extra Content card with Prophesy Recordings',
+          },
+        ],
+      },
+      {
+        id: 'tested',
+        title: 'Tested against a real database',
+        text: 'Gating, payments, holds, seat limits and anonymous pickers are covered by integration tests that run against a throwaway Neon Postgres branch, and Playwright walks the full organiser-to-attendee flow end to end.',
+        images: [],
+      },
+    ],
+    cover: {
+      src: '/work/huddle/landing.png',
+      alt: 'Huddle landing page: Join the huddle. Connect, monetize your communities.',
+    },
+    slides: [
+      {
+        screen: 'Landing',
+        src: '/work/huddle/landing.png',
+        alt: 'Huddle landing page: Join the huddle. Connect, monetize your communities.',
+      },
+      {
+        screen: 'Event page',
+        src: '/work/huddle/event.png',
+        alt: 'Huddle public event page for In God\u2019s Presence by The Watcher\u2019s Voice',
+      },
+      {
+        screen: 'Number Picker on a phone',
+        src: '/work/huddle/picker-phone.png',
+        alt: 'Huddle Number Picker grid on a phone',
+        phone: true,
+      },
+      {
+        screen: 'Features',
+        src: '/work/huddle/features.png',
+        alt: 'Huddle landing page Features section',
+      },
+    ],
+    role: 'Fullstack, end to end', // TODO(content): confirm (solo, or with The Watchers Channel / Vivant Enterprises?)
+    stack: [
+      'Next.js 16',
+      'TypeScript',
+      'Tailwind CSS 4',
+      'Drizzle + Neon Postgres',
+      'Better Auth (magic link + Google)',
+      'Paystack split payments',
+      'S3 storage (Backblaze B2)',
+      'Resend',
+      'Vitest + Playwright',
+    ],
+    year: '2026',
+    status: 'shipped',
+    links: {
+      live: 'https://huddle-three-rho.vercel.app',
+      repo: 'https://github.com/jonathandestinec/huddle-app',
+    },
+    images: [
+      {
+        src: '/work/huddle/landing.png',
+        width: 2160,
+        height: 1350,
+        alt: 'Huddle landing page: Join the huddle. Connect, monetize your communities.',
+        caption: 'Landing page',
+      },
+      {
+        src: '/work/huddle/landing-phone.png',
+        width: 1170,
+        height: 1992,
+        alt: 'Huddle landing page on a phone',
+        caption: 'Landing on a phone',
+      },
+    ],
+  },
   {
     slug: 'agrohub',
     name: 'AgroHub',
+    blurb: 'where farmer cooperatives in Nigeria sell together and get paid on delivery',
     tagline: 'farmer cooperatives sell together and get paid on delivery',
     context: 'In progress',
     summary:
@@ -149,149 +295,6 @@ export const projects: Project[] = [
         height: 1992,
         alt: 'AgroHub lot catalogue at phone width',
         caption: 'Browse lots on a phone',
-      },
-    ],
-  },
-  {
-    slug: 'huddle',
-    name: 'Huddle',
-    tagline: 'where organisations bring their people together',
-    context: 'Live',
-    summary:
-      'A modular event platform for churches, community groups, schools and NGOs in Nigeria and Ghana. Organisers create an event, attach Functions (Number Picker, RSVP & Seats, Extra Content) and share one link. Each Function can be free, paid through Paystack, or unlocked with an access code, and the money settles straight to the organisation\u2019s bank.',
-    // TODO(content): story and chapters are drafted from the huddle-app repo (README, PRODUCT.md, v1 spec); confirm wording and whether "built solo" is right.
-    story: [
-      'Huddle is for the people who run church services, community meetings and classes. They already meet on Zoom, Google Meet, Teams or in a room. Huddle runs alongside that meeting and adds the parts those tools lack: numbered turns, seats, recordings and notes behind a payment, and the payment itself.',
-      'An organiser creates an event, picks the Functions it needs from the Function Store, and shares one link, usually on WhatsApp. Attendees open it on their phones and join with just a name and an email. There are no passwords anywhere.',
-      'I built it end to end: the product, the event and dashboard flows, the database, payments and the tests. The first organisation is already running its events on it.',
-    ],
-    chapters: [
-      {
-        id: 'functions',
-        title: 'Functions, mixed per event',
-        text: 'Every event is assembled from Functions. RSVP & Seats handles capacity, Number Picker lets attendees claim their own number, and Extra Content keeps recordings, notes and slides behind a gate. Each Function is gated on its own: free, paid, or unlocked with an access code.',
-        images: [
-          {
-            src: '/work/huddle/features.png',
-            width: 2160,
-            height: 1350,
-            alt: 'Huddle landing page: the Features section listing Number Picker, Vault, Voting & Polls, Q&A Queue, Certificate and RSVP & Seats',
-          },
-        ],
-      },
-      {
-        id: 'one-link',
-        title: 'One link, no passwords',
-        text: 'The event page is the whole attendee experience. It shows when and where the meeting is, a button to join it, and every Function attached to it. Attendees give a name and email once and are signed in with a magic link, so they never stop to create an account.',
-        images: [
-          {
-            src: '/work/huddle/event.png',
-            width: 2160,
-            height: 1350,
-            alt: 'Huddle public event page for In God\u2019s Presence by The Watcher\u2019s Voice, with date, place and a Join the meeting online button',
-          },
-        ],
-      },
-      {
-        id: 'numbers',
-        title: 'Numbers, held and called live',
-        text: 'Tapping a free number holds it for ten minutes while the attendee pays. A database constraint makes sure two people can never claim the same number, and the loser gets a friendly "someone just grabbed it". During the event the host calls numbers from one screen, and every attendee\u2019s phone shows who is up within seconds.',
-        images: [
-          {
-            src: '/work/huddle/event-phone.png',
-            width: 1170,
-            height: 1992,
-            alt: 'Huddle event page on a phone',
-            phone: true,
-          },
-          {
-            src: '/work/huddle/picker-phone.png',
-            width: 1170,
-            height: 1992,
-            alt: 'Huddle Number Picker grid on a phone, numbers 1 to 30 at \u20a6100 each',
-            phone: true,
-          },
-        ],
-      },
-      {
-        id: 'payments',
-        title: 'Money goes straight to the organisation',
-        text: 'Each organisation connects its bank once and gets its own Paystack subaccount. At checkout Paystack splits the payment: the organisation gets its share directly and Huddle\u2019s 5% fee is taken automatically, so Huddle never holds anyone\u2019s money. Payment confirmation is idempotent, so a late or repeated webhook can never grant something twice.',
-        images: [
-          {
-            src: '/work/huddle/event-functions.png',
-            width: 2160,
-            height: 1350,
-            alt: 'Huddle event page showing a \u20a6100 Number Picker and a free Extra Content card with Prophesy Recordings',
-          },
-        ],
-      },
-      {
-        id: 'tested',
-        title: 'Tested against a real database',
-        text: 'Gating, payments, holds, seat limits and anonymous pickers are covered by integration tests that run against a throwaway Neon Postgres branch, and Playwright walks the full organiser-to-attendee flow end to end.',
-        images: [],
-      },
-    ],
-    cover: {
-      src: '/work/huddle/landing.png',
-      alt: 'Huddle landing page: Join the huddle. Connect, monetize your communities.',
-    },
-    slides: [
-      {
-        screen: 'Landing',
-        src: '/work/huddle/landing.png',
-        alt: 'Huddle landing page: Join the huddle. Connect, monetize your communities.',
-      },
-      {
-        screen: 'Event page',
-        src: '/work/huddle/event.png',
-        alt: 'Huddle public event page for In God\u2019s Presence by The Watcher\u2019s Voice',
-      },
-      {
-        screen: 'Number Picker on a phone',
-        src: '/work/huddle/picker-phone.png',
-        alt: 'Huddle Number Picker grid on a phone',
-        phone: true,
-      },
-      {
-        screen: 'Features',
-        src: '/work/huddle/features.png',
-        alt: 'Huddle landing page Features section',
-      },
-    ],
-    role: 'Fullstack, end to end', // TODO(content): confirm (solo, or with The Watchers Channel / Vivant Enterprises?)
-    stack: [
-      'Next.js 16',
-      'TypeScript',
-      'Tailwind CSS 4',
-      'Drizzle + Neon Postgres',
-      'Better Auth (magic link + Google)',
-      'Paystack split payments',
-      'S3 storage (Backblaze B2)',
-      'Resend',
-      'Vitest + Playwright',
-    ],
-    year: '2026',
-    status: 'shipped',
-    links: {
-      live: 'https://huddle-three-rho.vercel.app',
-      repo: 'https://github.com/jonathandestinec/huddle-app',
-    },
-    images: [
-      {
-        src: '/work/huddle/landing.png',
-        width: 2160,
-        height: 1350,
-        alt: 'Huddle landing page: Join the huddle. Connect, monetize your communities.',
-        caption: 'Landing page',
-      },
-      {
-        src: '/work/huddle/landing-phone.png',
-        width: 1170,
-        height: 1992,
-        alt: 'Huddle landing page on a phone',
-        caption: 'Landing on a phone',
       },
     ],
   },
