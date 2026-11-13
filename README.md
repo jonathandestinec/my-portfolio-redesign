@@ -40,3 +40,7 @@ Copy `.env.example` to `.env.local`.
 - [ ] Confirm or restore the AgroHub timeline in `content/projects.ts` (removed because the phases were unconfirmed).
 - [ ] Clean the test lot on the live AgroHub `/lots` page, then re-run `bun run capture`.
 - [ ] Set `GITHUB_TOKEN` so the activity grid shows real data.
+
+## Credits
+
+- Hero sticker from [stick-it-up](https://github.com/Sam721166/stick-it-up) © 2026 Samiran De, used under the Stick It Up Fair-Use & Community License (see `node_modules/stick-it-up/LICENSE`).
