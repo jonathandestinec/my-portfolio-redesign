@@ -13,18 +13,29 @@ test("agrohub case study follows the reference case layout", async ({ page, isMo
   );
   for (const t of ["Selling together", "Paid on delivery", "Built for phones"])
     await expect(page.getByRole("heading", { level: 2, name: t })).toBeVisible();
-  await expect(page.getByText("Next project")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Next project: Huddle/ })).toHaveAttribute("href", "/work/huddle");
   await expect(page.getByText("How it's shipping")).toHaveCount(0);
   if (isMobile) await page.getByRole("button", { name: "Menu" }).click();
   await expect(page.getByRole("link", { name: "← All works" }).first()).toBeVisible();
 });
 
+test("huddle case study", async ({ page }) => {
+  await page.goto("/work/huddle");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Huddle: where organisations bring their people together/);
+  await expect(page.getByRole("link", { name: "huddle-three-rho.vercel.app" })).toHaveAttribute(
+    "href",
+    "https://huddle-three-rho.vercel.app",
+  );
+  for (const t of ["Functions, mixed per event", "One link, no passwords", "Money goes straight to the organisation"])
+    await expect(page.getByRole("heading", { level: 2, name: t })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Next project: AgroHub/ })).toBeVisible();
+});
+
 test("works page: featured card plus client and experiment lists", async ({ page }) => {
   await page.goto("/works");
-  await expect(page.getByRole("link", { name: "Read the case study" })).toHaveAttribute(
-    "href",
-    "/work/agrohub",
-  );
+  const reads = page.getByRole("link", { name: "Read the case study" });
+  await expect(reads).toHaveCount(2);
+  await expect(reads.nth(1)).toHaveAttribute("href", "/work/huddle");
   await expect(page.getByRole("heading", { name: "Client & collaborations" })).toBeVisible();
   await expect(page.getByText("Thymus Energy FZCO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Experiments", exact: true })).toBeVisible();

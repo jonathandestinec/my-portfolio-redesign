@@ -20,21 +20,16 @@ export function getNextProject(slug: string): Project | null {
 
 export type CarouselSlide = { image: Img; tag: string; href: string; phone?: boolean }
 
+/** Every featured project's screens, in project order, each linking to its case study. */
 export function homeSlides(): CarouselSlide[] {
-  if (projects.length === 1) {
-    const p = projects[0]
-    return p.slides.map((s) => ({
+  return projects.flatMap((p) =>
+    p.slides.map((s) => ({
       image: { src: s.src, alt: s.alt },
       phone: s.phone,
       tag: `${p.name} · ${s.screen}`,
       href: `/work/${p.slug}`,
-    }))
-  }
-  return projects.map((p) => ({
-    image: p.cover,
-    tag: `${p.name} (${p.context})`,
-    href: `/work/${p.slug}`,
-  }))
+    })),
+  )
 }
 
 export function rangeLabel(start: string, end: string): string {

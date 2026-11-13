@@ -62,14 +62,14 @@ export default function WorksPage() {
         <Lead
           title="Works."
           statements={[
-            ["One big product I'm building alone, and the smaller things around it."],
+            ["Two products I built end to end, and the smaller things around them."],
             ["Drag through the screens, or open the case study."],
           ]}
         />
       </Intro>
 
-      <Bleed label="AgroHub screens">
-        <WorkCarousel slides={homeSlides()} label="AgroHub screens" />
+      <Bleed label="Project screens">
+        <WorkCarousel slides={homeSlides()} label="Project screens" />
       </Bleed>
 
       <Section id="featured" title="Featured" label>

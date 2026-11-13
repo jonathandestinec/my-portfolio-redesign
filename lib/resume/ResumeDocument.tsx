@@ -9,7 +9,7 @@ export type ResumeData = {
   education: Education[]
   stack: StackItem[]
   stackCategories: { id: string; label: string }[]
-  project: Project
+  projects: Project[]
 }
 
 const s = StyleSheet.create({
@@ -41,7 +41,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function ResumeDocument({ data }: { data: ResumeData }) {
-  const { site, siteUrl, project } = data
+  const { site, siteUrl, projects } = data
   const name = `${site.firstName} ${site.lastName}`.replace(/\b\w/g, (c) => c.toUpperCase())
   const summary = site.hero.statements.map(flat).join(' ')
   const host = (u: string) => u.replace(/^https?:\/\//, '')
@@ -72,12 +72,16 @@ export function ResumeDocument({ data }: { data: ResumeData }) {
           ))}
         </Section>
 
-        <Section title="Featured project">
-          <Text style={s.bold}>
-            {project.name} · {project.role} · {project.year}
-          </Text>
-          <Text style={s.line}>{project.summary}</Text>
-          <Text>Stack: {project.stack.join(', ')}</Text>
+        <Section title={projects.length > 1 ? 'Featured projects' : 'Featured project'}>
+          {projects.map((project) => (
+            <View key={project.slug} style={{ marginBottom: 6 }}>
+              <Text style={s.bold}>
+                {project.name} · {project.role} · {project.year}
+              </Text>
+              <Text>{project.summary}</Text>
+              <Text>Stack: {project.stack.join(', ')}</Text>
+            </View>
+          ))}
         </Section>
 
         <Section title="Skills">

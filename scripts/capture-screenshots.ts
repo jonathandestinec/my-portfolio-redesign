@@ -4,22 +4,45 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-const BASE = 'https://agrohub-theta.vercel.app'
-const OUT = path.join(process.cwd(), 'public', 'work', 'agrohub')
 const HIDE_CSS = 'vercel-live-feedback{display:none!important}'
 const MAX_BYTES = 1_500_000
 // Desktop shots are downscaled to the largest width at which ALL of them fit.
 const WIDTHS = [2160, 1800, 1600]
 
-type Shot = { name: string; route: string; phone?: boolean }
+/** `scrollTo`: a #id, or the exact text of an element, to scroll to the top of the screen before the shot. */
+type Shot = { name: string; route: string; phone?: boolean; scrollTo?: string }
 
-const shots: Shot[] = [
-  { name: 'landing', route: '/' },
-  { name: 'lots', route: '/lots' },
-  { name: 'prices', route: '/prices' },
-  { name: 'landing-phone', route: '/', phone: true },
-  { name: 'lots-phone', route: '/lots', phone: true },
-]
+const projects: Record<string, { base: string; shots: Shot[] }> = {
+  agrohub: {
+    base: 'https://agrohub-theta.vercel.app',
+    shots: [
+      { name: 'landing', route: '/' },
+      { name: 'lots', route: '/lots' },
+      { name: 'prices', route: '/prices' },
+      { name: 'landing-phone', route: '/', phone: true },
+      { name: 'lots-phone', route: '/lots', phone: true },
+    ],
+  },
+  huddle: {
+    base: 'https://huddle-three-rho.vercel.app',
+    shots: [
+      { name: 'landing', route: '/' },
+      { name: 'features', route: '/', scrollTo: '#features' },
+      { name: 'event', route: '/the-watcher-s-voice/in-god-s-presence-2' },
+      { name: 'event-functions', route: '/the-watcher-s-voice/in-god-s-presence-2', scrollTo: 'Number Picker' },
+      { name: 'login', route: '/login' },
+      { name: 'landing-phone', route: '/', phone: true },
+      { name: 'event-phone', route: '/the-watcher-s-voice/in-god-s-presence-2', phone: true },
+      { name: 'picker-phone', route: '/the-watcher-s-voice/in-god-s-presence-2', phone: true, scrollTo: 'Number Picker' },
+    ],
+  },
+}
+
+// Usage: bun scripts/capture-screenshots.ts <project>   (agrohub | huddle)
+const project = process.argv[2] ?? 'agrohub'
+if (!projects[project]) throw new Error(`unknown project "${project}"; use one of ${Object.keys(projects).join(', ')}`)
+const { base: BASE, shots } = projects[project]
+const OUT = path.join(process.cwd(), 'public', 'work', project)
 
 function downscale(src: string, dest: string, width: number) {
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', src, '-vf', `scale=${width}:-1`, dest])
@@ -27,7 +50,7 @@ function downscale(src: string, dest: string, width: number) {
 
 async function main() {
   mkdirSync(OUT, { recursive: true })
-  const work = mkdtempSync(path.join(tmpdir(), 'agrohub-capture-'))
+  const work = mkdtempSync(path.join(tmpdir(), `${project}-capture-`))
   const desktopRaw: { name: string; file: string }[] = []
   const browser = await chromium.launch()
   try {
@@ -45,6 +68,16 @@ async function main() {
         }
         await page.waitForTimeout(1500)
         await page.addStyleTag({ content: HIDE_CSS })
+        if (shot.scrollTo) {
+          const target = shot.scrollTo.startsWith('#')
+            ? page.locator(shot.scrollTo)
+            : page.getByText(shot.scrollTo, { exact: true })
+          await target
+            .first()
+            .evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+          await page.evaluate(() => window.scrollBy(0, -32))
+          await page.waitForTimeout(1200)
+        }
         if (shot.phone) {
           const file = path.join(OUT, `${shot.name}.png`)
           await page.screenshot({ path: file })

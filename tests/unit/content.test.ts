@@ -6,13 +6,24 @@ import { site } from '@/content/site'
 import { stack } from '@/content/stack'
 import { rangeLabel, filterStack, getNextProject, getProject, groupPlayground, homeSlides } from '@/lib/content'
 
-test('one featured project → slides tagged by screen', () => {
+test('carousel shows every project\'s screens, each linking to its own case study', () => {
   const s = homeSlides()
-  expect(s.length).toBeGreaterThanOrEqual(3)
   expect(s[0].tag).toBe('AgroHub · Landing')
-  expect(s.every((x) => x.href === '/work/agrohub')).toBe(true)
+  expect(s.find((x) => x.tag === 'Huddle · Event page')?.href).toBe('/work/huddle')
+  expect(s.length).toBe(projects.reduce((n, p) => n + p.slides.length, 0))
+  for (const x of s) expect(x.href).toBe(`/work/${x.tag.startsWith('Huddle') ? 'huddle' : 'agrohub'}`)
 })
-test('next project hidden with one project', () => expect(getNextProject('agrohub')).toBeNull())
+test('next project wraps around', () => {
+  expect(getNextProject('agrohub')?.slug).toBe('huddle')
+  expect(getNextProject('huddle')?.slug).toBe('agrohub')
+})
+test('every project image file exists', async () => {
+  const { existsSync } = await import('node:fs')
+  for (const p of projects) {
+    const srcs = [p.cover.src, ...p.slides.map((x) => x.src), ...p.images.map((x) => x.src), ...p.chapters.flatMap((c) => c.images.map((x) => x.src))]
+    for (const src of srcs) expect(existsSync(`public${src}`), src).toBe(true)
+  }
+})
 test('unknown slug', () => expect(getProject('nope')).toBeUndefined())
 test('stack filter', () => {
   expect(filterStack(stack, 'all')).toHaveLength(stack.length)

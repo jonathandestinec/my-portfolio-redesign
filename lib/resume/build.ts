@@ -13,7 +13,7 @@ import { ResumeDocument } from './ResumeDocument'
  */
 export async function buildResumePdf(opts: { compress?: boolean } = {}): Promise<Uint8Array> {
   const el = createElement(ResumeDocument, {
-    data: { site, siteUrl: siteUrl(), experience, education, stack, stackCategories, project: projects[0] },
+    data: { site, siteUrl: siteUrl(), experience, education, stack, stackCategories, projects },
   })
   if (opts.compress === false) {
     return new Uint8Array(Buffer.from(await renderToString(el as never), 'latin1'))
