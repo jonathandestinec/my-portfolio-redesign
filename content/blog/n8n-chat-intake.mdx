@@ -1,0 +1,42 @@
+export const meta = { title: 'A chat intake that survives retries', date: '2026-10-18', summary: 'How the Rossyz website hands chat to n8n, answers fast, and lets the browser pick up the result without starting the work twice.', tags: ['rossyz', 'n8n', 'automation'], draft: false }
+
+{/* TODO(content): owner to review and edit before publishing */}
+
+Rossyz Fashion is a made-to-measure atelier, and its website has a chat that helps a customer begin a commission. The Next.js app serves the site and the private business desk. The conversation itself is handled by an AI agent in n8n, which stays the authoritative chat integration.
+
+That split caused the first real design question. An agent can take a while to think. A web request that waits on it will time out at the worst moment.
+
+## Acknowledge fast, poll for the result
+
+The website sends a message to n8n and gets a quick acknowledgement back. The workflow keeps running on its own. Meanwhile the browser polls for the durable result and shows it when it lands.
+
+The timeout setting reflects this. `N8N_TIMEOUT_MS=25000` limits only the short webhook acknowledgement and the result checks, not how long the workflow runs. Results expire after 24 hours, and a daily n8n cleanup deletes the expired rows.
+
+## One turn, one ID
+
+Polling and flaky networks mean the same message can arrive more than once. If every arrival started a fresh run, the same work would happen twice. So each user turn carries an ID, and a retry reuses the same one.
+
+```ts
+// the browser makes the ID once per turn, then reuses it on every retry
+const turnId = crypto.randomUUID()
+
+async function send(text: string) {
+  await fetch('/api/rossyz/chat', {
+    method: 'POST',
+    body: JSON.stringify({ turnId, text }),
+  })
+  return pollResult(turnId)
+}
+```
+
+A repeated turn ID is the same turn, so the work is not started again. This is a sketch of the idea, not the exact route code.
+
+## Stop before asking for personal details
+
+The atelier has a limited number of open commission slots, and the chat should respect that. `ROSSYZ_ORDER_SLOTS` holds the count. While it is `0`, the chat stops before it asks for a name, phone number, measurements or any other order detail. When intake reopens, I set it to the live count and restart Next.
+
+I like that this is a plain setting. The person running the atelier can reason about it without reading the workflow.
+
+## What I would keep
+
+Keep the quick acknowledgement, keep the polling, and keep the turn ID. Those three small choices stop a slow agent from turning into a broken page or a double reply, and they cost very little to build.

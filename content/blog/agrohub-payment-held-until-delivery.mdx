@@ -1,0 +1,44 @@
+export const meta = { title: 'How AgroHub holds the money until delivery is real', date: '2026-11-01', summary: 'How AgroHub keeps a buyer\'s payment held until delivery is confirmed, and the small money rules that make it safe to build.', tags: ['agrohub', 'payments'], draft: false }
+
+{/* TODO(content): owner to review and edit before publishing */}
+
+AgroHub sells harvests from Nigerian farmer cooperatives to bulk buyers. The part I think about most is not the catalogue. It is the moment money changes hands, because nobody in that chain has much reason to trust a stranger.
+
+So the rule is simple to say. The buyer pays 100% upfront through AgroHub. The payment is held until delivery is confirmed, and only then is it split by bank transfer between the cooperative and each farmer, by their contribution. No cooperative or officer can hold or redirect the money.
+
+## Delivery has to end somewhere
+
+A held payment is only fair if it cannot be held forever. When the officer marks a delivery, the buyer can confirm it. If the buyer never does, the payment releases by itself 3 days after the officer's mark. An admin can also decide a disputed order. Buyer confirmation, the 3-day auto-release and an admin decision are how a delivered order completes.
+
+## Money is integers
+
+Every amount in the system is an integer number of kobo. Every percentage is an integer number of basis points, so 1000 means 10%. There are no floats anywhere, and one small module does all the arithmetic and formatting. That is boring on purpose. Splitting a payment between a cooperative and a dozen farmers is exactly the place where a stray decimal turns into a missing kobo.
+
+Here is the shape of a cut, as a sketch rather than the production code. The 3% and 5% are example rates: the platform fee and the cooperative's cut are admin settings, and they are locked to a lot when it is approved.
+
+```ts
+// all values are integer kobo; rates are integer basis points
+const cut = (amountKobo: number, bps: number) =>
+  Math.floor((amountKobo * bps) / 10_000)
+
+const total = 250_000_00 // ₦250,000.00
+const platformFee = cut(total, 300) // 3%
+const cooperativeCut = cut(total, 500) // 5%
+const farmers = total - platformFee - cooperativeCut
+```
+
+In this sketch the last line matters: the farmers take the remainder instead of having it computed separately, so the pieces always add up to the amount paid. The real split between farmers works differently. Each share is floored, then the leftover kobo are handed out by largest fractional part, with ties going to the lower index. The goal is the same: no kobo appears or disappears.
+
+## Terms are locked at approval
+
+When an officer approves a lot, the fee terms are locked to it. An order copies those terms when it is created, so changing a platform setting later cannot quietly change what a farmer was promised. A farmer sees what they will earn before they agree, and that number does not move afterwards.
+
+## Payouts never touch account numbers
+
+Payments and payouts go through Paystack. AgroHub only stores a recipient code for each cooperative and farmer, never the account number itself. If the payout method has to change, that change stays contained in one place instead of spreading through the order logic.
+
+## Checking it
+
+I do not trust myself to eyeball ledger maths, so the tests drive random orders through every path and check the invariants. Per order, the ledger entries sum to zero. Once everything settles, nothing is left held. Payouts plus the platform fee equal the amount paid minus refunds.
+
+None of this is clever. It is a handful of small rules, written down early and enforced by tests, so a farmer on a cheap phone can see one honest number.
