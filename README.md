@@ -21,7 +21,7 @@ Uses [Bun](https://bun.sh).
 Copy `.env.example` to `.env.local`.
 
 - `GITHUB_TOKEN` (optional): a read-only token with no scopes, used for the GraphQL contribution calendar. Without it (or if that call fails) the site reads the public calendar at `github.com/users/<login>/contributions`. Only if both fail does the grid show data labelled "sample data" (cached for minutes only, so it recovers quickly).
-- `NEXT_PUBLIC_SITE_URL`: the public origin, for example `https://example.com`. Drives canonical URLs, sitemap, robots, RSS and OG URLs. Defaults to a placeholder domain when empty.
+- `NEXT_PUBLIC_SITE_URL`: the public origin, no trailing slash. Drives the résumé PDF links, canonical URLs, sitemap, robots, RSS and OG URLs. Defaults to `https://destinejc.vercel.app` when empty.
 
 ## Editing content
 
@@ -35,7 +35,7 @@ Copy `.env.example` to `.env.local`.
 
 ## Before deploying
 
-- [ ] Set the real domain: `NEXT_PUBLIC_SITE_URL` (and replace the placeholder in `lib/site-url.ts`).
+- [x] Site URL: defaults to `https://destinejc.vercel.app` (`lib/site-url.ts`); set `NEXT_PUBLIC_SITE_URL` only if you move to a custom domain.
 - [ ] Review the two blog posts in `content/blog/` (marked `TODO(content)`), or set `draft: true` on them.
 - [ ] Confirm or restore the AgroHub timeline in `content/projects.ts` (removed because the phases were unconfirmed).
 - [ ] Clean the test lot on the live AgroHub `/lots` page, then re-run `bun run capture`.
