@@ -14,7 +14,7 @@ type Shot = { name: string; route: string; phone?: boolean; scrollTo?: string }
 
 const projects: Record<string, { base: string; shots: Shot[] }> = {
   agrohub: {
-    base: 'https://agrohub-theta.vercel.app',
+    base: 'https://agro-hub.com.ng',
     shots: [
       { name: 'landing', route: '/' },
       { name: 'lots', route: '/lots' },

@@ -257,7 +257,7 @@ export const projects: Project[] = [
     year: '2026',
     status: 'in-progress',
     links: {
-      live: 'https://agrohub-theta.vercel.app',
+      live: 'https://agro-hub.com.ng',
       repo: 'https://github.com/jonathandestinec/agrohub',
     },
     images: [

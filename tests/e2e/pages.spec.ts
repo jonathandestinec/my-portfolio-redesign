@@ -7,9 +7,9 @@ test("agrohub case study follows the reference case layout", async ({ page, isMo
     /^AgroHub: farmer cooperatives sell together/,
   );
   await expect(page.locator(".facts")).toContainText("What I did");
-  await expect(page.getByRole("link", { name: "agrohub-theta.vercel.app" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "agro-hub.com.ng" })).toHaveAttribute(
     "href",
-    "https://agrohub-theta.vercel.app",
+    "https://agro-hub.com.ng",
   );
   for (const t of ["Selling together", "Paid on delivery", "Built for phones"])
     await expect(page.getByRole("heading", { level: 2, name: t })).toBeVisible();

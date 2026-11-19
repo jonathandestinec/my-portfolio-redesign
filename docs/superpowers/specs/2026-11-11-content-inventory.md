@@ -51,7 +51,7 @@ AgroHub is the only major project and the only one featured on the home page. Th
 
 | Project | Repo | What it is | Stack | Live URL |
 |---|---|---|---|---|
-| **AgroHub** (in progress) | `agrohub` | Phone-first platform where Nigerian farmer cooperatives sell members' harvests to bulk buyers. Buyers pay upfront; the money is held until delivery is confirmed, then split automatically to the cooperative and each farmer. Roles: farmer, officer, buyer, admin, board. i18n (English first; Pidgin, Hausa, Yoruba, Igbo planned). | Next.js, Prisma + Postgres (Neon), better-auth (2FA), next-intl, Paystack, S3 storage, Resend, Docker Compose, Vitest + Playwright | https://agrohub-theta.vercel.app |
+| **AgroHub** (in progress) | `agrohub` | Phone-first platform where Nigerian farmer cooperatives sell members' harvests to bulk buyers. Buyers pay upfront; the money is held until delivery is confirmed, then split automatically to the cooperative and each farmer. Roles: farmer, officer, buyer, admin, board. i18n (English first; Pidgin, Hausa, Yoruba, Igbo planned). | Next.js, Prisma + Postgres (Neon), better-auth (2FA), next-intl, Paystack, S3 storage, Resend, Docker Compose, Vitest + Playwright | https://agro-hub.com.ng |
 
 Carousel slides (captured from the live site):
 
