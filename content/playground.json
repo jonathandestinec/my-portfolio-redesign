@@ -10,17 +10,7 @@
         "Zustand",
         "Resend"
       ],
-      "url": "https://chipannaputt0.vercel.app",
-      "repo": null
-    },
-    {
-      "name": "Saje Food Court",
-      "group": "client",
-      "role": "Built end-to-end",
-      "summary": "Restaurant site.",
-      "stack": [],
-      "url": "https://saje-food-court.vercel.app",
-      "repo": null
+      "url": "https://chipannaputt0.vercel.app"
     },
     {
       "name": "BAM Hire",
@@ -28,17 +18,7 @@
       "role": "Collaborated · fullstack",
       "summary": "Staffing agency site.",
       "stack": [],
-      "url": "https://www.bamhire.com",
-      "repo": null
-    },
-    {
-      "name": "Bubbles Bay Auto Spa",
-      "group": "client",
-      "role": "Collaborated · fullstack",
-      "summary": "Car detailing studio, Malete, Kwara.",
-      "stack": [],
-      "url": "https://bubbles-bay-bay.vercel.app",
-      "repo": null
+      "url": "https://www.bamhire.com"
     },
     {
       "name": "Thymus Energy FZCO",
@@ -46,17 +26,30 @@
       "role": "Collaborated · frontend",
       "summary": "Corporate site for a petroleum trading company (trading, logistics, finance, risk pages).",
       "stack": [],
-      "url": "https://www.thymus-energy.com",
-      "repo": null
+      "url": "https://www.thymus-energy.com"
+    },
+    {
+      "name": "Saje Food Court",
+      "group": "client",
+      "role": "Built end-to-end",
+      "summary": "Restaurant site.",
+      "stack": [],
+      "url": "https://saje-food-court.vercel.app"
     },
     {
       "name": "A3 Fine Jewelry",
       "group": "client",
       "role": "Collaborated · frontend",
       "summary": "Jewelry storefront: shop, categories, wishlist, checkout.",
+      "stack": []
+    },
+    {
+      "name": "Bubbles Bay Auto Spa",
+      "group": "client",
+      "role": "Collaborated · fullstack",
+      "summary": "Car detailing studio, Malete, Kwara.",
       "stack": [],
-      "url": null,
-      "repo": null
+      "url": "https://bubbles-bay-bay.vercel.app"
     },
     {
       "name": "Rossyz (TailorFlow)",
@@ -67,8 +60,7 @@
         "Next.js",
         "n8n"
       ],
-      "url": "https://tailorflow-theta.vercel.app",
-      "repo": null
+      "url": "https://tailorflow-theta.vercel.app"
     },
     {
       "name": "RefillRx",
