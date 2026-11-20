@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "slug": "aptech",
+      "course": "Frontend development course",
+      "institution": "Aptech Computer Education",
+      "institutionUrl": "https://www.aptech-worldwide.com",
+      "logo": {
+        "image": null,
+        "initials": "AP"
+      },
+      "date": "05/2024",
+      "location": "Abuja",
+      "summary": "Hands-on course in building websites and web apps.",
+      "details": "A practical course covering the foundations of the web and modern frontend work: semantic HTML, CSS layout, JavaScript, and building interfaces with React. It is where I went from tinkering to shipping complete projects.",
+      "highlights": [
+        "HTML, CSS and responsive layout",
+        "JavaScript fundamentals and the DOM",
+        "Building interfaces with React",
+        "Final project: a complete multi-page site"
+      ]
+    },
+    {
+      "slug": "unizik",
+      "course": "Polymer and Textiles Engineering",
+      "institution": "Nnamdi Azikiwe University",
+      "institutionUrl": "https://unizik.edu.ng",
+      "logo": {
+        "image": "/logos/unizik.png",
+        "initials": ""
+      },
+      "date": "01/2023",
+      "location": "Awka",
+      "summary": "Engineering degree studies.",
+      "details": "Engineering studies in polymer and textile materials. The habits carried over to software: working from first principles, measuring before changing things, and writing up how something works so others can follow it.",
+      "highlights": [
+        "Engineering maths, materials science and process design",
+        "Lab work and technical reports"
+      ]
+    }
+  ]
+}

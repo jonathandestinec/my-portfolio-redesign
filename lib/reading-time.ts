@@ -1,5 +1,6 @@
 export function readingMinutes(source: string): number {
   const text = source
+    .replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '')
     .replace(/^export\s[^\n]*[{[(]\s*\n[\s\S]*?^[}\])][^\n]*$/gm, '')
     .replace(/^export\s.*$/gm, '')
     .replace(/```[\s\S]*?```/g, '')

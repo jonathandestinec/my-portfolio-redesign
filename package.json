@@ -13,18 +13,24 @@
     "capture": "bun scripts/capture-screenshots.ts"
   },
   "dependencies": {
+    "@keystatic/core": "^0.6.10",
+    "@keystatic/next": "^5.0.5",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.4.6",
     "@react-pdf/renderer": "^4.9.0",
     "@shikijs/rehype": "^4.6.0",
+    "image-size": "^2.1.0",
     "motion": "^14.12.0",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-mdx-frontmatter": "^6.0.0",
     "shiki": "^4.6.0",
     "simple-icons": "^16.37.0",
     "stick-it-up": "^0.3.0",
+    "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

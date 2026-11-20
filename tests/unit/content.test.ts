@@ -19,7 +19,7 @@ test('next project wraps around', () => {
 test('every project image file exists', async () => {
   const { existsSync } = await import('node:fs')
   for (const p of projects) {
-    const srcs = [p.cover.src, ...p.slides.map((x) => x.src), ...p.images.map((x) => x.src), ...p.chapters.flatMap((c) => c.images.map((x) => x.src))]
+    const srcs = [p.cover.src, ...p.chapters.flatMap((c) => c.images.map((x) => x.src))]
     for (const src of srcs) expect(existsSync(`public${src}`), src).toBe(true)
   }
 })

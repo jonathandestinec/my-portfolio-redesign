@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { parse as parseYaml } from 'yaml'
 import { z } from 'zod'
 import { readingMinutes } from '@/lib/reading-time'
 
@@ -24,11 +25,17 @@ export function listSlugs(dir: string = BLOG_DIR): string[] {
     .sort()
 }
 
-/** Slugs of posts that are not drafts; use for static params and OG routes. Reads the `draft` flag from the meta export. */
+/** The YAML frontmatter at the top of a post, or {} when there is none. */
+export function readFrontmatter(src: string): Record<string, unknown> {
+  const m = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(src)
+  return m ? ((parseYaml(m[1]) as Record<string, unknown> | null) ?? {}) : {}
+}
+
+/** Slugs of posts that are not drafts; use for static params and OG routes. */
 export function listPublishedSlugs(dir: string = BLOG_DIR): string[] {
   return listSlugs(dir).filter((slug) => {
     const src = fs.readFileSync(/*turbopackIgnore: true*/ path.join(dir, `${slug}.mdx`), 'utf8')
-    return !/^export const meta\s*=\s*\{[^]*?[{,]\s*draft:\s*true\s*[,}]/.test(src)
+    return readFrontmatter(src).draft !== true
   })
 }
 

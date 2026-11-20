@@ -1,7 +1,13 @@
-export const meta = { title: 'A chat intake that survives retries', date: '2026-10-18', summary: 'How the Rossyz website hands chat to n8n, answers fast, and lets the browser pick up the result without starting the work twice.', tags: ['rossyz', 'n8n', 'automation'], draft: false }
-
-{/* TODO(content): owner to review and edit before publishing */}
-
+---
+title: "A chat intake that survives retries"
+date: 2026-10-18
+summary: "How the Rossyz website hands chat to n8n, answers fast, and lets the browser pick up the result without starting the work twice."
+tags:
+  - rossyz
+  - n8n
+  - automation
+draft: false
+---
 Rossyz Fashion is a made-to-measure atelier, and its website has a chat that helps a customer begin a commission. The Next.js app serves the site and the private business desk. The conversation itself is handled by an AI agent in n8n, which stays the authoritative chat integration.
 
 That split caused the first real design question. An agent can take a while to think. A web request that waits on it will time out at the worst moment.

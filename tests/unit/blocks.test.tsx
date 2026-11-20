@@ -2,24 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 import { EducationList, RoleList } from "@/components/blocks/Entries";
 import { Facts } from "@/components/blocks/Facts";
-import { Timeline } from "@/components/blocks/Timeline";
 import { Actions } from "@/components/cta/Actions";
 import { education, experience } from "@/content/experience";
 import { site } from "@/content/site";
-
-test("Timeline places bars", () => {
-  const { container } = render(
-    <Timeline
-      t={{
-        columns: ["a", "b", "c"],
-        rows: [{ track: "Build", start: 2, span: 2 }],
-      }}
-    />,
-  );
-  expect(container.querySelector("[data-bar]")).toHaveStyle({
-    gridColumn: "2 / span 2",
-  });
-});
 
 test("Facts renders key/value rows", () => {
   render(<Facts rows={[["Role", "Dev"]]} />);

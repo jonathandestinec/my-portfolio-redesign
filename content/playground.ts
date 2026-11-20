@@ -1,91 +1,15 @@
+import data from './playground.json'
 import type { PlaygroundItem } from './types'
 
-export const playground: PlaygroundItem[] = [
-  {
-    name: 'Chip Anna Putt',
-    group: 'client',
-    role: 'Built end-to-end (fullstack)',
-    summary: 'Golf training-kit brand: shop, lessons, members area.',
-    stack: ['Supabase', 'Zustand', 'Resend'],
-    url: 'https://chipannaputt0.vercel.app',
-  },
-  {
-    name: 'Saje Food Court',
-    group: 'client',
-    role: 'Built end-to-end',
-    summary: 'Restaurant site.',
-    url: 'https://saje-food-court.vercel.app',
-  },
-  {
-    name: 'BAM Hire',
-    group: 'client',
-    role: 'Collaborated · fullstack',
-    summary: 'Staffing agency site.',
-    url: 'https://www.bamhire.com',
-  },
-  {
-    name: 'Bubbles Bay Auto Spa',
-    group: 'client',
-    role: 'Collaborated · fullstack',
-    summary: 'Car detailing studio, Malete, Kwara.',
-    url: 'https://bubbles-bay-bay.vercel.app',
-  },
-  {
-    name: 'Thymus Energy FZCO',
-    group: 'client',
-    role: 'Collaborated · frontend',
-    summary:
-      'Corporate site for a petroleum trading company (trading, logistics, finance, risk pages).',
-    url: 'https://www.thymus-energy.com',
-  },
-  {
-    name: 'A3 Fine Jewelry',
-    group: 'client',
-    role: 'Collaborated · frontend',
-    summary: 'Jewelry storefront: shop, categories, wishlist, checkout.',
-  },
-  {
-    name: 'Rossyz (TailorFlow)',
-    group: 'experiment',
-    role: 'Solo',
-    summary: 'Bespoke fashion atelier site + private desk; AI chat intake on n8n.',
-    stack: ['Next.js', 'n8n'],
-    url: 'https://tailorflow-theta.vercel.app',
-  },
-  {
-    name: 'RefillRx',
-    group: 'experiment',
-    role: 'Solo',
-    summary: 'Pharmacy refill reminders, pharmacist chat, pickup status.',
-    stack: ['Next.js', 'Supabase', 'Paystack', 'Web Push', 'Resend'],
-    url: 'https://refillrx.vercel.app',
-    repo: 'https://github.com/jonathandestinec/refillrx',
-  },
-  {
-    name: 'FASCO Store',
-    group: 'experiment',
-    role: 'Solo',
-    summary: 'Figma design turned into a working storefront with Paystack checkout.',
-    stack: ['Next.js', 'Supabase', 'TanStack Query', 'Zustand'],
-    url: 'https://ecommerce-store-nine-xi.vercel.app',
-    repo: 'https://github.com/jonathandestinec/ecommerce-store',
-  },
-  {
-    name: 'AnimeVault',
-    group: 'experiment',
-    role: 'Solo',
-    summary: 'Anime library tracker on the AniList API.',
-    stack: ['Next.js', 'AniList GraphQL'],
-    url: 'https://animevault-development-zeta.vercel.app',
-    repo: 'https://github.com/jonathandestinec/animevault-development',
-  },
-  {
-    name: 'Chatt',
-    group: 'experiment',
-    role: 'Solo',
-    summary: 'Realtime chat.',
-    stack: ['Next.js', 'Socket.io', 'Express', 'MongoDB', 'JWT'],
-    url: 'https://super-basic-chat-app.vercel.app',
-    repo: 'https://github.com/jonathandestinec/super-basic-chat-app-front-end',
-  },
-]
+const opt = (s: string | null | undefined) => (s ? s : undefined)
+
+/** Client work and experiments on /works. Edited in the admin panel ("Client work & experiments"), stored in content/playground.json. */
+export const playground: PlaygroundItem[] = data.items.map((i) => ({
+  name: i.name,
+  group: i.group as PlaygroundItem['group'],
+  role: i.role,
+  summary: i.summary,
+  stack: i.stack.length ? i.stack : undefined,
+  url: opt(i.url),
+  repo: opt(i.repo),
+}))

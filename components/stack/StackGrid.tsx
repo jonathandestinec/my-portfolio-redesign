@@ -2,9 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import { stackCategories } from "@/content/stack";
+import { filterStack, stackCategories } from "@/content/stack";
 import type { StackCategory, StackItem } from "@/content/types";
-import { filterStack } from "@/lib/content";
 import { StackIcon } from "./StackIcon";
 
 type Cat = StackCategory | "all";

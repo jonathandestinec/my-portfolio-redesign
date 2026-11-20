@@ -5,8 +5,6 @@ import type {
   PlaygroundItem,
   Project,
   RichText,
-  StackCategory,
-  StackItem,
 } from '@/content/types'
 
 export function getProject(slug: string): Project | undefined {
@@ -51,13 +49,12 @@ export function heroStatements(): RichText[] {
   ]
 }
 
+export { filterStack } from '@/content/stack'
+
 export function rangeLabel(start: string, end: string): string {
   return start === end ? start : `${start} – ${end}`
 }
 
-export function filterStack(items: StackItem[], cat: StackCategory | 'all'): StackItem[] {
-  return cat === 'all' ? items : items.filter((i) => i.category === cat)
-}
 
 /** True when the project lives on its own domain rather than a *.vercel.app preview URL. */
 export function hasCustomDomain(item: PlaygroundItem): boolean {

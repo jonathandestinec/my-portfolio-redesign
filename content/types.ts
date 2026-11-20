@@ -17,13 +17,6 @@ export type Site = {
   hero: { lead: string; intro: string; status: string[] }
 }
 
-export type Slide = Img & { screen: string; phone?: boolean }
-
-export type Timeline = {
-  columns: string[]
-  rows: { track: string; start: number; span: number }[]
-}
-
 export type Chapter = {
   id: string
   title: string
@@ -44,15 +37,13 @@ export type Project = {
   /** Case-study paragraphs under the title. */
   story: string[]
   chapters: Chapter[]
+  /** Carousel slide, Works card and case-study header image. */
   cover: Img
-  slides: Slide[]
   role: string
   stack: string[]
   year: string
   status: 'in-progress' | 'shipped'
   links: { live?: string; repo?: string }
-  images: (Img & { caption?: string })[]
-  timeline?: Timeline
 }
 
 /** Square logo in /public/logos, or initials shown on a plain tile when there is none yet. */

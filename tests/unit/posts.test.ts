@@ -36,9 +36,12 @@ test('reading time strips a multi-line export', () =>
     readingMinutes("export const meta = {\n  title: 'a long title here',\n  summary: 'many words '.repeat(300),\n}\n\n" + 'word '.repeat(220)),
   ).toBe(1))
 
+test('reading time ignores YAML frontmatter', () =>
+  expect(readingMinutes('---\ntitle: "' + 'long '.repeat(400) + '"\ndate: 2026-01-01\n---\n' + 'word '.repeat(220))).toBe(1))
+
 test('listPublishedSlugs excludes drafts', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'posts-'))
-  const meta = (draft: boolean) => `export const meta = { title: 'T', date: '2026-01-01', summary: 's', tags: ['draft: true'], draft: ${draft} }\n\nBody draft: true\n`
+  const meta = (draft: boolean) => `---\ntitle: T\ndate: 2026-01-01\nsummary: s\ntags:\n  - "draft: true"\ndraft: ${draft}\n---\n\nBody draft: true\n`
   fs.writeFileSync(path.join(dir, 'live.mdx'), meta(false))
   fs.writeFileSync(path.join(dir, 'wip.mdx'), meta(true))
   expect(listSlugs(dir)).toEqual(['live', 'wip'])

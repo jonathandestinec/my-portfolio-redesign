@@ -3,13 +3,13 @@ import Image from "next/image";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { Facts } from "@/components/blocks/Facts";
-import { Timeline } from "@/components/blocks/Timeline";
 import { Intro } from "@/components/hero/Lead";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { projects } from "@/content/projects";
 import type { Img } from "@/content/types";
 import { getNextProject, getProject } from "@/lib/content";
+import { withSize } from "@/lib/image-size";
 
 // First request for an unlisted slug must wait for the full render so notFound() yields a real 404.
 export const ensureStatic = "navigation";
@@ -64,7 +64,7 @@ export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
   const project = await load(slug);
   const next = getNextProject(slug);
-  const hero = project.images[0];
+  const hero = withSize(project.cover);
 
   const facts: [string, React.ReactNode][] = [
     ["What I did", project.role],
@@ -124,15 +124,6 @@ export default async function ProjectPage({ params }: Props) {
         ) : null}
       </div>
 
-      {project.timeline ? (
-        <section className="col chapter" data-reveal>
-          <div className="chapter__text">
-            <h2 className="chapter__title">How it&apos;s shipping</h2>
-          </div>
-          <Timeline t={project.timeline} />
-        </section>
-      ) : null}
-
       {project.chapters.map((c) => (
         <section key={c.id} id={c.id} className="chapter">
           <div className="col chapter__text" data-reveal>
@@ -142,7 +133,7 @@ export default async function ProjectPage({ params }: Props) {
           {c.images.length ? (
             <div className="wide shots" data-reveal>
               <div className="shots__row" style={{ "--count": c.images.length } as React.CSSProperties}>
-                {c.images.map((img) => (
+                {c.images.map(withSize).map((img) => (
                   <Shot
                     key={img.src}
                     img={img}
