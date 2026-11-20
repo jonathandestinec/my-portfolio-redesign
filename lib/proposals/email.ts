@@ -7,6 +7,8 @@ import { Resend } from "resend";
  * which can only deliver to the Resend account's own email.
  */
 export async function notifyOwner(input: { subject: string; text: string; attachment?: { filename: string; content: Buffer } }) {
+  // The end-to-end tests set this so test runs don't fill the owner's inbox.
+  if (process.env.PROPOSALS_EMAIL_DISABLED === "1") return { sent: false as const, reason: "disabled" };
   const key = process.env.RESEND_API_KEY;
   const to = process.env.PROPOSALS_NOTIFY_EMAIL;
   if (!key || !to) return { sent: false as const, reason: "not configured" };

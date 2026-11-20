@@ -14,6 +14,7 @@ export default defineConfig({
       // Node's fetch use the sandbox proxy where one is set. DATABASE_URL comes from
       // .env.local and must point at a non-production branch.
       PROPOSALS_TEST_OWNER: "1",
+      PROPOSALS_EMAIL_DISABLED: "1",
       NODE_USE_ENV_PROXY: "1",
     },
     timeout: 240_000,
