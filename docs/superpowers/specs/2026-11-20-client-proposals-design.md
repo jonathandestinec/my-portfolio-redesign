@@ -1,9 +1,9 @@
 # Client proposals: design spec
 
 - **Date:** 2026-11-20
-- **Status:** Draft for the owner's review
+- **Status:** Approved; version 1 built
 - **Lives in:** the portfolio app (`destinejc.vercel.app`), managed from the private admin area
-- **Stack:** Next.js 16 (existing app) · Neon Postgres + Drizzle · Better Auth (GitHub) · Vercel Blob · Resend · `@react-pdf/renderer` (already used for the résumé)
+- **Stack:** Next.js 16 (existing app) · Neon Postgres + Drizzle · GitHub sign-in reused from Studio · Vercel Blob · Resend · `@react-pdf/renderer` (already used for the résumé)
 
 ## 1. What it is
 

@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   // entries added in the admin panel need no code change; ship it with every server function.
   outputFileTracingIncludes: {
     "/**": ["./content/**/*"],
+    // Fonts for the proposal PDFs (Noto Sans covers ₦).
+    "/api/**": ["./lib/proposals/fonts/*"],
   },
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   turbopack: {

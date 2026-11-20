@@ -1,13 +1,21 @@
 // @vitest-environment node
 import { expect, test } from 'vitest'
-import { decide, gateEnabled, isAdminPath } from '@/lib/admin-gate'
+import { decide, gateEnabled, isAdminPath, isProposalPath } from '@/lib/admin-gate'
 
 const env = { entryPath: '/studio-abc12345', token: 'x'.repeat(48) }
 
-test('admin paths are /keystatic and /api/keystatic only', () => {
-  for (const p of ['/keystatic', '/keystatic/branch/master', '/api/keystatic', '/api/keystatic/github/login'])
+test('admin paths are Studio (/keystatic) and the proposals admin (/desk) only', () => {
+  for (const p of ['/keystatic', '/keystatic/branch/master', '/api/keystatic', '/api/keystatic/github/login', '/desk', '/desk/abc/preview', '/api/desk/abc/pdf'])
     expect(isAdminPath(p)).toBe(true)
-  for (const p of ['/', '/keystatics', '/api/keystaticx', '/works', '/studio-abc12345']) expect(isAdminPath(p)).toBe(false)
+  for (const p of ['/', '/keystatics', '/api/keystaticx', '/works', '/studio-abc12345', '/desks', '/p/acme-x', '/api/p/acme-x/pdf'])
+    expect(isAdminPath(p)).toBe(false)
+})
+
+test('client proposal pages are recognised for noindex headers', () => {
+  expect(isProposalPath('/p/acme-abc')).toBe(true)
+  expect(isProposalPath('/api/p/acme-abc/sign')).toBe(true)
+  expect(isProposalPath('/projects')).toBe(false)
+  expect(isProposalPath('/p')).toBe(false)
 })
 
 test('visitors get a 404 on admin paths; other pages pass through', () => {

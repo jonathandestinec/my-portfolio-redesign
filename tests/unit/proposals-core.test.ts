@@ -132,3 +132,17 @@ describe('status and expiry', () => {
     expect(isEditable('viewed')).toBe(true)
   })
 })
+
+describe('contract text blocks', async () => {
+  const { paragraphs, toBlocks } = await import('@/lib/proposals/blocks')
+  test('headings, paragraphs joined across lines, and lists', () => {
+    expect(toBlocks('# 1. Parties\nThis is\none paragraph.\n\n- a\n- b\nAfter\n\n# 2. Next')).toEqual([
+      { type: 'h', text: '1. Parties' },
+      { type: 'p', text: 'This is one paragraph.' },
+      { type: 'ul', items: ['a', 'b'] },
+      { type: 'p', text: 'After' },
+      { type: 'h', text: '2. Next' },
+    ])
+    expect(paragraphs('One\nline\n\n\nTwo  ')).toEqual(['One line', 'Two'])
+  })
+})

@@ -50,8 +50,17 @@ export function buildSnapshot(input: {
   const work: SnapshotWork[] = content.work.flatMap((pick) => {
     const item = byKey.get(pick.key);
     if (!item) return [];
-    const { tags: _tags, ...rest } = item;
-    return [{ ...rest, note: pick.note.trim() }];
+    return [
+      {
+        key: item.key,
+        name: item.name,
+        summary: item.summary,
+        cover: item.cover,
+        caseStudyUrl: item.caseStudyUrl,
+        liveUrl: item.liveUrl,
+        note: pick.note.trim(),
+      },
+    ];
   });
   return {
     version: input.version,

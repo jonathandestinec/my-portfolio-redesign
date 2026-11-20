@@ -66,6 +66,43 @@ GitHub App (GitHub → Settings → Developer settings → GitHub Apps → New G
 
 Without these variables the site builds and runs normally, and the admin addresses simply answer 404.
 
+## Client proposals
+
+A private page per client at `/p/<client>-<random>`: both logos, the brief, relevant work picked from the portfolio's own projects, scope, milestones and price, and a contract the client signs on the page (typed or drawn signature). Both sides get a signed PDF with an audit page. The full design is in `docs/superpowers/specs/2026-11-20-client-proposals-design.md`.
+
+**Where things live.** The repo is public, so client data is not in it:
+
+- Proposals, versions, views and signatures: Neon Postgres (project `portfolio-proposals`; schema in `db/migrations/`).
+- Logos, signature images and signed PDFs: a **private** Vercel Blob store, served only through proposal routes.
+- Reusable, non-private pieces are edited in Studio under **Proposals**: contract templates (`content/contracts/`), your defaults (`content/proposal-defaults.json`), and **work tags** on projects and client sites, which drive the "relevant work" suggestions.
+
+**Using it.**
+
+1. Open the private admin address, sign in to Studio with GitHub, then go to `/desk`. The proposals admin sits behind the same hidden gate and also checks your GitHub account id (`ADMIN_GITHUB_ID`) on every page and action.
+2. **New proposal** starts from your default intro and contract. Fill in the client, brief and tags, pick relevant work, add scope and milestones (amounts like `150,000` or `1500.50`), and adjust the contract. Placeholders like `{{client}}` and `{{total}}` are filled in when you send.
+3. **Preview** shows exactly what the client will see; **PDF** gives the same as a file.
+4. **Sign and send** puts your signature on it and makes the link live, valid for 14 days by default. Copy the link and send it yourself. Optional: add a passcode and send that separately.
+5. Editing after sending is fine: save, then **Send update**. The client sees the new version and can only sign the latest one.
+6. When the client signs, the proposal is frozen, the signed PDF is stored, and you get an email with it attached. The client downloads theirs from the page.
+
+**How a signature is recorded.** Name, email, optional title, the signature image, time (UTC), IP address and browser, and a SHA-256 fingerprint of everything the client saw in that version (contract text, prices, scope, parties). Signing is a single database statement that only succeeds for the current version, before expiry, with a matching fingerprint. Proposal pages and files send `noindex` and `no-store` and never appear in the sitemap.
+
+**Before relying on the contract:** `content/contracts/standard.json` is a starting template. Have a lawyer review it once.
+
+**Emails** go only to you for now, from Resend's shared sender. To email clients too, verify a domain in Resend and set `PROPOSALS_FROM_EMAIL`.
+
+**Local development.** Put a Neon *dev branch* URL in `.env.local` as `DATABASE_URL` (never production: the tests write to it). Without `ADMIN_GITHUB_ID`, `next dev` lets you into `/desk` without signing in. Files go to `.data/` when there is no Blob token. In a sandbox behind a proxy, run Node with `NODE_USE_ENV_PROXY=1`.
+
+To apply a migration: `DATABASE_URL=... bun scripts/migrate.ts db/migrations/0001_proposals.sql`.
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Vercel (production: main branch; preview: dev branch) | Neon connection string |
+| `ADMIN_GITHUB_ID` | Vercel | The only GitHub account allowed into `/desk` |
+| `PROPOSALS_SECRET` | Vercel | Signs passcode cookies, hashes viewer IPs |
+| `BLOB_READ_WRITE_TOKEN` | Vercel (added by connecting the Blob store) | Private file storage |
+| `RESEND_API_KEY`, `PROPOSALS_NOTIFY_EMAIL` | Vercel | Opened and signed emails to you |
+
 ## Before deploying
 
 - [x] Site URL: defaults to `https://destinejc.vercel.app` (`lib/site-url.ts`); set `NEXT_PUBLIC_SITE_URL` only if you move to a custom domain.

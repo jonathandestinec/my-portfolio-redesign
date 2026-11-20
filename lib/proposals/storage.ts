@@ -11,7 +11,7 @@ import { get, put } from "@vercel/blob";
  */
 
 const LOCAL_DIR = path.join(process.cwd(), ".data", "blob");
-const useBlob = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const blobConfigured = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
 function safeKey(key: string): string {
   if (!/^[A-Za-z0-9/_.-]+$/.test(key) || key.includes("..")) throw new Error("Bad storage key");
@@ -20,7 +20,7 @@ function safeKey(key: string): string {
 
 export async function saveFile(key: string, body: Buffer, contentType: string): Promise<string> {
   safeKey(key);
-  if (useBlob()) {
+  if (blobConfigured()) {
     const res = await put(key, body, { access: "private", contentType, addRandomSuffix: false, allowOverwrite: true });
     return res.pathname;
   }
@@ -33,7 +33,7 @@ export async function saveFile(key: string, body: Buffer, contentType: string): 
 
 export async function readFile(key: string): Promise<{ body: Buffer; contentType: string } | null> {
   safeKey(key);
-  if (useBlob()) {
+  if (blobConfigured()) {
     const res = await get(key, { access: "private" });
     if (!res || !res.stream) return null;
     const body = Buffer.from(await new Response(res.stream).arrayBuffer());

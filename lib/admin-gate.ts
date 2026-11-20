@@ -2,7 +2,8 @@ import { timingSafeEqual } from "node:crypto";
 
 /**
  * Gate in front of the admin panel (Keystatic, which always lives at
- * /keystatic and /api/keystatic). Visitors get the site's normal 404 there.
+ * /keystatic and /api/keystatic) and the proposals admin (/desk, /api/desk).
+ * Visitors get the site's normal 404 there.
  * Visiting the private entry address (ADMIN_ENTRY_PATH, set only in Vercel)
  * stores ADMIN_GATE_TOKEN in an httpOnly cookie and opens the panel. Saving
  * still needs the owner's GitHub sign-in with write access to the repo.
@@ -24,13 +25,15 @@ export type GateDecision =
   | { kind: "admin" }
   | { kind: "not-found" };
 
+const ADMIN_PREFIXES = ["/keystatic", "/api/keystatic", "/desk", "/api/desk"];
+
 export function isAdminPath(pathname: string): boolean {
-  return (
-    pathname === "/keystatic" ||
-    pathname.startsWith("/keystatic/") ||
-    pathname === "/api/keystatic" ||
-    pathname.startsWith("/api/keystatic/")
-  );
+  return ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/** Client proposal pages and their files: public to whoever has the link, but never indexed or cached. */
+export function isProposalPath(pathname: string): boolean {
+  return pathname.startsWith("/p/") || pathname.startsWith("/api/p/");
 }
 
 /** The gate is on only with a real entry path and a long random token. */
