@@ -42,7 +42,9 @@ const projects: Record<string, { base: string; shots: Shot[] }> = {
 const project = process.argv[2] ?? 'agrohub'
 if (!projects[project]) throw new Error(`unknown project "${project}"; use one of ${Object.keys(projects).join(', ')}`)
 const { base: BASE, shots } = projects[project]
-const OUT = path.join(process.cwd(), 'public', 'work', project)
+// Screenshots land in captures/<project>/ (gitignored); upload the ones you want
+// through the admin panel, which stores them under public/work/<project>/.
+const OUT = path.join(process.cwd(), 'captures', project)
 
 function downscale(src: string, dest: string, width: number) {
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', src, '-vf', `scale=${width}:-1`, dest])

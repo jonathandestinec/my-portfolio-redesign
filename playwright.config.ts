@@ -6,6 +6,11 @@ export default defineConfig({
     command: "bun run build && bun run start -p 3100",
     url: "http://localhost:3100",
     reuseExistingServer: true,
+    // Test-only admin gate values (the real ones live only in Vercel).
+    env: {
+      ADMIN_ENTRY_PATH: "/studio-e2e-gate-01",
+      ADMIN_GATE_TOKEN: "e2e-gate-token-0123456789abcdef0123456789abcdef",
+    },
     timeout: 240_000,
   },
   use: { baseURL: "http://localhost:3100" },
