@@ -8,7 +8,7 @@ export type StoredStatus = "draft" | "sent" | "viewed" | "signed" | "withdrawn";
 export type Status = StoredStatus | "expired";
 
 export type WorkPick = {
-  /** `project:<slug>` for a case study, `client:<slug>` for an item from /works. */
+  /** `project:<slug>` for a case study; `client:<slug>` or `experiment:<slug>` for an item from /works. */
   key: string;
   /** One line on why this is relevant to the client. Optional. */
   note: string;

@@ -80,5 +80,13 @@
   "links": {
     "live": "https://agro-hub.com.ng",
     "repo": "https://github.com/jonathandestinec/agrohub"
-  }
+  },
+  "tags": [
+    "marketplace",
+    "payments",
+    "ecommerce",
+    "dashboard",
+    "mobile-first",
+    "automation"
+  ]
 }

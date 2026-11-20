@@ -44,6 +44,8 @@ export type Project = {
   year: string
   status: 'in-progress' | 'shipped'
   links: { live?: string; repo?: string }
+  /** Work tags (lib/proposals/tags.ts), used to suggest relevant work in client proposals. */
+  tags: string[]
 }
 
 /** Square logo in /public/logos, or initials shown on a plain tile when there is none yet. */
@@ -93,4 +95,6 @@ export type PlaygroundItem = {
   stack?: string[]
   url?: string
   repo?: string
+  /** Work tags, used to suggest relevant work in client proposals. */
+  tags: string[]
 }

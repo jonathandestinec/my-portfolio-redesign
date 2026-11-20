@@ -99,7 +99,8 @@ describe('fingerprints', () => {
 
   test('key order does not change the hash; content does', () => {
     expect(canonicalJson({ b: 1, a: { d: 2, c: 3 } })).toBe('{"a":{"c":3,"d":2},"b":1}')
-    const reordered = JSON.parse(JSON.stringify({ contract: snap.contract, ...snap }))
+    const { contract, ...rest } = snap
+    const reordered = { contract, ...rest } as Snapshot
     expect(snapshotHash(reordered)).toBe(snapshotHash(snap))
     expect(snapshotHash({ ...snap, contract: 'Terms.' })).not.toBe(snapshotHash(snap))
     expect(snapshotHash({ ...snap, totalMinor: 101 })).not.toBe(snapshotHash(snap))

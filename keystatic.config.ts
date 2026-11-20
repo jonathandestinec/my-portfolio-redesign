@@ -1,4 +1,5 @@
 import { collection, config, fields, singleton } from "@keystatic/core";
+import { WORK_TAGS } from "./lib/proposals/tags";
 
 /**
  * Admin panel ("Studio"). Every save is a git commit to the repo, which
@@ -21,6 +22,9 @@ const list = (label: string, itemLabel: string, description?: string) =>
     description,
     itemLabel: (p) => p.value || itemLabel,
   });
+
+const workTags = (description: string) =>
+  fields.multiselect({ label: "Work tags", description, options: [...WORK_TAGS] });
 
 const logo = (description: string) =>
   fields.object(
@@ -47,6 +51,7 @@ export default config({
       Work: ["projects", "playground"],
       About: ["experience", "education", "stack"],
       Writing: ["posts"],
+      Proposals: ["proposalDefaults", "contracts"],
     },
   },
 
@@ -200,6 +205,7 @@ export default config({
             stack: list("Stack", "Tool"),
             url: fields.url({ label: "Live link", description: "Client sites on their own domain are listed first." }),
             repo: fields.url({ label: "Code link", description: "Shown for experiments only." }),
+            tags: workTags("Not shown on the site. Used to suggest this work in client proposals."),
           }),
           {
             label: "Items",
@@ -209,9 +215,47 @@ export default config({
         ),
       },
     }),
+
+    proposalDefaults: singleton({
+      label: "Proposal defaults",
+      path: "content/proposal-defaults",
+      format: { data: "json" },
+      schema: {
+        providerName: text("Your name", "As it appears on proposals and contracts."),
+        providerTitle: text("Your title", "e.g. Fullstack developer"),
+        validityDays: fields.integer({
+          label: "Valid for (days)",
+          description: "Default time a client has to sign after you send.",
+          defaultValue: 14,
+          validation: { isRequired: true, min: 1, max: 365 },
+        }),
+        intro: paragraph("Default intro", "The personal note at the top of a new proposal. You can change it per client."),
+        contractTemplate: text("Default contract template", "The file name of a contract template, e.g. standard."),
+      },
+    }),
   },
 
   collections: {
+    contracts: collection({
+      label: "Contract templates",
+      path: "content/contracts/*",
+      slugField: "name",
+      format: { data: "json" },
+      schema: {
+        name: fields.slug({
+          name: { label: "Name", validation: { isRequired: true } },
+          slug: { label: "File name", description: "Used to pick this template in a proposal." },
+        }),
+        body: fields.text({
+          label: "Terms",
+          multiline: true,
+          validation: { isRequired: true },
+          description:
+            "Plain text. Lines starting with # are headings. Placeholders: {{client}}, {{contact}}, {{provider}}, {{providerTitle}}, {{total}}, {{currency}}, {{date}}, {{validUntil}}, {{scope}}, {{milestones}}. This file is public in the repo: keep client details out of it.",
+        }),
+      },
+    }),
+
     projects: collection({
       label: "Projects",
       path: "content/projects/*",
@@ -294,6 +338,7 @@ export default config({
           },
           { label: "Links" },
         ),
+        tags: workTags("Not shown on the site. Used to suggest this project in client proposals."),
       },
     }),
 

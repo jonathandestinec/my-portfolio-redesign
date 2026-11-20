@@ -27,6 +27,7 @@ type Stored = {
   year: string
   status: string
   links: { live: string | null; repo: string | null }
+  tags?: string[]
 }
 
 function toProject(slug: string, p: Stored): Project {
@@ -53,6 +54,7 @@ function toProject(slug: string, p: Stored): Project {
     year: p.year,
     status: p.status === 'shipped' ? 'shipped' : 'in-progress',
     links: { live: p.links.live || undefined, repo: p.links.repo || undefined },
+    tags: p.tags ?? [],
   }
 }
 
