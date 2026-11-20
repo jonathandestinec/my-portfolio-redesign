@@ -22,9 +22,9 @@ test("agrohub case study follows the reference case layout", async ({ page, isMo
 test("huddle case study", async ({ page }) => {
   await page.goto("/work/huddle");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Huddle: where organisations bring their people together/);
-  await expect(page.getByRole("link", { name: "huddle-three-rho.vercel.app" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "huddleplat.vercel.app" })).toHaveAttribute(
     "href",
-    "https://huddle-three-rho.vercel.app",
+    "https://huddleplat.vercel.app",
   );
   for (const t of ["Functions, mixed per event", "One link, no passwords", "Money goes straight to the organisation"])
     await expect(page.getByRole("heading", { level: 2, name: t })).toBeVisible();

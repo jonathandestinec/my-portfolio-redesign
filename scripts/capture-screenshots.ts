@@ -24,7 +24,7 @@ const projects: Record<string, { base: string; shots: Shot[] }> = {
     ],
   },
   huddle: {
-    base: 'https://huddle-three-rho.vercel.app',
+    base: 'https://huddleplat.vercel.app',
     shots: [
       { name: 'landing', route: '/' },
       { name: 'features', route: '/', scrollTo: '#features' },

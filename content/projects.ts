@@ -126,7 +126,7 @@ export const projects: Project[] = [
     year: '2026',
     status: 'shipped',
     links: {
-      live: 'https://huddle-three-rho.vercel.app',
+      live: 'https://huddleplat.vercel.app',
       repo: 'https://github.com/jonathandestinec/huddle-app',
     },
     images: [
