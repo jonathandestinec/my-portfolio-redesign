@@ -6,7 +6,11 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@": path.resolve(fileURLToPath(new URL(".", import.meta.url))) },
+    alias: {
+      "@": path.resolve(fileURLToPath(new URL(".", import.meta.url))),
+      // Server-only modules are tested directly in Node.
+      "server-only": path.resolve(fileURLToPath(new URL(".", import.meta.url)), "node_modules/server-only/empty.js"),
+    },
   },
   test: {
     environment: "jsdom",

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { GATE_COOKIE, GATE_MAX_AGE, decide } from "@/lib/admin-gate";
+import { GATE_COOKIE, GATE_MAX_AGE, decide, isProposalPath } from "@/lib/admin-gate";
 
 const NO_INDEX = "noindex, nofollow, noarchive";
 
@@ -12,8 +12,15 @@ export function proxy(request: NextRequest) {
   });
 
   switch (decision.kind) {
-    case "pass":
-      return NextResponse.next();
+    case "pass": {
+      const res = NextResponse.next();
+      if (isProposalPath(pathname)) {
+        res.headers.set("X-Robots-Tag", NO_INDEX);
+        res.headers.set("Cache-Control", "private, no-store");
+        res.headers.set("Referrer-Policy", "no-referrer");
+      }
+      return res;
+    }
     case "enter": {
       const res = NextResponse.redirect(new URL("/keystatic", request.url));
       res.cookies.set(GATE_COOKIE, decision.token, {

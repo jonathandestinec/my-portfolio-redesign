@@ -92,5 +92,13 @@
   "links": {
     "live": "https://huddleplat.vercel.app",
     "repo": "https://github.com/jonathandestinec/huddle-app"
-  }
+  },
+  "tags": [
+    "events",
+    "community",
+    "media",
+    "mobile-first",
+    "auth",
+    "dashboard"
+  ]
 }

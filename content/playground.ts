@@ -12,4 +12,5 @@ export const playground: PlaygroundItem[] = data.items.map((i) => ({
   stack: i.stack.length ? i.stack : undefined,
   url: opt(i.url),
   repo: opt(i.repo),
+  tags: i.tags ?? [],
 }))

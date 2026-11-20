@@ -10,7 +10,12 @@
         "Zustand",
         "Resend"
       ],
-      "url": "https://chipannaputt0.vercel.app"
+      "url": "https://chipannaputt0.vercel.app",
+      "tags": [
+        "ecommerce",
+        "auth",
+        "content-site"
+      ]
     },
     {
       "name": "BAM Hire",
@@ -18,7 +23,11 @@
       "role": "Collaborated · fullstack",
       "summary": "Staffing agency site.",
       "stack": [],
-      "url": "https://www.bamhire.com"
+      "url": "https://www.bamhire.com",
+      "tags": [
+        "content-site",
+        "landing-page"
+      ]
     },
     {
       "name": "Thymus Energy FZCO",
@@ -26,7 +35,10 @@
       "role": "Collaborated · frontend",
       "summary": "Corporate site for a petroleum trading company (trading, logistics, finance, risk pages).",
       "stack": [],
-      "url": "https://www.thymus-energy.com"
+      "url": "https://www.thymus-energy.com",
+      "tags": [
+        "content-site"
+      ]
     },
     {
       "name": "Saje Food Court",
@@ -34,14 +46,22 @@
       "role": "Built end-to-end",
       "summary": "Restaurant site.",
       "stack": [],
-      "url": "https://saje-food-court.vercel.app"
+      "url": "https://saje-food-court.vercel.app",
+      "tags": [
+        "content-site",
+        "landing-page"
+      ]
     },
     {
       "name": "A3 Fine Jewelry",
       "group": "client",
       "role": "Collaborated · frontend",
       "summary": "Jewelry storefront: shop, categories, wishlist, checkout.",
-      "stack": []
+      "stack": [],
+      "tags": [
+        "ecommerce",
+        "payments"
+      ]
     },
     {
       "name": "Bubbles Bay Auto Spa",
@@ -49,7 +69,11 @@
       "role": "Collaborated · fullstack",
       "summary": "Car detailing studio, Malete, Kwara.",
       "stack": [],
-      "url": "https://bubbles-bay-bay.vercel.app"
+      "url": "https://bubbles-bay-bay.vercel.app",
+      "tags": [
+        "landing-page",
+        "content-site"
+      ]
     },
     {
       "name": "Rossyz (TailorFlow)",
@@ -60,7 +84,13 @@
         "Next.js",
         "n8n"
       ],
-      "url": "https://tailorflow-theta.vercel.app"
+      "url": "https://tailorflow-theta.vercel.app",
+      "tags": [
+        "ai",
+        "automation",
+        "dashboard",
+        "content-site"
+      ]
     },
     {
       "name": "RefillRx",
@@ -75,7 +105,12 @@
         "Resend"
       ],
       "url": "https://refillrx.vercel.app",
-      "repo": "https://github.com/jonathandestinec/refillrx"
+      "repo": "https://github.com/jonathandestinec/refillrx",
+      "tags": [
+        "realtime",
+        "dashboard",
+        "mobile-first"
+      ]
     },
     {
       "name": "FASCO Store",
@@ -89,7 +124,11 @@
         "Zustand"
       ],
       "url": "https://ecommerce-store-nine-xi.vercel.app",
-      "repo": "https://github.com/jonathandestinec/ecommerce-store"
+      "repo": "https://github.com/jonathandestinec/ecommerce-store",
+      "tags": [
+        "ecommerce",
+        "payments"
+      ]
     },
     {
       "name": "AnimeVault",
@@ -101,7 +140,10 @@
         "AniList GraphQL"
       ],
       "url": "https://animevault-development-zeta.vercel.app",
-      "repo": "https://github.com/jonathandestinec/animevault-development"
+      "repo": "https://github.com/jonathandestinec/animevault-development",
+      "tags": [
+        "media"
+      ]
     },
     {
       "name": "Chatt",
@@ -116,7 +158,11 @@
         "JWT"
       ],
       "url": "https://super-basic-chat-app.vercel.app",
-      "repo": "https://github.com/jonathandestinec/super-basic-chat-app-front-end"
+      "repo": "https://github.com/jonathandestinec/super-basic-chat-app-front-end",
+      "tags": [
+        "realtime",
+        "auth"
+      ]
     }
   ]
 }
