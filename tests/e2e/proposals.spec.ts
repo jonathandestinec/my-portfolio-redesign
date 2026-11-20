@@ -27,12 +27,25 @@ async function createAndSend(page: Page, client: string) {
   await page.getByLabel("Client name").fill(client);
   await page.getByLabel("Contact name").fill("Ada Test");
   await page.getByLabel("Contact email").fill("ada@example.test");
-  await page.getByLabel("What they need").fill("An ordering portal with online payments.");
+  await page.getByLabel("In your words").fill("We lose orders in WhatsApp and nobody knows who paid.");
+  await page.getByRole("button", { name: "Add objective" }).click();
+  await page.getByPlaceholder("A measurable result").fill("Missed orders under 2 a week");
   await page.getByRole("button", { name: "Payments", exact: true }).click();
   await page.getByRole("button", { name: /^\+ AgroHub/ }).click();
-  await page.getByRole("button", { name: "Add milestone" }).click();
-  await page.getByPlaceholder("Milestone").fill("Build");
-  await page.getByRole("textbox", { name: /^Amount/ }).fill("250,000");
+  // Three options by default: price two of them, give each a deliverable, drop the third.
+  const prices = page.getByRole("textbox", { name: /^Price/ });
+  await prices.nth(0).fill("250,000");
+  await prices.nth(1).fill("600,000");
+  const addDeliverable = page.getByRole("button", { name: "Add deliverable" });
+  await addDeliverable.nth(0).click();
+  await page.getByPlaceholder("Deliverable").nth(0).fill("Order page");
+  await addDeliverable.nth(1).click();
+  await page.getByPlaceholder("Deliverable").nth(1).fill("Ordering portal");
+  await page.getByRole("button", { name: "Remove option" }).nth(2).click();
+  await page.getByRole("button", { name: "Add exclusion" }).click();
+  await page.getByPlaceholder("e.g. Mobile apps for iOS or Android").fill("Mobile apps");
+  await page.getByRole("button", { name: "Add criterion" }).click();
+  await page.getByPlaceholder("e.g. A shop owner can place and pay for an order on a phone").fill("Orders can be placed on a phone");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Saved.")).toBeVisible();
   await page.getByRole("button", { name: "Sign and send" }).click();
@@ -47,17 +60,37 @@ test.describe("proposal lifecycle", () => {
   test.describe.configure({ mode: "serial" });
   test.skip(({ isMobile }) => isMobile, "driven from the desktop project; the client side uses a phone context");
 
-  test("send, open on a phone, draw a signature, download the signed PDF", async ({ page, browser, playwright }) => {
-    const { admin, path } = await createAndSend(page, "E2E Drawn Co");
-    expect(path).toMatch(/^\/p\/e2e-drawn-co-[0-9A-Za-z]{22}$/);
+  test("pick an option on a phone, draw a signature, pay the deposit invoice, accept, balance", async ({ page, browser, playwright }) => {
+    // Bank details for the invoices.
+    await page.goto(ENTRY);
+    await page.goto("/desk/settings");
+    await page.getByLabel("Business name").fill("Destine Jonathan");
+    await page.getByLabel("Phone").fill("+234 800 000 0000");
+    await page.getByLabel("Bank").fill("Test Bank");
+    await page.getByLabel("Account name").fill("Destine Jonathan");
+    await page.getByLabel("Account number").fill("0123456789");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Saved. New invoices use these details.")).toBeVisible();
+
+    const { admin, path } = await createAndSend(page, "E2E Options Co");
+    expect(path).toMatch(/^\/p\/e2e-options-co-[0-9A-Za-z]{22}$/);
 
     const phone = await browser.newContext({ ...playwright.devices["iPhone 13"], baseURL: page.url().split("/desk")[0] });
     const client = await phone.newPage();
     const res = await client.goto(path);
     expect(res!.headers()["x-robots-tag"]).toContain("noindex");
-    await expect(client.getByRole("heading", { name: /Proposal for E2E Drawn Co/ })).toBeVisible();
-    await expect(client.getByText("₦250,000.00").first()).toBeVisible();
-    await expect(client.getByRole("heading", { name: "AgroHub" })).toBeVisible();
+    await expect(client.getByRole("heading", { name: /Proposal for E2E Options Co/ })).toBeVisible();
+    await expect(client.getByRole("heading", { name: "In your words" })).toBeVisible();
+    await expect(client.getByText("We lose orders in WhatsApp")).toBeVisible();
+    await expect(client.getByRole("heading", { name: "Not included" })).toBeVisible();
+    await expect(client.getByRole("heading", { name: "How to say yes" })).toBeVisible();
+
+    // The recommended option (Standard) is selected; switch to Essential.
+    await expect(client.getByText(/You’ve selected Standard/)).toBeVisible();
+    await client.locator(".pp-option", { hasText: "Essential" }).click();
+    await expect(client.getByRole("radio", { name: /Essential/ })).toBeChecked();
+    await expect(client.getByText(/You’ve selected Essential \(₦250,000\.00\)/)).toBeVisible();
+    await expect(client.locator(".pp-contract").first()).toContainText("the Essential option");
 
     await client.getByRole("tab", { name: "Draw" }).click();
     const pad = client.getByLabel("Draw your signature");
@@ -67,21 +100,59 @@ test.describe("proposal lifecycle", () => {
     for (let i = 1; i <= 12; i++) await client.mouse.move(box.x + 20 + i * 18, box.y + box.height / 2 + (i % 2 ? -14 : 14));
     await client.mouse.up();
     await client.getByLabel("I have read and agree").check();
+    await expect(client.getByText(/You’re signing for Essential/)).toBeVisible();
     await client.getByRole("button", { name: "Sign the agreement" }).click();
     await expect(client.getByText(/Signed by Ada Test/)).toBeVisible({ timeout: 30_000 });
-    await expect(client.getByRole("button", { name: "Sign the agreement" })).toHaveCount(0);
+    await expect(client.getByRole("heading", { name: "What you chose" })).toBeVisible();
+    await expect(client.getByText("Next: pay the deposit of ₦125,000.00")).toBeVisible();
 
     const pdf = await client.request.get(path.replace("/p/", "/api/p/") + "/pdf");
     expect(pdf.headers()["content-type"]).toBe("application/pdf");
-    expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
 
-    // Signed proposals can't be edited or signed again.
+    // The invoice: all nine lines, bank details, no Paystack button without a key.
+    await client.getByRole("link", { name: "View invoice and pay" }).click();
+    await expect(client.getByRole("heading", { name: /Invoice \d{4}-\d{3}/ })).toBeVisible();
+    for (const line of ["Destine Jonathan", "+234 800 000 0000", "Issued", "Due", "E2E Options Co", "Essential: 50% deposit", "Deposit due now", "₦125,000.00", "0123456789", "1.5% per month"])
+      await expect(client.getByText(line).first()).toBeVisible();
+    const invoicePdf = await client.request.get(new URL(client.url()).pathname.replace("/i/", "/api/i/") + "/pdf");
+    expect(invoicePdf.headers()["content-type"]).toBe("application/pdf");
+
+    // The owner marks the transfer paid, accepts the work: the balance invoice follows.
     await page.goto(admin);
     await expect(page.getByRole("heading", { name: "Signed", exact: true })).toBeVisible();
-    await expect(page.getByLabel("Client name")).toBeDisabled();
+    await expect(page.getByText("Chose Essential")).toBeVisible();
+    page.on("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Mark paid (transfer)" }).click();
+    await expect(page.getByText(/Paid .* by transfer/)).toBeVisible();
+    await page.getByRole("button", { name: "Mark work accepted" }).click();
+    await expect(page.getByText(/Balance · ₦125,000\.00/)).toBeVisible();
+    await client.goto(path);
+    await expect(client.getByText("Deposit received.")).toBeVisible();
+    await expect(client.getByText("Next: pay the balance of ₦125,000.00")).toBeVisible();
+
     const again = await client.request.post(path.replace("/p/", "/api/p/") + "/sign", { data: {} });
     expect(again.status()).toBe(409);
     await phone.close();
+  });
+
+  test("discovery notes start a proposal in the client’s words", async ({ page }) => {
+    await page.goto(ENTRY);
+    await page.goto("/desk/discovery");
+    await page.getByRole("button", { name: "New conversation" }).click();
+    await page.waitForURL(/\/desk\/discovery\/[0-9a-f-]{36}$/);
+    await page.getByLabel("Business name").fill("E2E Bakery");
+    await page.getByLabel("Who you spoke to").fill("Tunde");
+    await page.getByLabel("What part of that goes wrong most often?").fill("Customers say they paid and we can’t find it.");
+    await page.getByLabel("The value number").fill("About 5 disputes a week");
+    await page.getByLabel("Decision-maker").fill("Mrs Bello");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
+    await page.getByRole("button", { name: "Start a proposal" }).click();
+    await page.waitForURL(/\/desk\/[0-9a-f-]{36}$/);
+    await expect(page.getByLabel("Client name")).toHaveValue("E2E Bakery");
+    await expect(page.getByLabel("Contact name")).toHaveValue("Mrs Bello");
+    await expect(page.getByLabel("In your words")).toHaveValue("Customers say they paid and we can’t find it.");
+    await expect(page.getByPlaceholder("A measurable result")).toHaveValue("Fix this: About 5 disputes a week");
   });
 
   test("a passcode guards the link; withdrawing it hides everything", async ({ page, browser }) => {

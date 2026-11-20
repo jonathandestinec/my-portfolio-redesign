@@ -2,7 +2,9 @@ import "server-only";
 import type { SignedBy } from "@/components/proposals/ProposalView";
 import { siteUrl } from "@/lib/site-url";
 import { notifyOwner } from "./email";
+import { createDepositInvoice } from "./invoices";
 import { formatMoney } from "./money";
+import { defaultOption, formatDate } from "./snapshot";
 import { buildProposalPdf, pdfImage, type PdfSignature } from "./pdf";
 import { getByToken, getSignatures, getVersion, setSignaturePdf, signProposal, type ProposalRow, type SignatureRow } from "./repo";
 import { sameString, unlockCookieName, unlockValue } from "./security";
@@ -39,13 +41,14 @@ export const clientApi = (row: Pick<ProposalRow, "slug" | "token">) => `/api/p/$
 export const clientUrl = (row: Pick<ProposalRow, "slug" | "token">) => `${siteUrl()}${clientBase(row)}`;
 
 export function signedBy(sigs: SignatureRow[], imageUrl: (s: SignatureRow) => string): SignedBy[] {
-  return sigs.map((s) => ({ role: s.role, name: s.name, title: s.title, signedAt: s.signedAt, imageUrl: imageUrl(s) }));
+  return sigs.map((s) => ({ role: s.role, name: s.name, title: s.title, signedAt: s.signedAt, imageUrl: imageUrl(s), optionId: s.optionId }));
 }
 
 async function toPdfSignatures(sigs: SignatureRow[]): Promise<PdfSignature[]> {
   return Promise.all(
     sigs.map(async (s) => ({
       role: s.role,
+      optionId: s.optionId,
       name: s.name,
       email: s.email,
       title: s.title,
@@ -80,15 +83,22 @@ export async function storeSignatureImage(proposalId: string, version: number, r
   return saveFile(`proposals/${proposalId}/v${version}-${role}-signature.png`, png, "image/png");
 }
 
+/** The option the client chose (falls back to the default option for older signatures). */
+export function chosenOption(snapshot: Snapshot, optionId: string | null | undefined) {
+  return snapshot.options.find((o) => o.id === optionId) ?? defaultOption(snapshot.options);
+}
+
 /**
- * The client signs: store the image, sign atomically, build and store the signed
- * PDF, then email the owner. Returns false when the proposal can't be signed
- * (stale version, changed content, expired, already signed).
+ * The client signs: store the image, sign atomically (recording the chosen
+ * option), issue the deposit invoice, build and store the signed PDF, then
+ * email the owner. Returns false when the proposal can't be signed (stale
+ * version, changed content, expired, already signed).
  */
 export async function completeClientSignature(input: {
   row: ProposalRow;
   version: number;
   contentSha256: string;
+  optionId: string;
   name: string;
   email: string;
   title: string | null;
@@ -100,6 +110,7 @@ export async function completeClientSignature(input: {
   const { row } = input;
   const signatureKey = await storeSignatureImage(row.id, input.version, "client", input.png);
   const sigId = await signProposal(row.id, input.version, {
+    optionId: input.optionId,
     name: input.name,
     email: input.email,
     title: input.title,
@@ -112,17 +123,21 @@ export async function completeClientSignature(input: {
   if (!sigId) return { ok: false };
 
   const v = (await getVersion(row.id, input.version))!;
+  const option = chosenOption(v.snapshot, input.optionId)!;
+  const deposit = await createDepositInvoice(row, v.snapshot, option, input.name);
   const pdf = await renderPdf(row, v.snapshot, v.contentSha256);
   const pdfKey = await saveFile(`proposals/${row.id}/v${input.version}-signed.pdf`, pdf, "application/pdf");
   await setSignaturePdf(sigId, pdfKey);
 
   const s = v.snapshot;
   const email = notifyOwner({
-    subject: `Signed: proposal for ${s.client.name}`,
+    subject: `Signed: proposal for ${s.client.name} (${option.name})`,
     text: [
       `${input.name}${input.title ? ` (${input.title})` : ""} signed the proposal for ${s.client.name}.`,
       "",
-      `Total: ${formatMoney(s.totalMinor, s.currency)}`,
+      `Option: ${option.name}`,
+      `Price: ${formatMoney(option.priceMinor, s.currency)}`,
+      deposit ? `Deposit invoice ${deposit.number}: ${formatMoney(deposit.amountMinor, s.currency)}, due ${formatDate(deposit.dueAt)}` : "No deposit invoice.",
       `Version: ${s.version}`,
       `Signed by: ${input.name} <${input.email}>`,
       `Fingerprint: ${v.contentSha256}`,

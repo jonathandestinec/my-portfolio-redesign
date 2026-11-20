@@ -1,24 +1,33 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
+  acceptWorkAction,
   deleteAction,
   duplicateAction,
   extendAction,
+  issueDepositAction,
+  markPaidAction,
   passcodeAction,
   saveAction,
   sendAction,
+  voidInvoiceAction,
   withdrawAction,
 } from "@/app/desk/actions";
 import { rankWork } from "@/lib/proposals/match";
-import { amountInput, formatMoney, parseAmount, totalMinor } from "@/lib/proposals/money";
-import { readiness } from "@/lib/proposals/snapshot";
+import { amountInput, bpsLabel, formatMoney, parseAmount, split } from "@/lib/proposals/money";
+import { optionDays, readiness } from "@/lib/proposals/snapshot";
 import { STATUS_LABEL, isEditable } from "@/lib/proposals/status";
 import { placeholders } from "@/lib/proposals/template";
-import type { ProposalContent, Status } from "@/lib/proposals/types";
+import { emptyOption, type ProposalContent, type ProposalOption, type Status } from "@/lib/proposals/types";
 import { SignaturePad, type SignatureMethod, type SignaturePadHandle } from "./SignaturePad";
 
-const KNOWN = new Set(["client", "contact", "provider", "providerTitle", "total", "currency", "date", "validUntil", "scope", "milestones"]);
+const KNOWN = new Set([
+  "client", "contact", "provider", "providerTitle", "option", "overview", "objectives", "scopeIn", "scopeOut", "deliverables",
+  "timeline", "workingDays", "responsibilities", "acceptance", "payment", "total", "deposit", "balance", "depositPercent",
+  "lateFee", "currency", "date", "validUntil", "scope", "milestones",
+]);
 
 type CatalogEntry = { key: string; name: string; summary: string; tags: string[] };
 type Sig = {
@@ -32,10 +41,25 @@ type Sig = {
   contentSha256: string;
   imageUrl: string;
   pdfUrl: string | null;
+  optionName: string | null;
+};
+export type DeskInvoice = {
+  id: string;
+  number: string;
+  kind: "deposit" | "balance";
+  amountMinor: number;
+  currency: ProposalContent["currency"];
+  state: "paid" | "void" | "unpaid" | "overdue";
+  dueAt: string;
+  paidAt: string | null;
+  paidVia: string | null;
+  daysLate: number;
+  url: string;
 };
 
 const fmt = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Lagos", timeZoneName: "short" }).format(new Date(iso));
+const fmtDay = (iso: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" }).format(new Date(iso));
 
 function move<T>(list: T[], i: number, by: number): T[] {
   const j = i + by;
@@ -55,9 +79,9 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function Panel({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+function Panel({ title, sub, children, id }: { title: string; sub?: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="card">
+    <section className="card" id={id}>
       <div className="card__body">
         <div className="section__head">
           <h2 className="section__title">{title}</h2>
@@ -85,6 +109,158 @@ function RowTools({ onUp, onDown, onRemove }: { onUp: () => void; onDown: () => 
   );
 }
 
+/** Amount field: keeps what you type, reports whole minor units when it parses. */
+function MoneyInput({ label, value, currency, onChange }: { label: string; value: number; currency: ProposalContent["currency"]; onChange: (minor: number) => void }) {
+  const [text, setText] = useState(value ? amountInput(value) : "");
+  const bad = text.trim() !== "" && parseAmount(text) === null;
+  return (
+    <Field label={label} hint={bad ? "Use a number like 150,000 or 1500.50" : formatMoney(value, currency)}>
+      <input
+        className="field__input"
+        inputMode="decimal"
+        value={text}
+        aria-invalid={bad}
+        onChange={(e) => {
+          setText(e.target.value);
+          const p = parseAmount(e.target.value);
+          onChange(p ?? 0);
+        }}
+      />
+    </Field>
+  );
+}
+
+/** An editable list of short lines (objectives, out of scope, acceptance criteria). */
+function TextList({ items, onChange, placeholder, add }: { items: string[]; onChange: (v: string[]) => void; placeholder: string; add: string }) {
+  return (
+    <>
+      {items.length ? (
+        <ul className="desk-lines">
+          {items.map((it, i) => (
+            <li key={i} className="desk-row-head">
+              <input className="field__input" placeholder={placeholder} value={it} onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))} />
+              <RowTools onUp={() => onChange(move(items, i, -1))} onDown={() => onChange(move(items, i, 1))} onRemove={() => onChange(items.filter((_, j) => j !== i))} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <div className="actions">
+        <button type="button" className="button button--pale" onClick={() => onChange([...items, ""])}>
+          {add}
+        </button>
+      </div>
+    </>
+  );
+}
+
+function OptionEditor({
+  o,
+  index,
+  count,
+  currency,
+  depositPercent,
+  onChange,
+  onRemove,
+  onRecommend,
+}: {
+  o: ProposalOption;
+  index: number;
+  count: number;
+  currency: ProposalContent["currency"];
+  depositPercent: number;
+  onChange: (o: ProposalOption) => void;
+  onRemove: () => void;
+  onRecommend: () => void;
+}) {
+  const set = <K extends keyof ProposalOption>(k: K, v: ProposalOption[K]) => onChange({ ...o, [k]: v });
+  const { depositMinor } = split(o.priceMinor, depositPercent);
+  const days = optionDays(o);
+  return (
+    <div className={`desk-option${o.recommended ? " is-rec" : ""}`}>
+      <div className="desk-row-head">
+        <span className="field__label">Option {index + 1}</span>
+        <span className="desk-tools">
+          <label className="desk-inline">
+            <input type="radio" name="recommended" checked={o.recommended} onChange={onRecommend} /> Recommended
+          </label>
+          {count > 1 ? (
+            <button type="button" className="text-link" onClick={onRemove}>
+              Remove option
+            </button>
+          ) : null}
+        </span>
+      </div>
+      <div className="desk-two">
+        <Field label="Name">
+          <input className="field__input" placeholder="e.g. Essential" value={o.name} onChange={(e) => set("name", e.target.value)} />
+        </Field>
+        <MoneyInput label="Price" value={o.priceMinor} currency={currency} onChange={(v) => set("priceMinor", v)} />
+      </div>
+      <Field label="One-line summary">
+        <input className="field__input" placeholder="Who it’s for, in a sentence" value={o.summary} onChange={(e) => set("summary", e.target.value)} />
+      </Field>
+
+      <div className="field">
+        <span className="field__label">Deliverables</span>
+        {o.deliverables.map((d, i) => (
+          <div key={i} className="desk-subrow">
+            <div className="desk-row-head">
+              <input className="field__input" placeholder="Deliverable" value={d.title} onChange={(e) => set("deliverables", o.deliverables.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} />
+              <RowTools
+                onUp={() => set("deliverables", move(o.deliverables, i, -1))}
+                onDown={() => set("deliverables", move(o.deliverables, i, 1))}
+                onRemove={() => set("deliverables", o.deliverables.filter((_, j) => j !== i))}
+              />
+            </div>
+            <div className="desk-two">
+              <input className="field__input" placeholder="Format, e.g. live site on your domain" value={d.format} onChange={(e) => set("deliverables", o.deliverables.map((x, j) => (j === i ? { ...x, format: e.target.value } : x)))} />
+              <input className="field__input" placeholder="Details (optional)" value={d.description} onChange={(e) => set("deliverables", o.deliverables.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
+            </div>
+          </div>
+        ))}
+        <div className="actions">
+          <button type="button" className="button button--pale" onClick={() => set("deliverables", [...o.deliverables, { title: "", description: "", format: "" }])}>
+            Add deliverable
+          </button>
+        </div>
+      </div>
+
+      <div className="field">
+        <span className="field__label">Timeline (working days from the deposit)</span>
+        {o.timeline.map((t, i) => (
+          <div key={i} className="desk-row-head">
+            <input
+              className="field__input desk-day"
+              inputMode="numeric"
+              placeholder="Day"
+              aria-label="Working day"
+              value={t.day ?? ""}
+              onChange={(e) => {
+                const n = e.target.value.trim() === "" ? null : Number.parseInt(e.target.value, 10);
+                set("timeline", o.timeline.map((x, j) => (j === i ? { ...x, day: Number.isFinite(n) ? n : null } : x)));
+              }}
+            />
+            <input className="field__input" placeholder="Milestone, e.g. Design approved" value={t.title} onChange={(e) => set("timeline", o.timeline.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} />
+            <RowTools
+              onUp={() => set("timeline", move(o.timeline, i, -1))}
+              onDown={() => set("timeline", move(o.timeline, i, 1))}
+              onRemove={() => set("timeline", o.timeline.filter((_, j) => j !== i))}
+            />
+          </div>
+        ))}
+        <div className="actions">
+          <button type="button" className="button button--pale" onClick={() => set("timeline", [...o.timeline, { title: "", day: null }])}>
+            Add milestone
+          </button>
+          <span className="field__hint">
+            {formatMoney(depositMinor, currency)} deposit{days ? ` · ${days} working days` : ""}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProposalEditor(props: {
   id: string;
   initial: ProposalContent;
@@ -93,26 +269,31 @@ export function ProposalEditor(props: {
   unsent: boolean;
   hasPasscode: boolean;
   expiresAt: string | null;
+  acceptedAt: string | null;
   link: string | null;
   logoUrl: string | null;
+  discoveryUrl: string | null;
   catalog: CatalogEntry[];
   contracts: { slug: string; name: string; body: string }[];
   tags: { value: string; label: string }[];
   providerName: string;
   signatures: Sig[];
+  invoices: DeskInvoice[];
+  businessReady: boolean;
   views: { at: string; version: number; userAgent: string | null }[];
 }) {
   const { id, status } = props;
   const editable = isEditable(status);
   const [c, setC] = useState<ProposalContent>(props.initial);
   const [saved, setSaved] = useState<ProposalContent>(props.initial);
-  const [amounts, setAmounts] = useState<string[]>(props.initial.milestones.map((m) => amountInput(m.amountMinor)));
   const [logoUrl, setLogoUrl] = useState(props.logoUrl);
+  const [lateFee, setLateFee] = useState(bpsLabel(props.initial.terms.lateFeeBps).replace("%", ""));
   const [msg, setMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [pending, start] = useTransition();
   const dirty = JSON.stringify(c) !== JSON.stringify(saved);
 
   const set = <K extends keyof ProposalContent>(k: K, v: ProposalContent[K]) => setC((prev) => ({ ...prev, [k]: v }));
+  const setTerm = <K extends keyof ProposalContent["terms"]>(k: K, v: number) => setC((prev) => ({ ...prev, terms: { ...prev.terms, [k]: v } }));
 
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {
@@ -152,25 +333,6 @@ export function ProposalEditor(props: {
   }, [props.catalog, c.tags, c.work]);
   const others = props.catalog.filter((w) => !c.work.some((p) => p.key === w.key) && !suggested.some((s) => s.item.key === w.key));
 
-  // ---------- Money ----------
-  const total = (() => {
-    try {
-      return totalMinor(c.milestones);
-    } catch {
-      return 0;
-    }
-  })();
-  const setAmount = (i: number, text: string) => {
-    const next = [...amounts];
-    next[i] = text;
-    setAmounts(next);
-    const parsed = parseAmount(text);
-    set(
-      "milestones",
-      c.milestones.map((m, j) => (j === i ? { ...m, amountMinor: parsed ?? 0 } : m)),
-    );
-  };
-
   // ---------- Contract ----------
   const unknownMarkers = placeholders(c.contractBody).filter((p) => !KNOWN.has(p));
   const pickTemplate = (slug: string) => {
@@ -193,6 +355,7 @@ export function ProposalEditor(props: {
 
   const problems = readiness(c);
   const lock = !editable;
+  const setOption = (i: number, o: ProposalOption) => set("options", c.options.map((x, j) => (j === i ? o : x)));
 
   return (
     <div className="desk-grid">
@@ -200,13 +363,13 @@ export function ProposalEditor(props: {
         <fieldset disabled={lock} className="desk-fieldset">
           <Panel title="Client">
             <div className="pp-fields">
-              <Field label="Client name">
+              <Field label="Client name" hint="The business or organisation.">
                 <input className="field__input" value={c.clientName} onChange={(e) => set("clientName", e.target.value)} />
               </Field>
-              <Field label="Contact name">
+              <Field label="Contact name" hint="The person who will sign.">
                 <input className="field__input" value={c.contactName} onChange={(e) => set("contactName", e.target.value)} />
               </Field>
-              <Field label="Contact email" hint="Pre-filled on the signing form. Not emailed in this version.">
+              <Field label="Contact email" hint="Pre-filled on the signing form, and used for invoices.">
                 <input className="field__input" type="email" value={c.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} />
               </Field>
             </div>
@@ -219,12 +382,7 @@ export function ProposalEditor(props: {
               )}
               <label className="button button--pale">
                 {c.clientLogoKey ? "Replace logo" : "Upload logo"}
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="sr-only"
-                  onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
-                />
+                <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
               </label>
               {c.clientLogoKey ? (
                 <button
@@ -240,28 +398,36 @@ export function ProposalEditor(props: {
               ) : null}
               <span className="field__hint">PNG, JPEG or WebP, up to 2 MB. Square works best.</span>
             </div>
+            {props.discoveryUrl ? (
+              <p className="m-0 field__hint">
+                Started from{" "}
+                <a href={props.discoveryUrl} className="text-link">
+                  discovery notes
+                </a>
+                .
+              </p>
+            ) : null}
           </Panel>
 
-          <Panel title="Intro and brief">
+          <Panel title="Part one: in their words" sub="The proposal opens with the client’s own description of the problem.">
             <Field label="Intro" hint="A short personal note at the top. Blank lines start new paragraphs.">
-              <textarea className="field__input field__area" rows={4} value={c.intro} onChange={(e) => set("intro", e.target.value)} />
+              <textarea className="field__input field__area" rows={3} value={c.intro} onChange={(e) => set("intro", e.target.value)} />
             </Field>
-            <Field label="What they need" hint="The brief, in your words.">
-              <textarea className="field__input field__area" rows={6} value={c.brief} onChange={(e) => set("brief", e.target.value)} />
+            <Field label="In your words" hint="Quote what they told you (discovery question 2). Their words, not yours.">
+              <textarea className="field__input field__area" rows={5} value={c.brief} onChange={(e) => set("brief", e.target.value)} />
             </Field>
+            <div className="field">
+              <span className="field__label">Objectives</span>
+              <span className="field__hint">The measurable result you both agree on, e.g. “Cut missed orders from about 20 a week to under 2.”</span>
+              <TextList items={c.objectives} onChange={(v) => set("objectives", v)} placeholder="A measurable result" add="Add objective" />
+            </div>
             <div className="field">
               <span className="field__label">Kind of work</span>
               <div className="chips" role="group" aria-label="Kind of work">
                 {props.tags.map((t) => {
                   const on = c.tags.includes(t.value);
                   return (
-                    <button
-                      key={t.value}
-                      type="button"
-                      aria-pressed={on}
-                      className={`chip desk-chip${on ? " is-on" : ""}`}
-                      onClick={() => set("tags", on ? c.tags.filter((x) => x !== t.value) : [...c.tags, t.value])}
-                    >
+                    <button key={t.value} type="button" aria-pressed={on} className={`chip desk-chip${on ? " is-on" : ""}`} onClick={() => set("tags", on ? c.tags.filter((x) => x !== t.value) : [...c.tags, t.value])}>
                       {t.label}
                     </button>
                   );
@@ -280,18 +446,9 @@ export function ProposalEditor(props: {
                     <li key={w.key} className="list__item">
                       <span className="desk-row-head">
                         <span className="medium">{item?.name ?? `${w.key} (removed from the site)`}</span>
-                        <RowTools
-                          onUp={() => set("work", move(c.work, i, -1))}
-                          onDown={() => set("work", move(c.work, i, 1))}
-                          onRemove={() => set("work", c.work.filter((_, j) => j !== i))}
-                        />
+                        <RowTools onUp={() => set("work", move(c.work, i, -1))} onDown={() => set("work", move(c.work, i, 1))} onRemove={() => set("work", c.work.filter((_, j) => j !== i))} />
                       </span>
-                      <input
-                        className="field__input"
-                        placeholder={item?.summary ?? "Why this is relevant"}
-                        value={w.note}
-                        onChange={(e) => set("work", c.work.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))}
-                      />
+                      <input className="field__input" placeholder={item?.summary ?? "Why this is relevant"} value={w.note} onChange={(e) => set("work", c.work.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))} />
                     </li>
                   );
                 })}
@@ -325,118 +482,98 @@ export function ProposalEditor(props: {
             ) : null}
           </Panel>
 
-          <Panel title="Scope" sub="The deliverables, one per row.">
-            {c.scope.length ? (
-              <ul className="list">
-                {c.scope.map((s, i) => (
-                  <li key={i} className="list__item">
-                    <span className="desk-row-head">
-                      <input
-                        className="field__input"
-                        placeholder="Deliverable"
-                        value={s.title}
-                        onChange={(e) => set("scope", c.scope.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
-                      />
-                      <RowTools
-                        onUp={() => set("scope", move(c.scope, i, -1))}
-                        onDown={() => set("scope", move(c.scope, i, 1))}
-                        onRemove={() => set("scope", c.scope.filter((_, j) => j !== i))}
-                      />
-                    </span>
-                    <textarea
-                      className="field__input field__area"
-                      rows={2}
-                      placeholder="Details (optional)"
-                      value={s.description}
-                      onChange={(e) => set("scope", c.scope.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))}
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="actions">
-              <button type="button" className="button button--pale" onClick={() => set("scope", [...c.scope, { title: "", description: "" }])}>
-                Add deliverable
-              </button>
-            </div>
-          </Panel>
-
-          <Panel title="Milestones and price">
+          <Panel title="Options" sub="Up to three. The client picks one, and the agreement follows their choice. Each is its own scope, timeline and price.">
             <Field label="Currency">
               <select className="field__input" value={c.currency} onChange={(e) => set("currency", e.target.value as ProposalContent["currency"])}>
                 <option value="NGN">Naira (₦)</option>
                 <option value="USD">US dollars ($)</option>
               </select>
             </Field>
-            {c.milestones.length ? (
-              <ul className="list">
-                {c.milestones.map((m, i) => {
-                  const bad = amounts[i] !== undefined && amounts[i].trim() !== "" && parseAmount(amounts[i]) === null;
-                  return (
-                    <li key={i} className="list__item">
-                      <span className="desk-row-head">
-                        <input
-                          className="field__input"
-                          placeholder="Milestone"
-                          value={m.title}
-                          onChange={(e) => set("milestones", c.milestones.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
-                        />
-                        <RowTools
-                          onUp={() => {
-                            set("milestones", move(c.milestones, i, -1));
-                            setAmounts(move(amounts, i, -1));
-                          }}
-                          onDown={() => {
-                            set("milestones", move(c.milestones, i, 1));
-                            setAmounts(move(amounts, i, 1));
-                          }}
-                          onRemove={() => {
-                            set("milestones", c.milestones.filter((_, j) => j !== i));
-                            setAmounts(amounts.filter((_, j) => j !== i));
-                          }}
-                        />
-                      </span>
-                      <div className="desk-two">
-                        <Field label="Amount" hint={bad ? "Use a number like 150,000 or 1500.50" : formatMoney(m.amountMinor, c.currency)}>
-                          <input className="field__input" inputMode="decimal" value={amounts[i] ?? ""} aria-invalid={bad} onChange={(e) => setAmount(i, e.target.value)} />
-                        </Field>
-                        <Field label="Due">
-                          <input
-                            className="field__input"
-                            placeholder="e.g. Week 2"
-                            value={m.due}
-                            onChange={(e) => set("milestones", c.milestones.map((x, j) => (j === i ? { ...x, due: e.target.value } : x)))}
-                          />
-                        </Field>
-                      </div>
-                      <textarea
-                        className="field__input field__area"
-                        rows={2}
-                        placeholder="What’s delivered (optional)"
-                        value={m.description}
-                        onChange={(e) => set("milestones", c.milestones.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))}
-                      />
-                    </li>
-                  );
-                })}
+            <div className="desk-options">
+              {c.options.map((o, i) => (
+                <OptionEditor
+                  key={o.id}
+                  o={o}
+                  index={i}
+                  count={c.options.length}
+                  currency={c.currency}
+                  depositPercent={c.terms.depositPercent}
+                  onChange={(next) => setOption(i, next)}
+                  onRemove={() => set("options", c.options.filter((_, j) => j !== i))}
+                  onRecommend={() => set("options", c.options.map((x, j) => ({ ...x, recommended: j === i })))}
+                />
+              ))}
+            </div>
+            {c.options.length < 3 ? (
+              <div className="actions">
+                <button type="button" className="button button--pale" onClick={() => set("options", [...c.options, emptyOption()])}>
+                  Add option
+                </button>
+              </div>
+            ) : null}
+          </Panel>
+
+          <Panel title="Scope: out" sub="The list that protects you. Required before sending.">
+            <TextList items={c.outOfScope} onChange={(v) => set("outOfScope", v)} placeholder="e.g. Mobile apps for iOS or Android" add="Add exclusion" />
+          </Panel>
+
+          <Panel title="Client responsibilities" sub="What they must supply, and by when.">
+            {c.responsibilities.length ? (
+              <ul className="desk-lines">
+                {c.responsibilities.map((r, i) => (
+                  <li key={i} className="desk-row-head">
+                    <input className="field__input" placeholder="e.g. Product photos and prices" value={r.item} onChange={(e) => set("responsibilities", c.responsibilities.map((x, j) => (j === i ? { ...x, item: e.target.value } : x)))} />
+                    <input className="field__input desk-by" placeholder="By, e.g. day 3" value={r.by} onChange={(e) => set("responsibilities", c.responsibilities.map((x, j) => (j === i ? { ...x, by: e.target.value } : x)))} />
+                    <RowTools
+                      onUp={() => set("responsibilities", move(c.responsibilities, i, -1))}
+                      onDown={() => set("responsibilities", move(c.responsibilities, i, 1))}
+                      onRemove={() => set("responsibilities", c.responsibilities.filter((_, j) => j !== i))}
+                    />
+                  </li>
+                ))}
               </ul>
             ) : null}
             <div className="actions">
-              <button
-                type="button"
-                className="button button--pale"
-                onClick={() => {
-                  set("milestones", [...c.milestones, { title: "", description: "", amountMinor: 0, due: "" }]);
-                  setAmounts([...amounts, ""]);
-                }}
-              >
-                Add milestone
+              <button type="button" className="button button--pale" onClick={() => set("responsibilities", [...c.responsibilities, { item: "", by: "" }])}>
+                Add responsibility
               </button>
-              <span className="medium">Total {formatMoney(total, c.currency)}</span>
             </div>
           </Panel>
 
-          <Panel title="Contract" sub="Placeholders like {{client}} and {{total}} are filled in when you send.">
+          <Panel title="Acceptance criteria" sub="How you’ll both agree it is finished. Acceptance triggers the balance invoice.">
+            <TextList items={c.acceptance} onChange={(v) => set("acceptance", v)} placeholder="e.g. A shop owner can place and pay for an order on a phone" add="Add criterion" />
+          </Panel>
+
+          <Panel title="Payment terms" sub="No deposit, no start. Defaults come from Studio → Proposal defaults.">
+            <div className="desk-two">
+              <Field label="Deposit (%)" hint="Paid before any work begins.">
+                <input className="field__input" inputMode="numeric" value={c.terms.depositPercent} onChange={(e) => setTerm("depositPercent", Math.min(100, Math.max(0, Number.parseInt(e.target.value || "0", 10) || 0)))} />
+              </Field>
+              <Field label="Deposit due (days after signing)">
+                <input className="field__input" inputMode="numeric" value={c.terms.depositDueDays} onChange={(e) => setTerm("depositDueDays", Math.max(0, Number.parseInt(e.target.value || "0", 10) || 0))} />
+              </Field>
+              <Field label="Balance due (days after acceptance)">
+                <input className="field__input" inputMode="numeric" value={c.terms.balanceDueDays} onChange={(e) => setTerm("balanceDueDays", Math.max(0, Number.parseInt(e.target.value || "0", 10) || 0))} />
+              </Field>
+              <Field label="Late fee (% per month)" hint={/^\d{1,2}(\.\d{1,2})?$/.test(lateFee.trim()) ? `${lateFee.trim()}% a month` : "Use a number like 1.5"}>
+                <input
+                  className="field__input"
+                  inputMode="decimal"
+                  value={lateFee}
+                  onChange={(e) => {
+                    setLateFee(e.target.value);
+                    const m = /^(\d{1,2})(?:\.(\d{1,2}))?$/.exec(e.target.value.trim());
+                    if (m) setTerm("lateFeeBps", Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0")));
+                  }}
+                />
+              </Field>
+              <Field label="Pause work after (working days late)">
+                <input className="field__input" inputMode="numeric" value={c.terms.stopWorkDays} onChange={(e) => setTerm("stopWorkDays", Math.max(1, Number.parseInt(e.target.value || "1", 10) || 1))} />
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel title="Agreement" sub="Placeholders like {{overview}} and {{payment}} are filled in for each option when you send.">
             <Field label="Template">
               <select className="field__input" value={c.contractTemplate ?? ""} onChange={(e) => pickTemplate(e.target.value)}>
                 <option value="" disabled>
@@ -452,16 +589,14 @@ export function ProposalEditor(props: {
             <Field label="Terms for this client" hint="Edit freely; the template in Studio stays as it is. Lines starting with # are headings, - starts a list item.">
               <textarea className="field__input field__area field__mono" rows={18} value={c.contractBody} onChange={(e) => set("contractBody", e.target.value)} />
             </Field>
-            {unknownMarkers.length ? (
-              <p className="pp-error m-0">Unknown placeholders, left as typed: {unknownMarkers.map((m) => `{{${m}}}`).join(", ")}</p>
-            ) : null}
+            {unknownMarkers.length ? <p className="pp-error m-0">Unknown placeholders, left as typed: {unknownMarkers.map((m) => `{{${m}}}`).join(", ")}</p> : null}
           </Panel>
         </fieldset>
       </div>
 
       <aside className="desk-side">
         <div className="desk-sticky">
-          <Panel title={STATUS_LABEL[status]} sub={props.version ? `Version ${props.version} is with the client.` : "Not sent yet."}>
+          <Panel title={props.acceptedAt ? "Accepted" : STATUS_LABEL[status]} sub={props.version ? `Version ${props.version} is with the client.` : "Not sent yet."}>
             {editable ? (
               <div className="actions">
                 <button type="button" className="button" onClick={save} disabled={!dirty || pending}>
@@ -480,22 +615,15 @@ export function ProposalEditor(props: {
                 {msg.text}
               </p>
             ) : null}
-            {props.link ? <CopyLink link={props.link} /> : null}
-            {props.expiresAt && status !== "signed" ? (
-              <p className="m-0 muted text-[14px]">Valid until {fmt(props.expiresAt)}</p>
-            ) : null}
+            {props.link ? <CopyLink link={props.link} label="Client link" /> : null}
+            {props.expiresAt && status !== "signed" ? <p className="m-0 muted text-[14px]">Valid until {fmt(props.expiresAt)}</p> : null}
           </Panel>
 
           {editable ? (
-            <SendPanel
-              id={id}
-              providerName={props.providerName}
-              disabled={dirty || problems.length > 0}
-              problems={dirty ? ["Save your changes first."] : problems}
-              resend={props.version > 0}
-              unsent={props.unsent}
-            />
+            <SendPanel id={id} providerName={props.providerName} disabled={dirty || problems.length > 0} problems={dirty ? ["Save your changes first."] : problems} resend={props.version > 0} unsent={props.unsent} />
           ) : null}
+
+          {status === "signed" ? <InvoicesPanel id={id} invoices={props.invoices} accepted={Boolean(props.acceptedAt)} businessReady={props.businessReady} /> : null}
 
           <Panel title="More">
             <div className="desk-more">
@@ -551,6 +679,7 @@ export function ProposalEditor(props: {
                     <span className="medium">
                       {s.name} <span className="faint">· {s.role === "client" ? "client" : "you"}, v{s.version}</span>
                     </span>
+                    {s.optionName ? <span className="muted text-[14px]">Chose {s.optionName}</span> : null}
                     <span className="muted text-[14px]">
                       {fmt(s.signedAt)}
                       {s.ip ? ` · ${s.ip}` : ""}
@@ -585,11 +714,90 @@ export function ProposalEditor(props: {
   );
 }
 
-function CopyLink({ link }: { link: string }) {
+function InvoicesPanel({ id, invoices, accepted, businessReady }: { id: string; invoices: DeskInvoice[]; accepted: boolean; businessReady: boolean }) {
+  const [err, setErr] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const hasDeposit = invoices.some((i) => i.kind === "deposit");
+  return (
+    <Panel title="Invoices" sub={accepted ? "Work accepted. The balance invoice is issued." : "Mark the work accepted when the acceptance criteria are met, to issue the balance invoice."}>
+      {!businessReady ? (
+        <p className="m-0 pp-error">
+          Add your bank details in{" "}
+          <Link href="/desk/settings" className="text-link">
+            Settings
+          </Link>{" "}
+          so invoices show how to pay.
+        </p>
+      ) : null}
+      {invoices.length ? (
+        <ul className="desk-sigs">
+          {invoices.map((inv) => (
+            <li key={inv.id}>
+              <span className="medium">
+                {inv.number} · {inv.kind === "deposit" ? "Deposit" : "Balance"} · {formatMoney(inv.amountMinor, inv.currency)}
+              </span>
+              <span className={inv.state === "overdue" ? "pp-error" : "muted text-[14px]"}>
+                {inv.state === "paid"
+                  ? `Paid ${inv.paidAt ? fmtDay(inv.paidAt) : ""}${inv.paidVia ? ` by ${inv.paidVia === "paystack" ? "Paystack" : "transfer"}` : ""}`
+                  : inv.state === "void"
+                    ? "Cancelled"
+                    : `${inv.state === "overdue" ? "Overdue" : "Due"} ${fmtDay(inv.dueAt)}${inv.daysLate ? ` · ${inv.daysLate} working days late` : ""}`}
+              </span>
+              {inv.state === "overdue" && inv.daysLate >= 10 ? <span className="pp-error">Payment is 10+ working days late: pause the work, as the agreement allows.</span> : null}
+              {inv.state !== "void" ? <CopyLink link={inv.url} label={`Invoice ${inv.number} link`} /> : null}
+              {inv.state === "unpaid" || inv.state === "overdue" ? (
+                <span className="desk-inline">
+                  <form action={markPaidAction.bind(null, inv.id)} onSubmit={(e) => { if (!confirm(`Mark invoice ${inv.number} as paid by bank transfer?`)) e.preventDefault(); }}>
+                    <button type="submit" className="text-link">
+                      Mark paid (transfer)
+                    </button>
+                  </form>
+                  <form action={voidInvoiceAction.bind(null, inv.id)} onSubmit={(e) => { if (!confirm(`Cancel invoice ${inv.number}?`)) e.preventDefault(); }}>
+                    <button type="submit" className="text-link">
+                      Cancel
+                    </button>
+                  </form>
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="m-0 muted">No invoices yet.</p>
+      )}
+      {err ? <p className="pp-error m-0">{err}</p> : null}
+      <div className="actions">
+        {!hasDeposit ? (
+          <button type="button" className="button button--pale" disabled={pending} onClick={() => start(async () => { const r = await issueDepositAction(id); setErr(r.ok ? null : r.error); })}>
+            Issue deposit invoice
+          </button>
+        ) : null}
+        {!accepted ? (
+          <button
+            type="button"
+            className="button"
+            disabled={pending}
+            onClick={() => {
+              if (!confirm("Mark the work accepted? This issues the balance invoice.")) return;
+              start(async () => {
+                const r = await acceptWorkAction(id);
+                setErr(r.ok ? null : r.error);
+              });
+            }}
+          >
+            Mark work accepted
+          </button>
+        ) : null}
+      </div>
+    </Panel>
+  );
+}
+
+function CopyLink({ link, label }: { link: string; label: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="desk-link">
-      <input className="field__input field__mono" value={link} readOnly onFocus={(e) => e.currentTarget.select()} aria-label="Client link" />
+      <input className="field__input field__mono" value={link} readOnly onFocus={(e) => e.currentTarget.select()} aria-label={label} />
       <div className="actions">
         <button
           type="button"
@@ -653,21 +861,7 @@ function PasscodeControl({ id, has }: { id: string; has: boolean }) {
   );
 }
 
-function SendPanel({
-  id,
-  providerName,
-  disabled,
-  problems,
-  resend,
-  unsent,
-}: {
-  id: string;
-  providerName: string;
-  disabled: boolean;
-  problems: string[];
-  resend: boolean;
-  unsent: boolean;
-}) {
+function SendPanel({ id, providerName, disabled, problems, resend, unsent }: { id: string; providerName: string; disabled: boolean; problems: string[]; resend: boolean; unsent: boolean }) {
   const pad = useRef<SignaturePadHandle>(null);
   const [sig, setSig] = useState<{ method: SignatureMethod; ready: boolean }>({ method: "typed", ready: true });
   const [err, setErr] = useState<string | null>(null);
@@ -676,7 +870,7 @@ function SendPanel({
 
   if (resend && !unsent && !disabled) {
     return (
-      <Panel title="Up to date" sub="The client sees your latest saved version. Edit and save to send an update." >
+      <Panel title="Up to date" sub="The client sees your latest saved version. Edit and save to send an update.">
         <span />
       </Panel>
     );

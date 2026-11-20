@@ -81,7 +81,21 @@ describe('matching relevant work', () => {
 })
 
 describe('fingerprints', () => {
+  const option = {
+    id: 'a1',
+    name: 'Standard',
+    summary: '',
+    deliverables: [{ title: 'Site', description: '', format: 'Live site' }],
+    timeline: [{ title: 'Launch', day: 10 }],
+    priceMinor: 100,
+    recommended: true,
+    depositMinor: 50,
+    balanceMinor: 50,
+    workingDays: 10,
+    contract: 'Terms',
+  }
   const snap: Snapshot = {
+    schema: 2,
     version: 1,
     issuedAt: '2026-11-20T00:00:00.000Z',
     expiresAt: null,
@@ -89,22 +103,74 @@ describe('fingerprints', () => {
     client: { name: 'Acme', logoKey: null, contactName: 'A', contactEmail: 'a@x' },
     intro: 'Hi',
     brief: 'B',
+    objectives: ['O'],
     work: [],
-    scope: [{ title: 'S', description: '' }],
-    milestones: [{ title: 'M', description: '', amountMinor: 100, due: '' }],
+    options: [option],
+    outOfScope: ['Apps'],
+    responsibilities: [],
+    acceptance: ['Works'],
+    terms: { depositPercent: 50, depositDueDays: 3, balanceDueDays: 15, lateFeeBps: 150, stopWorkDays: 10 },
     currency: 'NGN',
-    totalMinor: 100,
-    contract: 'Terms',
   }
 
-  test('key order does not change the hash; content does', () => {
+  test('key order does not change the hash; any option’s content does', () => {
     expect(canonicalJson({ b: 1, a: { d: 2, c: 3 } })).toBe('{"a":{"c":3,"d":2},"b":1}')
-    const { contract, ...rest } = snap
-    const reordered = { contract, ...rest } as Snapshot
+    const { brief, ...rest } = snap
+    const reordered = { brief, ...rest } as Snapshot
     expect(snapshotHash(reordered)).toBe(snapshotHash(snap))
-    expect(snapshotHash({ ...snap, contract: 'Terms.' })).not.toBe(snapshotHash(snap))
-    expect(snapshotHash({ ...snap, totalMinor: 101 })).not.toBe(snapshotHash(snap))
+    expect(snapshotHash({ ...snap, options: [{ ...option, contract: 'Terms.' }] })).not.toBe(snapshotHash(snap))
+    expect(snapshotHash({ ...snap, options: [{ ...option, priceMinor: 101 }] })).not.toBe(snapshotHash(snap))
+    expect(snapshotHash({ ...snap, outOfScope: [] })).not.toBe(snapshotHash(snap))
     expect(sha256('abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
+  })
+})
+
+describe('deposits and late fees', async () => {
+  const { split, bpsLabel } = await import('@/lib/proposals/money')
+  test('the deposit rounds to the nearest minor unit; the balance takes the rest', () => {
+    expect(split(150_000_00, 50)).toEqual({ depositMinor: 75_000_00, balanceMinor: 75_000_00 })
+    expect(split(101, 50)).toEqual({ depositMinor: 51, balanceMinor: 50 })
+    expect(split(1000, 0)).toEqual({ depositMinor: 0, balanceMinor: 1000 })
+    expect(split(1000, 100)).toEqual({ depositMinor: 1000, balanceMinor: 0 })
+    expect(() => split(100, 101)).toThrow()
+    expect(() => split(100, 12.5)).toThrow()
+  })
+  test('late fee labels', () => {
+    expect(bpsLabel(150)).toBe('1.5%')
+    expect(bpsLabel(200)).toBe('2%')
+    expect(bpsLabel(125)).toBe('1.25%')
+  })
+})
+
+describe('working days', async () => {
+  const { addWorkingDays, workingDaysBetween } = await import('@/lib/proposals/dates')
+  const fri = new Date('2026-11-20T12:00:00Z') // a Friday
+  test('weekends are skipped', () => {
+    expect(addWorkingDays(fri, 1).toISOString().slice(0, 10)).toBe('2026-11-23')
+    expect(addWorkingDays(fri, 10).toISOString().slice(0, 10)).toBe('2026-12-04')
+    expect(workingDaysBetween(fri, new Date('2026-11-23T09:00:00Z'))).toBe(1)
+    expect(workingDaysBetween(fri, new Date('2026-12-04T09:00:00Z'))).toBe(10)
+    expect(workingDaysBetween(fri, fri)).toBe(0)
+  })
+})
+
+describe('paystack webhooks', async () => {
+  const { createHmac } = await import('node:crypto')
+  const { paymentMatches, validWebhookSignature } = await import('@/lib/proposals/paystack')
+  test('only bodies signed with the secret key are accepted', () => {
+    const body = '{"event":"charge.success","data":{"reference":"2026-001-abc"}}'
+    const sig = createHmac('sha512', 'sk_test_x').update(body).digest('hex')
+    expect(validWebhookSignature(body, sig, 'sk_test_x')).toBe(true)
+    expect(validWebhookSignature(body + ' ', sig, 'sk_test_x')).toBe(false)
+    expect(validWebhookSignature(body, sig, 'sk_test_y')).toBe(false)
+    expect(validWebhookSignature(body, null, 'sk_test_x')).toBe(false)
+  })
+  test('a payment counts only for the exact amount and currency', () => {
+    const inv = { amountMinor: 75_000_00, currency: 'NGN' }
+    expect(paymentMatches({ status: 'success', amount: 75_000_00, currency: 'NGN' }, inv)).toBe(true)
+    expect(paymentMatches({ status: 'success', amount: 74_999_00, currency: 'NGN' }, inv)).toBe(false)
+    expect(paymentMatches({ status: 'abandoned', amount: 75_000_00, currency: 'NGN' }, inv)).toBe(false)
+    expect(paymentMatches({ status: 'success', amount: 75_000_00, currency: 'USD' }, inv)).toBe(false)
   })
 })
 

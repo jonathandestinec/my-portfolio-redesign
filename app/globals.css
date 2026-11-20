@@ -1717,3 +1717,204 @@ body {
   line-height: 16px;
   word-break: break-all;
 }
+
+/* ---------- Proposals v2: options, quote, steps ---------- */
+
+.pp-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.pp-quote p {
+  margin: 0;
+  text-wrap: pretty;
+}
+.pp-options {
+  display: grid;
+  gap: 12px;
+}
+.pp-option {
+  display: block;
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s;
+}
+.pp-option.is-locked {
+  cursor: default;
+}
+.pp-option.is-on:not(.is-locked) {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.pp-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pp-option__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.pp-option__name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.pp-option__radio {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+.pp-option.is-on .pp-option__radio {
+  color: var(--ink);
+  font-weight: 500;
+}
+.pp-deliverables {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pp-deliverables li {
+  text-wrap: pretty;
+}
+.pp-format {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 13px;
+  line-height: 18px;
+}
+.pp-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+  font-size: 14px;
+}
+.pp-timeline li {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 8px;
+}
+.pp-day {
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.pp-price-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.pp-big {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.pp-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+  list-style: decimal;
+}
+.pp-steps li {
+  padding-left: 4px;
+  text-wrap: pretty;
+}
+.pp-steps li::marker {
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Desk v2 ---------- */
+
+.desk-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  width: max-content;
+  max-width: 100%;
+  border-radius: 999px;
+  background: var(--pale);
+  overflow-x: auto;
+}
+.desk-tab {
+  padding: 5px 14px;
+  border-radius: 999px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.desk-tab.is-on {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.desk-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.desk-option {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.desk-option.is-rec {
+  border-color: var(--line-strong);
+  background: color-mix(in srgb, var(--pale) 50%, transparent);
+}
+.desk-subrow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--line);
+}
+.desk-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.desk-day {
+  width: 72px;
+  flex: none;
+}
+.desk-by {
+  width: 140px;
+  flex: none;
+}
+.desk-plain {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}

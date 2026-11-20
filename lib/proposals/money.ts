@@ -1,4 +1,4 @@
-import type { Currency, Milestone } from "./types";
+import type { Currency } from "./types";
 
 const SYMBOL: Record<Currency, string> = { NGN: "₦", USD: "$" };
 
@@ -30,9 +30,20 @@ export function amountInput(minor: number): string {
   return cents ? `${Math.floor(minor / 100)}.${String(cents).padStart(2, "0")}` : String(minor / 100);
 }
 
-export function totalMinor(milestones: Pick<Milestone, "amountMinor">[]): number {
+export function totalMinor(milestones: { amountMinor: number }[]): number {
   return milestones.reduce((sum, m) => {
     if (!Number.isSafeInteger(m.amountMinor) || m.amountMinor < 0) throw new Error("Invalid milestone amount");
     return sum + m.amountMinor;
   }, 0);
 }
+
+/** Deposit for a price: rounded to the nearest minor unit; the balance is whatever is left. */
+export function split(priceMinor: number, depositPercent: number): { depositMinor: number; balanceMinor: number } {
+  if (!Number.isSafeInteger(priceMinor) || priceMinor < 0) throw new Error("Invalid price");
+  if (!Number.isInteger(depositPercent) || depositPercent < 0 || depositPercent > 100) throw new Error("Invalid deposit percent");
+  const depositMinor = Math.round((priceMinor * depositPercent) / 100);
+  return { depositMinor, balanceMinor: priceMinor - depositMinor };
+}
+
+/** 150 → "1.5%". */
+export const bpsLabel = (bps: number) => `${(bps / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;

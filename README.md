@@ -68,7 +68,7 @@ Without these variables the site builds and runs normally, and the admin address
 
 ## Client proposals
 
-A private page per client at `/p/<client>-<random>`: both logos, the brief, relevant work picked from the portfolio's own projects, scope, milestones and price, and a contract the client signs on the page (typed or drawn signature). Both sides get a signed PDF with an audit page. The full design is in `docs/superpowers/specs/2026-11-20-client-proposals-design.md`.
+A private page per client at `/p/<client>-<random>`: both logos, the client's own words, relevant work from the portfolio, up to three priced options, and an agreement the client signs on the page (typed or drawn signature), followed by deposit and balance invoices. Both sides get a signed PDF with an audit page. Design: `docs/superpowers/specs/2026-11-20-client-proposals-design.md` and `…-proposals-v2-design.md`.
 
 **Where things live.** The repo is public, so client data is not in it:
 
@@ -78,12 +78,16 @@ A private page per client at `/p/<client>-<random>`: both logos, the brief, rele
 
 **Using it.**
 
-1. Open the private admin address, sign in to Studio with GitHub, then go to `/desk`. The proposals admin sits behind the same hidden gate and also checks your GitHub account id (`ADMIN_GITHUB_ID`) on every page and action.
-2. **New proposal** starts from your default intro and contract. Fill in the client, brief and tags, pick relevant work, add scope and milestones (amounts like `150,000` or `1500.50`), and adjust the contract. Placeholders like `{{client}}` and `{{total}}` are filled in when you send.
-3. **Preview** shows exactly what the client will see; **PDF** gives the same as a file.
-4. **Sign and send** puts your signature on it and makes the link live, valid for 14 days by default. Copy the link and send it yourself. Optional: add a passcode and send that separately.
-5. Editing after sending is fine: save, then **Send update**. The client sees the new version and can only sign the latest one.
-6. When the client signs, the proposal is frozen, the signed PDF is stored, and you get an email with it attached. The client downloads theirs from the page.
+1. **Discovery first** (`/desk/discovery`). For each business you survey, note the five answers: how an order reaches them, what goes wrong (their exact words), how often and what it costs (the value number), who decides, and whether they'd look at something. **Start a proposal** pre-fills the client, "In your words", the objective and the signer.
+2. **Proposal** (`/desk`). It opens with their words, then the objectives, relevant work, **up to three options** (each with deliverables and their format, a timeline in working days from the deposit, and a price; mark one as recommended), what's **out of scope**, what the client must supply, the **acceptance criteria**, and the **payment terms** (defaults: 50% deposit, deposit due in 3 days, balance due 15 days after acceptance, 1.5% a month late, work pauses at 10 working days late). Change the defaults in Studio under **Proposal defaults**.
+3. **Preview**, then **Sign and send**. Copy the link and send it yourself. The page ends with "How to say yes": pick an option, sign, pay the deposit.
+4. **When they sign**, the agreement is filled in for the option they picked, the signed PDF is stored, the **deposit invoice** is issued, and you get an email. The page then shows "Pay the deposit".
+5. **Invoices** (`/i/<number>-<random>`, noindex) have the nine lines, a PDF, a **Paystack** button (naira, once `PAYSTACK_SECRET_KEY` is set) and your **bank details** from `/desk/settings`. A Paystack payment is marked paid only after the server verifies it. Mark bank transfers paid yourself in the proposal's **Invoices** panel.
+6. **Mark work accepted** when the acceptance criteria are met. This issues the **balance invoice**, due in 15 days. Overdue invoices show how many working days late they are.
+
+Editing after sending is fine: save, then **Send update**. The client can only sign the latest version.
+
+**Paystack setup:** add `PAYSTACK_SECRET_KEY` in Vercel (sensitive). In the Paystack dashboard (Settings → API Keys & Webhooks), set the webhook URL to `https://destinejc.vercel.app/api/paystack/webhook`. Test with a test key first.
 
 **How a signature is recorded.** Name, email, optional title, the signature image, time (UTC), IP address and browser, and a SHA-256 fingerprint of everything the client saw in that version (contract text, prices, scope, parties). Signing is a single database statement that only succeeds for the current version, before expiry, with a matching fingerprint. Proposal pages and files send `noindex` and `no-store` and never appear in the sitemap.
 
@@ -93,7 +97,7 @@ A private page per client at `/p/<client>-<random>`: both logos, the brief, rele
 
 **Local development.** Put a Neon *dev branch* URL in `.env.local` as `DATABASE_URL` (never production: the tests write to it). Without `ADMIN_GITHUB_ID`, `next dev` lets you into `/desk` without signing in. Files go to `.data/` when there is no Blob token. In a sandbox behind a proxy, run Node with `NODE_USE_ENV_PROXY=1`.
 
-To apply a migration: `DATABASE_URL=... bun scripts/migrate.ts db/migrations/0001_proposals.sql`.
+To apply migrations, in order: `DATABASE_URL=... bun scripts/migrate.ts db/migrations/0001_proposals.sql`, then `0002_options_invoices_discovery.sql`.
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
@@ -101,7 +105,8 @@ To apply a migration: `DATABASE_URL=... bun scripts/migrate.ts db/migrations/000
 | `ADMIN_GITHUB_ID` | Vercel | The only GitHub account allowed into `/desk` |
 | `PROPOSALS_SECRET` | Vercel | Signs passcode cookies, hashes viewer IPs |
 | `BLOB_READ_WRITE_TOKEN` | Vercel (added by connecting the Blob store) | Private file storage |
-| `RESEND_API_KEY`, `PROPOSALS_NOTIFY_EMAIL` | Vercel | Opened and signed emails to you |
+| `RESEND_API_KEY`, `PROPOSALS_NOTIFY_EMAIL` | Vercel | Opened, signed and paid emails to you |
+| `PAYSTACK_SECRET_KEY` | Vercel (you add it) | Online invoice payments |
 
 ## Before deploying
 

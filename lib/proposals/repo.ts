@@ -3,7 +3,8 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { loadContracts, provider, proposalDefaults, workCatalog } from "./content";
 import { db, schema } from "./db";
 import { snapshotHash } from "./hash";
-import { buildSnapshot } from "./snapshot";
+import { buildSnapshot, defaultOption } from "./snapshot";
+import { upgradeContent, upgradeSnapshot } from "./upgrade";
 import { effectiveStatus, expiryFrom, isEditable } from "./status";
 import { newToken, slugify } from "./tokens";
 import { emptyContent, type ProposalContent, type Snapshot, type Status } from "./types";
@@ -22,6 +23,8 @@ export type ListItem = {
   version: number;
   totalMinor: number;
   currency: ProposalContent["currency"];
+  /** Number of options; totalMinor is the recommended (or first) one. */
+  options: number;
   views: number;
   lastViewedAt: Date | null;
   sentAt: Date | null;
@@ -30,8 +33,11 @@ export type ListItem = {
   updatedAt: Date;
 };
 
+/** Rows saved before options existed are upgraded on read. */
+const up = (r: ProposalRow): ProposalRow => ({ ...r, content: upgradeContent(r.content) });
+
 export async function listProposals(): Promise<ListItem[]> {
-  const rows = await db().select().from(proposals).orderBy(desc(proposals.updatedAt));
+  const rows = (await db().select().from(proposals).orderBy(desc(proposals.updatedAt))).map(up);
   if (!rows.length) return [];
   const stats = await db()
     .select({
@@ -52,7 +58,8 @@ export async function listProposals(): Promise<ListItem[]> {
       clientName: r.content.clientName || "Untitled client",
       status: effectiveStatus(r),
       version: r.version,
-      totalMinor: r.content.milestones.reduce((a, m) => a + m.amountMinor, 0),
+      totalMinor: defaultOption(r.content.options)?.priceMinor ?? 0,
+      options: r.content.options.length,
       currency: r.content.currency,
       views: s?.views ?? 0,
       lastViewedAt: s?.last ? new Date(s.last) : null,
@@ -67,12 +74,12 @@ export async function listProposals(): Promise<ListItem[]> {
 export async function getProposal(id: string): Promise<ProposalRow | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null;
   const [row] = await db().select().from(proposals).where(eq(proposals.id, id));
-  return row ?? null;
+  return row ? up(row) : null;
 }
 
 export async function getByToken(token: string): Promise<ProposalRow | null> {
   const [row] = await db().select().from(proposals).where(eq(proposals.token, token));
-  return row ?? null;
+  return row ? up(row) : null;
 }
 
 export async function getVersion(id: string, version: number): Promise<{ snapshot: Snapshot; contentSha256: string } | null> {
@@ -80,7 +87,7 @@ export async function getVersion(id: string, version: number): Promise<{ snapsho
     .select({ snapshot: proposalVersions.snapshot, contentSha256: proposalVersions.contentSha256 })
     .from(proposalVersions)
     .where(and(eq(proposalVersions.proposalId, id), eq(proposalVersions.version, version)));
-  return row ?? null;
+  return row ? { snapshot: upgradeSnapshot(row.snapshot), contentSha256: row.contentSha256 } : null;
 }
 
 export async function getSignatures(id: string, version?: number): Promise<SignatureRow[]> {
@@ -99,14 +106,17 @@ export async function getViews(id: string, limit = 20) {
     .limit(limit);
 }
 
-export async function createProposal(seed?: ProposalContent): Promise<string> {
+/** A new proposal from your defaults; `seed` (a duplicate, or discovery notes) overrides them. */
+export async function createProposal(seed?: Partial<ProposalContent>): Promise<string> {
   const contracts = loadContracts();
   const template = contracts.find((c) => c.slug === proposalDefaults.contractTemplate) ?? contracts[0];
-  const content: ProposalContent = seed ?? {
+  const content: ProposalContent = {
     ...emptyContent(),
     intro: proposalDefaults.intro,
+    terms: { ...proposalDefaults.terms },
     contractTemplate: template?.slug ?? null,
     contractBody: template?.body ?? "",
+    ...seed,
   };
   const [row] = await db()
     .insert(proposals)
@@ -234,6 +244,7 @@ export async function recordView(row: ProposalRow, ipHash: string | null, userAg
 }
 
 export type ClientSignature = {
+  optionId: string | null;
   name: string;
   email: string;
   title: string | null;
@@ -262,9 +273,9 @@ export async function signProposal(id: string, version: number, sig: ClientSigna
         AND EXISTS (SELECT 1 FROM current)
       RETURNING id
     )
-    INSERT INTO signatures (proposal_id, version, role, name, email, title, method, signature_key, ip, user_agent, content_sha256)
+    INSERT INTO signatures (proposal_id, version, role, name, email, title, method, signature_key, ip, user_agent, content_sha256, option_id)
     SELECT upd.id, ${version}, 'client', ${sig.name}, ${sig.email}, ${sig.title}, ${sig.method}, ${sig.signatureKey},
-           ${sig.ip}, ${sig.userAgent}, ${sig.contentSha256}
+           ${sig.ip}, ${sig.userAgent}, ${sig.contentSha256}, ${sig.optionId}
     FROM upd
     RETURNING id
   `);

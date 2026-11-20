@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
+import { useChoice } from "./Choice";
 import { SignaturePad, type SignatureMethod, type SignaturePadHandle } from "./SignaturePad";
 
 /** The client's half of the agreement. Posts to /api/p/<key>/sign with the version and fingerprint they read. */
@@ -11,7 +12,10 @@ export function SignForm({
   contentSha256,
   defaultName,
   defaultEmail,
+  optionLabels,
 }: {
+  /** Option id → "Standard · ₦1,500,000.00", shown above the button. */
+  optionLabels: Record<string, string>;
   endpoint: string;
   version: number;
   contentSha256: string;
@@ -19,6 +23,7 @@ export function SignForm({
   defaultEmail: string;
 }) {
   const router = useRouter();
+  const { selected } = useChoice();
   const pad = useRef<SignaturePadHandle>(null);
   const [name, setName] = useState(defaultName);
   const [email, setEmail] = useState(defaultEmail);
@@ -42,7 +47,7 @@ export function SignForm({
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ version, contentSha256, name, email, title, method: sig.method, image, agree }),
+        body: JSON.stringify({ version, contentSha256, optionId: selected, name, email, title, method: sig.method, image, agree }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Something went wrong. Please try again.");
@@ -93,6 +98,15 @@ export function SignForm({
         {error ? (
           <p className="pp-error" role="alert">
             {error}
+          </p>
+        ) : null}
+
+        {Object.keys(optionLabels).length > 1 ? (
+          <p className="m-0" aria-live="polite">
+            You’re signing for <span className="medium">{optionLabels[selected]}</span>.{" "}
+            <a href="#options" className="text-link">
+              Change
+            </a>
           </p>
         ) : null}
 
