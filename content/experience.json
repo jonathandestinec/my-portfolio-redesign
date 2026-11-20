@@ -1,0 +1,139 @@
+{
+  "roles": [
+    {
+      "slug": "welup-digital",
+      "title": "Software Development Intern",
+      "company": "Welup Digital",
+      "companyUrl": "https://www.welupdigital.com",
+      "logo": {
+        "image": "/logos/welup.png",
+        "initials": ""
+      },
+      "start": "Aug 2026",
+      "end": "Present",
+      "type": "Internship",
+      "location": "",
+      "summary": "Ongoing software development internship.",
+      "details": "Working inside a small product team on Welup’s web platform for tech training and consulting. I pick up features end to end, from the UI to the API it talks to, and ship them through code review.",
+      "highlights": [
+        "Build and maintain pages and components for the learning platform",
+        "Work through tickets with code review and pull requests",
+        "Pair with senior engineers on backend and data work"
+      ],
+      "stack": [
+        "Next.js",
+        "TypeScript",
+        "Tailwind CSS"
+      ]
+    },
+    {
+      "slug": "giz",
+      "title": "AI & Automations Engineering",
+      "company": "GIZ",
+      "companyUrl": "https://www.giz.de",
+      "logo": {
+        "image": "/logos/giz.png",
+        "initials": ""
+      },
+      "start": "Aug 2026",
+      "end": "Present",
+      "type": "Programme",
+      "location": "",
+      "summary": "Ongoing AI and automation engineering programme.",
+      "details": "A structured programme on applying AI and workflow automation to real business problems: connecting tools, moving data between systems, and putting language models to work where they actually save time.",
+      "highlights": [
+        "Design automation workflows that connect forms, CRMs, email and databases",
+        "Use language models for intake, classification and drafting steps",
+        "Ship small working projects as part of the programme"
+      ],
+      "stack": [
+        "n8n",
+        "OpenAI API",
+        "Postgres",
+        "Webhooks"
+      ]
+    },
+    {
+      "slug": "nexorra-studio",
+      "title": "Front-End Developer",
+      "company": "Nexorra Studio",
+      "companyUrl": "https://www.nexorrastudio.com",
+      "logo": {
+        "image": "/logos/nexorra.png",
+        "initials": ""
+      },
+      "start": "Aug 2024",
+      "end": "Present",
+      "type": "Contract",
+      "location": "Remote",
+      "summary": "Client web apps in React/Next.js/TypeScript; UI performance work; Zustand/Redux state and Socket.io realtime.",
+      "details": "Building client web apps for a design and development agency. Designers hand over Figma files and I turn them into fast, responsive interfaces, wire up state and realtime features, and keep them quick as they grow.",
+      "highlights": [
+        "Turn Figma designs into production React and Next.js interfaces",
+        "Manage app state with Zustand and Redux",
+        "Add realtime updates with Socket.io",
+        "Find and fix slow renders and heavy pages"
+      ],
+      "stack": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Zustand",
+        "Redux",
+        "Socket.io"
+      ]
+    },
+    {
+      "slug": "caretrax",
+      "title": "Frontend Developer",
+      "company": "Caretrax",
+      "companyUrl": null,
+      "logo": {
+        "image": null,
+        "initials": "CT"
+      },
+      "start": "2025",
+      "end": "2025",
+      "type": "Contract",
+      "location": "Remote",
+      "summary": "UI components for a health and care web app; API integration with the team.",
+      "details": "Worked with the Caretrax team on a web app for health and care providers. I built reusable interface components and connected them to the team’s APIs, so screens showed real data and handled loading and error states properly.",
+      "highlights": [
+        "Built reusable UI components for care records and schedules",
+        "Integrated screens with the team’s REST APIs",
+        "Handled loading, empty and error states across the app"
+      ],
+      "stack": [
+        "React",
+        "TypeScript",
+        "REST APIs"
+      ]
+    },
+    {
+      "slug": "joenadiv-concepts",
+      "title": "Frontend Developer",
+      "company": "JoeNadiv Concepts",
+      "companyUrl": null,
+      "logo": {
+        "image": null,
+        "initials": "JN"
+      },
+      "start": "2024",
+      "end": "2025",
+      "type": "",
+      "location": "",
+      "summary": "Responsive business web app; SEO and page-load improvements.",
+      "details": "Built a responsive web app for the business, then made it easier to find and quicker to open: cleaner metadata and structure for search engines, lighter images and less JavaScript on first load.",
+      "highlights": [
+        "Built the responsive web app from scratch",
+        "Improved SEO: metadata, page structure and sitemap",
+        "Cut page-load time with image and bundle work"
+      ],
+      "stack": [
+        "Next.js",
+        "React",
+        "Tailwind CSS"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+{
+  "notes": {
+    "frontend": "Next.js and React with TypeScript for almost everything, styled with Tailwind. Server data through TanStack Query; client state in Zustand, or Redux on larger existing apps. Astro for content-heavy sites.",
+    "backend": "Postgres on Neon or Supabase, through Prisma or Drizzle, with Zod at every boundary. MongoDB where a project already uses it. Node, Express or Bun for APIs, Socket.io for realtime, GraphQL when an API speaks it. Better Auth, Clerk, Auth0 or my own JWT/OAuth for sign-in, Paystack for payments and Resend for email.",
+    "tools": "n8n and Make for automations: webhooks, CRMs, email, AI steps. Vitest and Playwright for tests, Docker Compose for local services, Git and GitHub for everything, Vercel for deploys.",
+    "design": "Figma to read designers’ files closely, and to sketch my own screens before I build them."
+  },
+  "items": [
+    {
+      "name": "Next.js",
+      "category": "frontend",
+      "icon": "nextdotjs"
+    },
+    {
+      "name": "React",
+      "category": "frontend",
+      "icon": "react"
+    },
+    {
+      "name": "TypeScript",
+      "category": "frontend",
+      "icon": "typescript"
+    },
+    {
+      "name": "Astro",
+      "category": "frontend",
+      "icon": "astro"
+    },
+    {
+      "name": "Tailwind CSS",
+      "category": "frontend",
+      "icon": "tailwindcss"
+    },
+    {
+      "name": "TanStack Query",
+      "category": "frontend",
+      "icon": "reactquery"
+    },
+    {
+      "name": "Axios",
+      "category": "frontend",
+      "icon": "axios"
+    },
+    {
+      "name": "Zustand",
+      "category": "frontend",
+      "icon": "key"
+    },
+    {
+      "name": "Redux",
+      "category": "frontend",
+      "icon": "redux"
+    },
+    {
+      "name": "Node.js",
+      "category": "backend",
+      "icon": "nodedotjs"
+    },
+    {
+      "name": "Express",
+      "category": "backend",
+      "icon": "express"
+    },
+    {
+      "name": "Bun",
+      "category": "backend",
+      "icon": "bun"
+    },
+    {
+      "name": "MongoDB",
+      "category": "backend",
+      "icon": "mongodb"
+    },
+    {
+      "name": "PostgreSQL",
+      "category": "backend",
+      "icon": "postgresql"
+    },
+    {
+      "name": "Prisma",
+      "category": "backend",
+      "icon": "prisma"
+    },
+    {
+      "name": "Drizzle",
+      "category": "backend",
+      "icon": "drizzle"
+    },
+    {
+      "name": "Socket.io",
+      "category": "backend",
+      "icon": "socketdotio"
+    },
+    {
+      "name": "OAuth",
+      "category": "backend",
+      "icon": "key"
+    },
+    {
+      "name": "Clerk",
+      "category": "backend",
+      "icon": "clerk"
+    },
+    {
+      "name": "JWT",
+      "category": "backend",
+      "icon": "jsonwebtokens"
+    },
+    {
+      "name": "Auth0",
+      "category": "backend",
+      "icon": "auth0"
+    },
+    {
+      "name": "Better Auth",
+      "category": "backend",
+      "icon": "betterauth"
+    },
+    {
+      "name": "Supabase",
+      "category": "backend",
+      "icon": "supabase"
+    },
+    {
+      "name": "Neon",
+      "category": "backend",
+      "icon": "neon"
+    },
+    {
+      "name": "Zod",
+      "category": "backend",
+      "icon": "zod"
+    },
+    {
+      "name": "GraphQL",
+      "category": "backend",
+      "icon": "graphql"
+    },
+    {
+      "name": "Paystack",
+      "category": "backend",
+      "icon": "card"
+    },
+    {
+      "name": "Resend",
+      "category": "backend",
+      "icon": "resend"
+    },
+    {
+      "name": "n8n",
+      "category": "tools",
+      "icon": "n8n"
+    },
+    {
+      "name": "Make",
+      "category": "tools",
+      "icon": "make"
+    },
+    {
+      "name": "Docker",
+      "category": "tools",
+      "icon": "docker"
+    },
+    {
+      "name": "CLI",
+      "category": "tools",
+      "icon": "terminal"
+    },
+    {
+      "name": "Git",
+      "category": "tools",
+      "icon": "git"
+    },
+    {
+      "name": "GitHub",
+      "category": "tools",
+      "icon": "github"
+    },
+    {
+      "name": "Vercel",
+      "category": "tools",
+      "icon": "vercel"
+    },
+    {
+      "name": "Vitest",
+      "category": "tools",
+      "icon": "vitest"
+    },
+    {
+      "name": "Playwright",
+      "category": "tools",
+      "icon": "check"
+    },
+    {
+      "name": "Figma",
+      "category": "design",
+      "icon": "figma"
+    }
+  ]
+}
