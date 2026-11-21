@@ -11,6 +11,8 @@ import { notifyOwner } from "@/lib/proposals/email";
 import { getSignatures, recordView } from "@/lib/proposals/repo";
 import { clientIp, ipHash } from "@/lib/proposals/security";
 import { formatDate } from "@/lib/proposals/snapshot";
+import { formatMoney } from "@/lib/proposals/money";
+import { invoiceKey, invoiceState, listInvoices, type InvoiceRow } from "@/lib/proposals/invoices";
 import { clientAccess, clientApi, clientUrl, signedBy } from "@/lib/proposals/service";
 
 // A private page per client: rendered per request, never cached or indexed.
@@ -55,7 +57,7 @@ async function ClientProposalPage({ params }: Props) {
     }
   });
 
-  const sigs = await getSignatures(row.id, row.version);
+  const [sigs, invoices] = await Promise.all([getSignatures(row.id, row.version), status === "signed" ? listInvoices(row.id) : []]);
   return (
     <ProposalView
       snapshot={snapshot}
@@ -70,9 +72,11 @@ async function ClientProposalPage({ params }: Props) {
             contentSha256={contentSha256}
             defaultName={snapshot.client.contactName}
             defaultEmail={snapshot.client.contactEmail}
+            optionLabels={Object.fromEntries(snapshot.options.map((o) => [o.id, `${o.name} · ${formatMoney(o.priceMinor, snapshot.currency)}`]))}
           />
         )
       }
+      afterSigning={<AfterSigning invoices={invoices} />}
       banner={
         status === "signed" ? (
           <div className="pp-banner" role="status">
@@ -90,6 +94,49 @@ async function ClientProposalPage({ params }: Props) {
         ) : null
       }
     />
+  );
+}
+
+/** Next steps once signed: the deposit (and later the balance) invoice. */
+function AfterSigning({ invoices }: { invoices: InvoiceRow[] }) {
+  const open = invoices.filter((i) => i.status !== "void");
+  if (!open.length) return null;
+  return (
+    <div className="cards">
+      {open.map((inv) => {
+        const state = invoiceState(inv);
+        const label = inv.kind === "deposit" ? "Deposit" : "Balance";
+        return (
+          <div key={inv.id} className="card">
+            <div className="card__body">
+              {state === "paid" ? (
+                <p className="m-0">
+                  <span className="medium">{label} received.</span> <span className="muted">Thank you. Invoice {inv.number}.</span>
+                </p>
+              ) : (
+                <>
+                  <p className="m-0">
+                    <span className="medium">
+                      Next: pay the {label.toLowerCase()} of {formatMoney(inv.amountMinor, inv.currency)}
+                    </span>
+                    <br />
+                    <span className={state === "overdue" ? "pp-error" : "muted"}>
+                      Invoice {inv.number}, due {formatDate(inv.dueAt)}
+                      {state === "overdue" ? " (overdue)" : ""}
+                    </span>
+                  </p>
+                  <div className="actions">
+                    <a href={`/i/${invoiceKey(inv)}`} className="button">
+                      View invoice and pay
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

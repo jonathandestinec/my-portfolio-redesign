@@ -31,9 +31,9 @@ export function isAdminPath(pathname: string): boolean {
   return ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-/** Client proposal pages and their files: public to whoever has the link, but never indexed or cached. */
+/** Client proposal and invoice pages and their files: public to whoever has the link, but never indexed or cached. */
 export function isProposalPath(pathname: string): boolean {
-  return pathname.startsWith("/p/") || pathname.startsWith("/api/p/");
+  return ["/p/", "/api/p/", "/i/", "/api/i/"].some((p) => pathname.startsWith(p));
 }
 
 /** The gate is on only with a real entry path and a long random token. */

@@ -8,7 +8,7 @@ import { site } from "@/content/site";
 import { siteUrl } from "@/lib/site-url";
 import type { CatalogItem } from "./snapshot";
 import { slugify } from "./tokens";
-import type { Provider } from "./types";
+import { DEFAULT_TERMS, type PaymentTerms, type Provider } from "./types";
 
 /** Contract templates, one JSON file each in content/contracts/ (edited in Studio). */
 export type ContractTemplate = { slug: string; name: string; body: string };
@@ -28,12 +28,30 @@ export function loadContracts(): ContractTemplate[] {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+function intOr(v: unknown, fallback: number): number {
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 ? n : fallback;
+}
+
+/** "1.5" → 150 basis points, without floating-point surprises. */
+export function percentToBps(v: unknown, fallback: number): number {
+  const m = /^(\d{1,2})(?:\.(\d{1,2}))?$/.exec(String(v ?? "").trim());
+  return m ? Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0")) : fallback;
+}
+
 export const proposalDefaults = {
   providerName: defaults.providerName,
   providerTitle: defaults.providerTitle,
   validityDays: Number(defaults.validityDays) || 14,
   intro: defaults.intro,
   contractTemplate: defaults.contractTemplate,
+  terms: {
+    depositPercent: intOr(defaults.depositPercent, DEFAULT_TERMS.depositPercent),
+    depositDueDays: intOr(defaults.depositDueDays, DEFAULT_TERMS.depositDueDays),
+    balanceDueDays: intOr(defaults.balanceDueDays, DEFAULT_TERMS.balanceDueDays),
+    lateFeeBps: percentToBps(defaults.lateFeePercent, DEFAULT_TERMS.lateFeeBps),
+    stopWorkDays: intOr(defaults.stopWorkDays, DEFAULT_TERMS.stopWorkDays),
+  } satisfies PaymentTerms,
 };
 
 export function provider(): Provider {

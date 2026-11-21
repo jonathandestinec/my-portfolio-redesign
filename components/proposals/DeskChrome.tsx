@@ -1,6 +1,24 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+const TABS = [
+  { href: "/desk", label: "Proposals" },
+  { href: "/desk/discovery", label: "Discovery" },
+  { href: "/desk/settings", label: "Settings" },
+] as const;
+
+export function DeskTabs({ current }: { current: (typeof TABS)[number]["href"] }) {
+  return (
+    <nav aria-label="Desk" className="desk-tabs">
+      {TABS.map((t) => (
+        <Link key={t.href} href={t.href} className={`desk-tab${t.href === current ? " is-on" : ""}`} aria-current={t.href === current ? "page" : undefined}>
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function DeskHeader({ crumbs, actions }: { crumbs: { href?: string; label: string }[]; actions?: ReactNode }) {
   return (
     <header className="desk-head">

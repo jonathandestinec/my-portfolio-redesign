@@ -25,6 +25,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/p/[key]/sign">)
   if (name.length < 2) return json({ error: "Please enter your full name." }, 400);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Please enter a valid email." }, 400);
   if (!png) return json({ error: "Please add your signature." }, 400);
+  const optionId = typeof body.optionId === "string" ? body.optionId : "";
+  if (!a.snapshot.options.some((o) => o.id === optionId)) return json({ error: "Please pick an option first." }, 400);
   if (body.version !== a.row.version || body.contentSha256 !== a.contentSha256) {
     return json({ error: "This proposal was updated while you were reading. Please reload the page and review it again." }, 409);
   }
@@ -33,6 +35,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/p/[key]/sign">)
     row: a.row,
     version: a.row.version,
     contentSha256: a.contentSha256,
+    optionId,
     name,
     email,
     title,

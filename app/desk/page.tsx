@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
-import { DeskHeader, NotSetUp, SignInFirst } from "@/components/proposals/DeskChrome";
+import { DeskHeader, DeskTabs, NotSetUp, SignInFirst } from "@/components/proposals/DeskChrome";
 import { proposalsConfigured } from "@/lib/proposals/db";
 import { formatMoney } from "@/lib/proposals/money";
 import { currentOwner } from "@/lib/proposals/owner";
@@ -38,6 +38,7 @@ async function DeskHome() {
           </form>
         }
       />
+      <DeskTabs current="/desk" />
       {items.length ? (
         <ul className="list">
           {items.map((p) => (
@@ -46,6 +47,7 @@ async function DeskHome() {
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="medium truncate">{p.clientName}</span>
                   <span className="muted text-[14px]">
+                    {p.options > 1 ? `${p.options} options, recommended ` : ""}
                     {formatMoney(p.totalMinor, p.currency)}
                     {p.version ? ` · v${p.version}` : ""}
                     {p.views ? ` · ${p.views} view${p.views === 1 ? "" : "s"}, last ${ago(p.lastViewedAt!)}` : ""}
