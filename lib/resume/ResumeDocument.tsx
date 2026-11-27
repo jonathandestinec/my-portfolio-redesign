@@ -25,7 +25,8 @@ const s = StyleSheet.create({
   rowBody: { flex: 1 },
   bold: { fontFamily: 'Helvetica-Bold' },
   line: { marginBottom: 2 },
-  foot: { marginTop: 12, fontSize: 8, color: '#666' },
+  // Pinned to the bottom edge so it never pushes the page onto a second sheet.
+  foot: { position: 'absolute', bottom: 22, left: 36, fontSize: 8, color: '#666' },
 })
 
 const flat = (parts: RichText) => parts.map((p) => (typeof p === 'string' ? p : p.text)).join('')
@@ -48,6 +49,10 @@ export function ResumeDocument({ data }: { data: ResumeData }) {
   return (
     <Document title={`${name} - Resume`} author={name}>
       <Page size="A4" style={s.page}>
+        {/* First in the markup, absolutely placed at the bottom: it can't push content onto a second page. */}
+        <Text style={s.foot} fixed>
+          More projects: {siteUrl}/works
+        </Text>
         <Text style={s.name}>{name}</Text>
         <Text style={s.role}>{site.role}</Text>
         <Text style={s.contact}>
@@ -79,7 +84,8 @@ export function ResumeDocument({ data }: { data: ResumeData }) {
                 {project.name} · {project.role} · {project.year}
               </Text>
               <Text>{project.summary}</Text>
-              <Text>Stack: {project.stack.join(', ')}</Text>
+              {/* The main tools only, so three or more projects still fit on one page. */}
+              <Text>Stack: {project.stack.slice(0, 6).join(', ')}</Text>
             </View>
           ))}
         </Section>
@@ -109,7 +115,6 @@ export function ResumeDocument({ data }: { data: ResumeData }) {
           ))}
         </Section>
 
-        <Text style={s.foot}>More projects: {siteUrl}/works</Text>
       </Page>
     </Document>
   )

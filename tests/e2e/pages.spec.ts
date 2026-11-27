@@ -13,10 +13,19 @@ test("agrohub case study follows the reference case layout", async ({ page, isMo
   );
   for (const t of ["Selling together", "Paid on delivery", "Built for phones"])
     await expect(page.getByRole("heading", { level: 2, name: t })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Next project: Huddle/ })).toHaveAttribute("href", "/work/huddle");
+  await expect(page.getByRole("link", { name: /Next project: Royal Beads Edo/ })).toHaveAttribute("href", "/work/royal-beads-edo");
   await expect(page.getByText("How it's shipping")).toHaveCount(0);
   if (isMobile) await page.getByRole("button", { name: "Menu" }).click();
   await expect(page.getByRole("link", { name: "← All works" }).first()).toBeVisible();
+});
+
+test("royal beads edo case study", async ({ page }) => {
+  await page.goto("/work/royal-beads-edo");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Royal Beads Edo: coral beads, tried on before they’re bought/);
+  await expect(page.getByRole("link", { name: "royal-beads-edo.vercel.app" })).toHaveAttribute("href", "https://royal-beads-edo.vercel.app");
+  for (const t of ["Sets for every occasion", "See it on you before you buy", "Build your wedding set", "Every enquiry, sorted"])
+    await expect(page.getByRole("heading", { level: 2, name: t })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Next project: Huddle/ })).toHaveAttribute("href", "/work/huddle");
 });
 
 test("huddle case study", async ({ page }) => {
@@ -34,8 +43,9 @@ test("huddle case study", async ({ page }) => {
 test("works page: featured card plus client and experiment lists", async ({ page }) => {
   await page.goto("/works");
   const reads = page.getByRole("link", { name: "Read the case study" });
-  await expect(reads).toHaveCount(2);
-  await expect(reads.nth(0)).toHaveAttribute("href", "/work/huddle");
+  await expect(reads).toHaveCount(3);
+  await expect(reads.nth(0)).toHaveAttribute("href", "/work/royal-beads-edo");
+  await expect(reads.nth(1)).toHaveAttribute("href", "/work/huddle");
   await expect(page.getByRole("heading", { name: "Client & collaborations" })).toBeVisible();
   await expect(page.getByText("Thymus Energy FZCO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Experiments", exact: true })).toBeVisible();

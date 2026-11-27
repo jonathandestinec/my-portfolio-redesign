@@ -18,7 +18,7 @@ export function getNextProject(slug: string): Project | null {
   return projects[(i + 1) % projects.length]
 }
 
-export type CarouselSlide = { image: Img; tag: string; href: string; phone?: boolean }
+export type CarouselSlide = { image: Img; tag: string; href: string; phone?: boolean; film?: { src: string; poster: string } }
 
 /** One slide per featured project (its cover), in project order. */
 export function homeSlides(): CarouselSlide[] {
@@ -26,6 +26,7 @@ export function homeSlides(): CarouselSlide[] {
     image: p.cover,
     tag: p.name,
     href: `/work/${p.slug}`,
+    film: p.film,
   }))
 }
 

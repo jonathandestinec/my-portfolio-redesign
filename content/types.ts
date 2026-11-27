@@ -46,6 +46,8 @@ export type Project = {
   links: { live?: string; repo?: string }
   /** Work tags (lib/proposals/tags.ts), used to suggest relevant work in client proposals. */
   tags: string[]
+  /** A short looping film of the project (video/ renders it), with a still poster. */
+  film?: { src: string; poster: string }
 }
 
 /** Square logo in /public/logos, or initials shown on a plain tile when there is none yet. */

@@ -19,8 +19,8 @@ test("hero type matches the reference: weight 400 display, no bold", async ({ pa
 test("hero links both projects and the note hangs off 'See all my work'", async ({ page }) => {
   await page.goto("/");
   const lead = page.locator("header.intro .lead");
+  await expect(lead.getByRole("link", { name: "Royal Beads Edo", exact: true })).toHaveAttribute("href", "/work/royal-beads-edo");
   await expect(lead.getByRole("link", { name: "Huddle", exact: true })).toHaveAttribute("href", "/work/huddle");
-  await expect(lead.getByRole("link", { name: "AgroHub", exact: true })).toHaveAttribute("href", "/work/agrohub");
   const link = page.locator("a.note__link");
   await expect(link).toHaveAttribute("href", "/works");
   await expect(link.locator(".note__text")).toHaveText("check this out :)");

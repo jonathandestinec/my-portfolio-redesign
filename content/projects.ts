@@ -28,6 +28,7 @@ type Stored = {
   status: string
   links: { live: string | null; repo: string | null }
   tags?: string[]
+  film?: { video: string | null; poster: string | null }
 }
 
 function toProject(slug: string, p: Stored): Project {
@@ -55,6 +56,7 @@ function toProject(slug: string, p: Stored): Project {
     status: p.status === 'shipped' ? 'shipped' : 'in-progress',
     links: { live: p.links.live || undefined, repo: p.links.repo || undefined },
     tags: p.tags ?? [],
+    film: p.film?.video && p.film.poster ? { src: p.film.video, poster: p.film.poster } : undefined,
   }
 }
 

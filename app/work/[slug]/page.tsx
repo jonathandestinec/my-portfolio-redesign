@@ -3,6 +3,7 @@ import Image from "next/image";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { Facts } from "@/components/blocks/Facts";
+import { FilmLoop } from "@/components/work/FilmLoop";
 import { Intro } from "@/components/hero/Lead";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { Wordmark } from "@/components/layout/Wordmark";
@@ -117,6 +118,11 @@ export default async function ProjectPage({ params }: Props) {
           <Facts rows={facts} />
         </div>
 
+        {project.film ? (
+          <figure className="case-film" data-reveal>
+            <FilmLoop src={project.film.src} poster={project.film.poster} label={`${project.name}: a short film of the project`} className="case-film__video" />
+          </figure>
+        ) : null}
         {hero ? (
           <figure className="wide case-image" data-reveal>
             <Shot img={hero} sizes="(max-width: 1119px) calc(100vw - 40px), 960px" />
