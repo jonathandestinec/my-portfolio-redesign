@@ -61,12 +61,14 @@ async function main() {
       '-framerate', '60000/1001', '-i', path.join(frames, '%04d.png'),
       '-i', audio,
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', '22', '-profile:v', 'high',
+      // The picture ends at 12.012 s (360 frames), so the 60 ms fade goes there.
+      '-af', 'afade=t=out:st=11.952:d=0.06',
       '-c:a', 'aac', '-b:a', '160k',
       '-shortest', '-movflags', '+faststart',
       path.join(dest, 'film.mp4'),
     ], { stdio: 'inherit' })
-    // Poster: the settled logo disc (shown before playback and with reduced motion).
-    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', path.join(frames, `${String(560).padStart(4, '0')}.png`), '-q:v', '3', path.join(dest, 'poster.jpg')])
+    // Poster: f40, the header in the window over the real site (shown before playback and with reduced motion).
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', path.join(frames, `${String(80).padStart(4, '0')}.png`), '-q:v', '3', path.join(dest, 'poster.jpg')])
     console.log(`wrote ${path.join(dest, 'film.mp4')}`)
   }
   if (errors.length) console.error('page errors:', errors)

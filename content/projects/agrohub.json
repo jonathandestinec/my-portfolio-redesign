@@ -88,5 +88,9 @@
     "dashboard",
     "mobile-first",
     "automation"
-  ]
+  ],
+  "film": {
+    "video": "/work/agrohub/film/film.mp4",
+    "poster": "/work/agrohub/film/poster.jpg"
+  }
 }

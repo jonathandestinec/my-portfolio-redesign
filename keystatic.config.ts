@@ -344,6 +344,13 @@ export default config({
           { label: "Links" },
         ),
         tags: workTags("Not shown on the site. Used to suggest this project in client proposals."),
+        film: fields.object(
+          {
+            video: fields.file({ label: "Film (MP4)", directory: "public/work", publicPath: "/work/", description: "Square, muted loop. Rendered by video/render.ts." }),
+            poster: fields.image({ label: "Poster", directory: "public/work", publicPath: "/work/", description: "Still shown before it plays and with reduced motion." }),
+          },
+          { label: "Film", description: "Plays at the top of the case study and on the home carousel." },
+        ),
       },
     }),
 

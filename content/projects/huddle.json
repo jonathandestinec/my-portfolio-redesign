@@ -100,5 +100,9 @@
     "mobile-first",
     "auth",
     "dashboard"
-  ]
+  ],
+  "film": {
+    "video": "/work/huddle/film/film.mp4",
+    "poster": "/work/huddle/film/poster.jpg"
+  }
 }

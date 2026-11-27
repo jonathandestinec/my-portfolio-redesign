@@ -1918,3 +1918,24 @@ body {
   font: inherit;
   cursor: pointer;
 }
+
+/* ---------- Project films ---------- */
+
+.slide__film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.case-film {
+  width: min(640px, 100% - var(--gutter) * 2);
+  margin: 48px auto 0;
+}
+.case-film__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: var(--well);
+}

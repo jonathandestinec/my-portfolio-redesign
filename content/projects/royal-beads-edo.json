@@ -115,5 +115,9 @@
     "dashboard",
     "mobile-first",
     "content-site"
-  ]
+  ],
+  "film": {
+    "video": "/work/royal-beads-edo/film/film.mp4",
+    "poster": "/work/royal-beads-edo/film/poster.jpg"
+  }
 }
