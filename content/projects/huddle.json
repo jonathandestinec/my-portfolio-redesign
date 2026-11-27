@@ -1,6 +1,6 @@
 {
   "name": "Huddle",
-  "order": 1,
+  "order": 0,
   "blurb": "where churches and communities run events and get paid for them",
   "tagline": "where organisations bring their people together",
   "context": "Live",
@@ -102,7 +102,7 @@
     "dashboard"
   ],
   "film": {
-    "video": "/work/huddle/film/film.mp4",
+    "video": "/work/huddle/film/video.mp4",
     "poster": "/work/huddle/film/poster.jpg"
   }
 }
