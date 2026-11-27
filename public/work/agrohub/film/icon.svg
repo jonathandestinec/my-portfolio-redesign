@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Drawn mark for AgroHub (the site has no icon): a sprout in the brand lime on deep green. -->
+  <rect width="120" height="120" rx="28" fill="#16261A"/>
+  <path d="M60 96V56" stroke="#DCEF6A" stroke-width="7" stroke-linecap="round"/>
+  <path d="M60 60C60 42 47 31 30 31C30 49 42 60 60 60Z" fill="#DCEF6A"/>
+  <path d="M60 52C60 34 73 23 90 23C90 41 78 52 60 52Z" fill="#8BC34A"/>
+</svg>

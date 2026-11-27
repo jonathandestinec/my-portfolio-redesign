@@ -1,0 +1,425 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Project film</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=block" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #000; }
+  #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; font-family: Inter, sans-serif; }
+  #stage * { box-sizing: border-box; }
+  .abs { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .cover { background-size: cover; background-position: top center; }
+  svg.defs { position: absolute; width: 0; height: 0; }
+  [data-off] { display: none !important; }
+</style>
+<script src="projects.js"></script>
+</head>
+<body>
+<svg class="defs" aria-hidden="true"><defs id="filters"></defs></svg>
+<div id="stage"></div>
+<script>
+/*
+ * A 12-second project film, 1080x1080. Frame numbers are at 29.97 fps (f0–f359);
+ * the master renders every half frame. seek(f) draws one frame as a pure function
+ * of f: no timers, no transitions, no randomness.
+ */
+const P = window.FILM_PROJECTS[new URLSearchParams(location.search).get("p") || "royal-beads-edo"];
+const C = P.palette;
+const stage = document.getElementById("stage");
+const defs = document.getElementById("filters");
+
+// ---------- maths ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const E = {
+  lin: (t) => t,
+  out: (t) => 1 - Math.pow(1 - t, 3),
+  outExpo: (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -9 * t)),
+  in: (t) => t * t * t,
+  inQuad: (t) => t * t,
+  inOut: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+};
+/** Keyframes [[frame, value], ...]; continuous in the frame number. */
+function kf(f, pts, ease = E.lin) {
+  if (f <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    if (f <= pts[i][0]) {
+      const [f0, v0] = pts[i - 1], [f1, v1] = pts[i];
+      return lerp(v0, v1, ease((f - f0) / (f1 - f0)));
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+/** Deterministic hash in [0,1) (instead of Math.random). */
+const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.trunc(x); };
+
+// ---------- DOM helpers: elements are made once and updated every frame ----------
+const cache = new Map();
+function el(id, html, parent = stage) {
+  let e = cache.get(id);
+  if (!e) {
+    const t = document.createElement("div");
+    t.innerHTML = html.trim();
+    e = t.firstChild;
+    e.id = id;
+    parent.appendChild(e);
+    cache.set(id, e);
+  }
+  e.removeAttribute("data-off");
+  return e;
+}
+// Hidden with an attribute, so each element keeps its own display (flex etc.).
+function hideAll() { for (const e of cache.values()) e.setAttribute("data-off", ""); }
+/** A directional blur filter (separate x/y), applied by url(#id). */
+function dirBlur(id, x, y) {
+  let f = document.getElementById(id);
+  if (!f) {
+    f = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+    f.id = id;
+    f.setAttribute("x", "-50%"); f.setAttribute("y", "-50%"); f.setAttribute("width", "200%"); f.setAttribute("height", "200%");
+    f.setAttribute("color-interpolation-filters", "sRGB");
+    f.innerHTML = '<feGaussianBlur stdDeviation="0 0"/>';
+    defs.appendChild(f);
+  }
+  f.firstChild.setAttribute("stdDeviation", `${x.toFixed(2)} ${y.toFixed(2)}`);
+  return x < 0.05 && y < 0.05 ? "none" : `url(#${id})`;
+}
+const blurCss = (b) => (b < 0.05 ? "none" : `blur(${b.toFixed(2)}px)`);
+
+// ---------- shared art ----------
+const CURSOR_SVG = `<svg width="32" height="39" viewBox="0 0 32 39"><path d="M3 2 L3 31 L10 24.5 L14.6 35.5 L19.4 33.4 L14.9 22.8 L24.5 22.8 Z" fill="#000" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
+function cursor(id, x, y, { rot = 0, scale = 1, blurX = 0, blurY = 0 } = {}) {
+  const c = el(id, `<div class="abs" style="width:32px;height:39px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:50">${CURSOR_SVG}</div>`);
+  c.style.transformOrigin = "3px 2px";
+  c.style.transform = `translate(${x - 3}px, ${y - 2}px) rotate(${rot}deg) scale(${scale})`;
+  c.firstChild.style.filter = dirBlur(id + "-b", blurX, blurY);
+  return c;
+}
+const markImg = (size) => `<img src="${P.icon}" style="width:${size}px;height:${size}px;display:block;border-radius:${size * 0.24}px" />`;
+
+// ---------- shots ----------
+const shots = [];
+const shot = (f0, f1, render) => shots.push({ f0, f1, render });
+
+// S1 f0–71: header rises out of the haze inside a light window; cursor glides in and clicks the logo.
+shot(0, 71.99, (f) => {
+  const zoom = f <= 46 ? 1 : f <= 61 ? kf(f, [[46, 1], [60, 1.2], [61, 1.2]], E.inOut) : kf(f, [[61, 1.2], [71, 1.04]], E.inQuad);
+  const cam = el("s1cam", `<div class="abs" style="width:1080px;height:1080px"></div>`);
+  cam.style.transformOrigin = "540px 540px";
+  cam.style.transform = `scale(${zoom})`;
+  el("s1bg", `<div class="abs" style="width:1080px;height:1080px;background:${C.page}"></div>`, cam);
+  const haze = el("s1haze", `<div class="abs" style="width:1080px;height:1080px;background:${C.haze}"></div>`, cam);
+  haze.style.opacity = kf(f, [[0, 1], [28, 0]], E.out);
+  el("s1floor", `<div class="abs" style="width:1080px;height:1080px;background:radial-gradient(120% 45% at 50% 108%, ${C.floor} 0%, transparent 70%)"></div>`, cam);
+
+  // The hub window, running off the right and bottom.
+  const win = el("s1win", `<div class="abs" style="left:408px;top:405px;width:900px;height:900px;border-radius:93px;background:#FCFDFF;box-shadow:0 30px 80px rgba(20,30,60,.12), inset 0 -120px 140px -60px ${C.floor};overflow:hidden">
+      <div class="abs" style="width:100%;height:150px;background:linear-gradient(${C.ice}, #FCFDFF)"></div>
+      <div class="abs" style="left:250px;top:12px;width:380px;height:44px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 1px #E3E8EF;color:#9AA3B2;font-size:19px;line-height:44px;padding-left:24px">Search ${P.name}</div>
+      <div class="abs" style="left:98px;top:303px;width:62px;height:62px;border-radius:18px;background:${C.navy};"></div>
+      <div class="abs" style="left:98px;top:464px;width:62px;height:62px;border-radius:18px;background:#E9EDF3;opacity:.6"></div>
+      <div class="abs" style="left:356px;top:295px;width:560px;height:620px;border-radius:44px;background:#fff;box-shadow:0 12px 40px rgba(20,30,60,.10);overflow:hidden">
+        <div class="abs cover" style="left:18px;top:18px;width:524px;height:328px;border-radius:30px;background-image:url('${P.windowCard.image}')"></div>
+        <div class="abs" style="left:30px;top:370px;font-size:30px;font-weight:600;color:#111;white-space:nowrap">${P.windowCard.title}</div>
+        <div class="abs" style="left:30px;top:414px;font-size:21px;color:#8A8F98;white-space:nowrap">${P.windowCard.sub}</div>
+      </div>
+    </div>`, cam);
+  win.style.opacity = kf(f, [[0, 0], [14, 0], [15, 0.53], [19, 0.7], [24, 1]]);
+
+  // Header lockup: disc, name, pill; scaled to fit x474–1063.
+  const lock = el("s1lock", `<div class="abs" style="display:flex;align-items:center;gap:26px;white-space:nowrap">
+      <div id="s1disc" style="position:relative;width:132px;height:132px;border-radius:50%;background:#FBFCFE;box-shadow:inset 0 0 0 1px #E8E8EA;display:flex;align-items:center;justify-content:center;flex:none">
+        <div id="s1ring" style="position:absolute;left:-21px;top:-21px;width:174px;height:174px;border-radius:50%;background:radial-gradient(circle, #F7FEFF 55%, ${C.ice} 75%, transparent 76%);z-index:-1"></div>
+        ${markImg(78)}
+      </div>
+      <div id="s1name" style="font-size:82px;font-weight:500;letter-spacing:-0.03em;color:#111">${P.name}</div>
+      <div id="s1pill" style="height:60px;padding:0 26px;border-radius:30px;background:#2F2E2F;color:#fff;font-size:28px;font-weight:500;display:flex;align-items:center">${P.pill}</div>
+    </div>`, cam);
+  const natW = lock.scrollWidth, natH = lock.offsetHeight;
+  const s = Math.min(1, 589 / natW);
+  const cy = f <= 37 ? kf(f, [[0, 932], [2, 776], [5, 683], [10, 608], [24, 546], [37, 536]], E.out) : 536 - (f - 37);
+  const vy = Math.abs(cy - (f - 1 <= 37 ? kf(f - 1, [[0, 932], [2, 776], [5, 683], [10, 608], [24, 546], [37, 536]], E.out) : 536 - (f - 38)));
+  lock.style.transform = `translate(474px, ${cy - (natH * s) / 2}px) scale(${s})`;
+  lock.style.filter = dirBlur("s1lockb", 0, clamp(vy * 0.12, 0, 9));
+  const name = document.getElementById("s1name");
+  name.style.opacity = kf(f, [[1.5, 0], [2, 1]]);
+  name.style.filter = blurCss(kf(f, [[2, 10], [9, 0]], E.out));
+  const pill = document.getElementById("s1pill");
+  pill.style.opacity = kf(f, [[3.5, 0], [4, 1]]);
+  pill.style.filter = blurCss(kf(f, [[4, 16], [13, 0]], E.out));
+  pill.style.transform = `translateX(${kf(f, [[4, 15], [13, 0]], E.out)}px)`;
+  document.getElementById("s1ring").style.opacity = kf(f, [[53, 0], [58, 1]], E.out);
+
+  // Cursor: glide in, turn to face its way, dive, hover-grow, press.
+  if (f >= 27) {
+    const path = [[27, 891, 393], [44, 770, 383], [56, 629, 564], [59, 587, 546], [71, 555, 531]];
+    const pos = (g) => {
+      const xs = path.map(([fr, x]) => [fr, x]), ys = path.map(([fr, , y]) => [fr, y]);
+      const e = g <= 44 ? E.outExpo : E.inOut;
+      return [kf(g, xs, e), kf(g, ys, e)];
+    };
+    const [x, y] = pos(f), [px, py] = pos(f - 1);
+    const rot = kf(f, [[47, 0], [51, -62]], E.inOut) + kf(f, [[56, 0], [60, 48]], E.out);
+    const sc = kf(f, [[56, 1], [60, 1.55]], E.out) * kf(f, [[69, 1], [71, 0.85]], E.inOut);
+    cursor("s1cur", x, y, { rot, scale: sc, blurX: clamp(Math.abs(x - px) * 0.18, 0, 6), blurY: clamp(Math.abs(y - py) * 0.18, 0, 6) }).style.opacity = kf(f, [[27, 0], [28, 1]]);
+  }
+});
+
+// S2 f72–100: the app icon, four squares orbiting into a cross, then collapsing into a row.
+shot(72, 100.99, (f) => {
+  el("s2bg", `<div class="abs" style="width:1080px;height:1080px;background:${C.page}"></div>`);
+  const shrinkOut = kf(f, [[88, 0], [100, 1]], E.inQuad);
+  const size = f < 88 ? kf(f, [[72, 276], [86, 178]], E.outExpo) : lerp(178, 40, shrinkOut);
+  const cx = 540 - shrinkOut * 150, cy = 540;
+  const halo = el("s2halo", `<div class="abs" style="border-radius:50%;background:#E9E9E7"></div>`);
+  const hd = kf(f, [[72, 150], [75, 240], [86, 326]], E.out) * (1 - shrinkOut * 0.85);
+  halo.style.width = halo.style.height = `${hd}px`;
+  halo.style.transform = `translate(${cx - hd / 2}px, ${cy - hd / 2}px)`;
+  const blur = kf(f, [[88, 0.3], [100, 6]], E.inQuad);
+  const ic = el("s2icon", `<div class="abs" style="z-index:5"><img src="${P.icon}" style="width:100%;height:100%;display:block"/></div>`);
+  ic.style.width = ic.style.height = `${size}px`;
+  ic.style.borderRadius = `${size * 0.28}px`;
+  ic.style.overflow = "hidden";
+  ic.style.boxShadow = "0 18px 40px rgba(0,0,0,.18)";
+  ic.style.transform = `translate(${cx - size / 2}px, ${cy - size / 2}px)`;
+  ic.style.filter = blurCss(f >= 88 ? blur : 0);
+  const colors = ["#FFFFFF", C.a1, C.a2, C.a3];
+  const finalAng = [180, 270, 0, 90]; // left, top, right, bottom
+  const spin = kf(f, [[72, 300], [86, 0]], E.outExpo); // counter-clockwise, decelerating
+  const r = kf(f, [[72, 330], [86, 216]], E.outExpo);
+  for (let i = 0; i < 4; i++) {
+    const sq = el(`s2sq${i}`, `<div class="abs" style="border-radius:26px;background:${colors[i]};${i === 0 ? "box-shadow:inset 0 0 0 1px #E3E8EF, 0 4px 14px rgba(0,0,0,.08);" : ""}"></div>`);
+    const a = ((finalAng[i] - spin) * Math.PI) / 180;
+    let x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r, s = 92;
+    if (f >= 88) {
+      // Slide into a row to the right of the icon; white slips behind it.
+      const t = shrinkOut;
+      const rowX = cx + size / 2 + 14 + (i === 0 ? -size / 2 - 7 : (i - 1) * 46 + 20);
+      x = lerp(x, rowX, E.out(clamp((f - 88) / 8)));
+      y = lerp(y, cy, E.out(clamp((f - 88) / 8)));
+      s = lerp(92, 36, t);
+    }
+    sq.style.width = sq.style.height = `${s}px`;
+    sq.style.borderRadius = `${s * 0.28}px`;
+    sq.style.zIndex = i === 0 && f >= 92 ? 1 : 6;
+    sq.style.transform = `translate(${x - s / 2}px, ${y - s / 2}px)`;
+    sq.style.filter = blurCss(f >= 88 ? blur : 0);
+  }
+});
+
+// S3 f101–158: menu bar, the click, the glass prompt box springing out, typing, whip-tilt up.
+shot(101, 158.99, (f) => {
+  // Accelerating drift: ≈25 px/frame by f158. Blur follows speed, so it stays sharp while slow.
+  const drift = f < 136 ? 0 : -25 * Math.pow(f - 136, 3) / (3 * 22 * 22);
+  const vy = f < 136 ? 0 : 25 * Math.pow((f - 136) / 22, 2);
+  const pan = kf(f, [[115, 0], [130, 125]], E.inOut);
+  const settle = kf(f, [[101, 3], [110, 0]], E.out);
+  const world = el("s3world", `<div class="abs" style="width:1080px;height:1080px"></div>`);
+  world.style.transform = `translate(${pan}px, ${drift}px)`;
+  world.style.filter = f < 136 ? blurCss(settle) : dirBlur("s3wb", 0, clamp((vy - 4) * 0.36, 0, 8));
+  el("s3page", `<div class="abs" style="left:-200px;top:-600px;width:1500px;height:1025px;background:#fff"></div>`, world);
+  el("s3bezel", `<div class="abs" style="left:-200px;top:425px;width:1500px;height:50px;background:#0B0B0C;box-shadow:inset 0 2px 0 #686866"></div>`, world);
+  el("s3wall", `<div class="abs" style="left:-200px;top:538px;width:1500px;height:1200px;background:linear-gradient(180deg, ${C.deepA}, ${C.deepB});overflow:hidden">
+      <svg width="1500" height="1200" style="position:absolute;left:0;top:0">
+        <circle cx="900" cy="360" r="300" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+        <line x1="0" y1="220" x2="1500" y2="220" stroke="rgba(255,255,255,.28)" stroke-width="2"/>
+        <line x1="0" y1="520" x2="1500" y2="520" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
+        <line x1="600" y1="0" x2="600" y2="1200" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
+        <path d="M600 208 L606 214 L600 220 L594 214Z M600 196 L603 214 L600 232 L597 214Z M582 220 L600 217 L618 220 L600 223Z" fill="#fff" transform="translate(0 -6)"/>
+        <circle cx="1380" cy="40" r="260" fill="${C.a2}" opacity=".22" filter="blur(40px)"/>
+      </svg>
+    </div>`, world);
+  el("s3bar", `<div class="abs" style="left:-200px;top:477px;width:1500px;height:61px;background:${C.navy}">
+      <div class="abs" style="left:480px;top:14px;display:flex;gap:22px;align-items:center;color:#fff">
+        <svg width="30" height="24" viewBox="0 0 30 24"><path d="M15 21l4-5a6 6 0 0 0-8 0zM6 12a13 13 0 0 1 18 0l-3 3a9 9 0 0 0-12 0zM1 7a20 20 0 0 1 28 0l-3 3a16 16 0 0 0-22 0z" fill="#fff"/></svg>
+        <svg width="40" height="20" viewBox="0 0 40 20"><rect x="1" y="2" width="33" height="16" rx="4" fill="none" stroke="#fff" stroke-width="2"/><rect x="4" y="5" width="24" height="10" rx="2" fill="#fff"/><rect x="36" y="7" width="3" height="6" rx="1" fill="#fff"/></svg>
+        <svg width="34" height="20" viewBox="0 0 34 20"><rect x="1" y="2" width="32" height="16" rx="8" fill="none" stroke="#fff" stroke-width="2"/><circle cx="25" cy="10" r="5" fill="#fff"/></svg>
+      </div>
+      <div class="abs" style="left:731px;top:3px;width:53px;height:53px">${markImg(53)}</div>
+      <div class="abs" style="left:794px;top:12px;width:36px;height:36px;border-radius:50%;background:${C.a1}"></div>
+      <div class="abs" style="left:843px;top:12px;width:36px;height:36px;border-radius:50%;background:${C.a2}"></div>
+      <div class="abs" style="left:891px;top:12px;width:36px;height:36px;border-radius:50%;background:${C.a3};box-shadow:inset 0 0 0 2px rgba(255,255,255,.4)"></div>
+      <div class="abs" style="left:945px;top:11px;color:#fff;font-size:34px;font-weight:500;white-space:nowrap">Mon Jun 22&nbsp;&nbsp;9:41 AM</div>
+    </div>`, world);
+
+  // The glass prompt box springs out from under the mark.
+  if (f >= 116) {
+    const w = kf(f, [[116, 60], [121, 560], [126, 744], [132, 718], [138, 726]], E.out);
+    const h = kf(f, [[116, 30], [121, 180], [126, 240], [132, 224], [138, 228]], E.out);
+    const left = 559 - pan - w / 2 + 0, top = 568;
+    const box = el("s3box", `<div class="abs" style="border-radius:60px;background:linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.18));backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);box-shadow:inset 0 2px 0 rgba(255,255,255,.85), inset 0 0 0 1.5px rgba(255,255,255,.45), 0 24px 60px rgba(0,0,0,.25);overflow:hidden">
+        <div id="s3text" style="position:absolute;left:46px;top:40px;right:46px;font-size:40px;font-weight:500;color:#fff;letter-spacing:-0.01em;white-space:nowrap"></div>
+        <div style="position:absolute;left:46px;bottom:34px;display:flex;gap:22px">
+          <svg width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="14" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M17 10v14M10 17h14" stroke="#fff" stroke-width="2.4"/></svg>
+          <svg width="34" height="34" viewBox="0 0 34 34"><rect x="4" y="7" width="26" height="20" rx="5" fill="none" stroke="#fff" stroke-width="2.4"/><circle cx="13" cy="15" r="3" fill="#fff"/><path d="M6 25l8-7 6 5 4-3 6 5" fill="none" stroke="#fff" stroke-width="2.4"/></svg>
+          <svg width="34" height="34" viewBox="0 0 34 34"><rect x="12" y="4" width="10" height="18" rx="5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M7 17a10 10 0 0 0 20 0M17 27v4" fill="none" stroke="#fff" stroke-width="2.4"/></svg>
+        </div>
+        <div style="position:absolute;right:30px;bottom:26px;width:51px;height:51px;border-radius:50%;background:${C.a1};display:flex;align-items:center;justify-content:center">
+          <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 20V5M5 11l7-7 7 7" fill="none" stroke="${C.a1 === "#FEF16C" || C.a1 === "#DCEF6A" ? "#111" : "#fff"}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>`, world);
+    box.style.width = `${w}px`;
+    box.style.height = `${h}px`;
+    box.style.transform = `translate(${left}px, ${top}px)`;
+    box.style.opacity = kf(f, [[116, 0], [118, 1]]);
+    // Typing: about one character a frame, with a one-frame hold every 2–3 characters.
+    const full = P.prompt;
+    let n = 0;
+    if (f >= 121) {
+      const steps = Math.trunc(f - 121);
+      let shown = 0, k = 0;
+      for (let s = 0; s <= steps && shown < full.length; s++) {
+        const holdEvery = 2 + (hash(k) > 0.5 ? 1 : 0);
+        if (s > 0 && s % (holdEvery + 1) === 0) { k++; continue; }
+        shown++;
+      }
+      n = f >= 150 ? full.length : Math.min(full.length, Math.max(5, shown));
+    }
+    const caret = `<span style="display:inline-block;width:3px;height:44px;margin-left:3px;vertical-align:-8px;background:#fff"></span>`;
+    document.getElementById("s3text").innerHTML = full.slice(0, n).replace(/&/g, "&amp;").replace(/</g, "&lt;") + caret;
+  }
+
+  // Cursor rises from below, sits on the mark, presses.
+  if (f >= 102) {
+    const x = kf(f, [[102, 700], [112, 757]], E.outExpo) + pan;
+    const y = kf(f, [[102, 1100], [112, 512]], E.outExpo) + drift;
+    const press = kf(f, [[113, 1], [115, 0.85], [117, 1]], E.inOut);
+    cursor("s3cur", x, y, { scale: 1.2 * press, blurY: clamp(Math.abs(kf(f, [[102, 1100], [112, 512]], E.outExpo) - kf(f - 1, [[102, 1100], [112, 512]], E.outExpo)) * 0.1, 0, 6) });
+  }
+  const tint = el("s3tint", `<div class="abs" style="width:1080px;height:1080px;background:${C.ice};z-index:60"></div>`);
+  tint.style.opacity = kf(f, [[154, 0], [158, 0.85]], E.inQuad);
+});
+
+// S4 f159–186: the real site arrives smeared and scrolls into place.
+shot(159, 186.99, (f) => {
+  el("s4bg", `<div class="abs" style="width:1080px;height:1080px;background:${C.page}"></div>`);
+  const off = kf(f, [[159, 420], [160, 315], [161, 210], [162, 170], [163, 140], [164, 116], [165, 96], [166, 81], [175, 14], [180, 0], [186, -6]]);
+  const prev = kf(f - 1, [[159, 420], [160, 315], [161, 210], [162, 170], [163, 140], [164, 116], [165, 96], [166, 81], [175, 14], [180, 0], [186, -6]]);
+  const blur = kf(f, [[159, 24], [165, 1.5], [170, 0]], E.out);
+  const page = el("s4page", `<div class="abs" style="left:-40px;width:1160px;height:1450px;background:#fff;border-radius:0">
+      <div class="abs cover" style="left:0;top:0;width:1160px;height:725px;background-image:url('${P.answer.image}')"></div>
+      <div class="abs cover" style="left:0;top:725px;width:1160px;height:725px;background-image:url('${P.windowCard.image}');background-position:bottom center"></div>
+    </div>`);
+  page.style.transform = `translate(-40px, ${60 + off}px)`;
+  page.style.filter = dirBlur("s4b", blur * 0.25, Math.max(blur, Math.abs(off - prev) * 0.15));
+  const flash = el("s4flash", `<div class="abs" style="width:1080px;height:1080px;background:#E2F4FE"></div>`);
+  flash.style.background = C.ice;
+  flash.style.opacity = kf(f, [[159, 1], [165, 0]], E.out);
+  const [tx, ty] = P.answer.cursor;
+  const cx = tx + Math.max(0, f - 180) * 3, cy = ty + off * 0.9;
+  cursor("s4cur", cx, cy, { rot: 0, scale: 1.25, blurY: clamp(Math.abs(off - prev) * 0.08, 0, 6) });
+});
+
+// S5 f187–214: a card rises over the page.
+shot(187, 214.99, (f) => {
+  el("s5bg", `<div class="abs" style="width:1080px;height:1080px;background:${C.page}"></div>`);
+  const back = el("s5back", `<div class="abs cover" style="left:-40px;top:54px;width:1160px;height:1450px;background:#fff"><div class="abs cover" style="width:1160px;height:725px;background-image:url('${P.answer.image}')"></div><div class="abs cover" style="top:725px;width:1160px;height:725px;background-image:url('${P.windowCard.image}');background-position:bottom center"></div></div>`);
+  back.style.filter = blurCss(kf(f, [[187, 0], [197, 2.5]], E.out));
+  const top = f <= 205 ? kf(f, [[187, 642], [191, 456], [196, 395], [200, 369], [205, 348]], E.out) : 348 - (f - 205) * 4 - (f > 207 ? Math.pow(f - 207, 2) * 1.2 : 0);
+  const card = el("s5card", `<div class="abs" style="left:0;top:0;width:675px;height:900px;border-radius:64px;background:#fff;box-shadow:0 -10px 60px rgba(0,0,0,.18)">
+      <div class="abs" style="left:297px;top:10px;width:80px;height:7px;border-radius:4px;background:#E2E2E2"></div>
+      <div class="abs cover" style="left:24px;top:24px;width:627px;height:536px;border-radius:44px;background-image:url('${P.card.image}')"></div>
+      <div class="abs" style="left:44px;top:590px;font-size:38px;font-weight:600;color:#000;white-space:nowrap">${P.card.caption}</div>
+      <div class="abs" style="left:44px;top:642px;font-size:23px;color:#8A8F98;white-space:nowrap">${P.card.sub}</div>
+    </div>`);
+  const sc = kf(f, [[207, 1], [214, 0.95]], E.inQuad);
+  card.style.transformOrigin = "337px 0";
+  card.style.transform = `translate(203px, ${top - 24}px) scale(${sc})`;
+  card.style.filter = blurCss(kf(f, [[187, 2], [189, 3.8], [201, 0]], E.out));
+  stage.style.filter = f >= 207 ? blurCss(kf(f, [[207, 1], [214, 7]], E.inQuad)) : "none";
+});
+
+// S6 f215–244: two stacked cards with giant frosted-glass titles.
+shot(215, 244.99, (f) => {
+  stage.style.filter = "none";
+  el("s6bg", `<div class="abs" style="width:1080px;height:1080px;background:${C.page}"></div>`);
+  const exitUp = f > 238 ? Math.pow(f - 238, 2) * 6 : 0;
+  const exitBlur = kf(f, [[238, 0], [244, 10]], E.inQuad);
+  const cards = [
+    { y: [[215, 264], [230, 168]], s: [[215, 1.08], [230, 1]], d: 0 },
+    { y: [[218, 927], [233, 552]], s: [[218, 1], [233, 1]], d: 3 },
+  ];
+  P.cards.forEach((c, i) => {
+    const id = `s6c${i}`;
+    const svgTitle = `<svg width="538" height="348" style="position:absolute;left:0;top:0">
+        <defs>
+          <clipPath id="${id}clip"><text x="24" y="392" font-family="Inter" font-weight="700" font-size="196" letter-spacing="-8">${c.title}</text></clipPath>
+          <filter id="${id}glass"><feGaussianBlur stdDeviation="14"/><feComponentTransfer><feFuncR type="linear" slope=".45" intercept=".55"/><feFuncG type="linear" slope=".45" intercept=".55"/><feFuncB type="linear" slope=".45" intercept=".55"/></feComponentTransfer></filter>
+        </defs>
+        <g clip-path="url(#${id}clip)"><image href="${c.image}" x="0" y="0" width="538" height="348" preserveAspectRatio="xMidYMin slice" filter="url(#${id}glass)"/></g>
+        <text x="24" y="392" font-family="Inter" font-weight="700" font-size="196" letter-spacing="-8" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.5">${c.title}</text>
+      </svg>`;
+    const card = el(id, `<div class="abs" style="width:538px;height:348px;border-radius:57px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.14);background:#ddd">
+        <div class="abs cover" style="width:538px;height:348px;background-image:url('${c.image}')"></div>
+        <div class="abs" style="width:538px;height:348px;background:linear-gradient(180deg, rgba(0,0,0,0) 30%, ${C.deepA}D9 92%)"></div>
+        ${svgTitle}
+        <div class="abs" style="left:26px;top:24px;height:44px;padding:0 18px;border-radius:22px;background:rgba(24,24,28,.38);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);color:#fff;font-size:20px;font-weight:600;line-height:44px">${c.pill}</div>
+        <div class="abs" style="left:466px;top:24px;width:46px;height:46px;border-radius:50%;background:rgba(24,24,28,.38);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);color:#fff;font-size:20px;text-align:center;line-height:40px;font-weight:700">•••</div>
+      </div>`);
+    const spec = cards[i];
+    const y = kf(f, spec.y, E.outExpo) - (f > 230 ? (f - 230) * 3 : 0) - exitUp;
+    const s = kf(f, spec.s, E.outExpo);
+    card.style.transformOrigin = "269px 174px";
+    card.style.transform = `translate(271px, ${y}px) scale(${s})`;
+    card.style.opacity = kf(f, [[215 + spec.d, 0], [216 + spec.d, 1]]);
+    const b = kf(f, [[215 + spec.d, 12], [224 + spec.d, 0]], E.out);
+    card.style.filter = f > 238 ? dirBlur(id + "b", 0, exitBlur) : blurCss(b);
+  });
+});
+
+// S7 f245–300: the lone logo disc.
+shot(245, 300.99, (f) => {
+  el("s7bg", `<div class="abs" style="width:1080px;height:1080px;background:${C.page}"></div>`);
+  const d = f <= 287 ? 168 : kf(f, [[287, 168], [300, 123]], E.in);
+  const top = kf(f, [[245, 569], [250, 491], [255, 468], [269, 456]], E.out);
+  const cy = top + 84;
+  const disc = el("s7disc", `<div class="abs" style="border-radius:50%;background:#F6F6F6;box-shadow:inset 0 0 0 1px #E6E6E6, 0 10px 30px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center"><img src="${P.icon}" style="width:58%;height:58%;border-radius:24%"/></div>`);
+  disc.style.width = disc.style.height = `${d}px`;
+  disc.style.transform = `translate(${540 - d / 2}px, ${cy - d / 2}px)`;
+  disc.style.filter = dirBlur("s7b", 0, kf(f, [[245, 14], [251, 0]], E.out));
+});
+
+// S8 f301–359: black end card with a glowing wordmark, ending mid-collapse.
+shot(301, 359.99, (f) => {
+  el("s8bg", `<div class="abs" style="width:1080px;height:1080px;background:radial-gradient(60% 40% at 50% 50%, #272729 0%, #0c0c0e 70%, #020204 100%)"></div>`);
+  const word = el("s8word", `<div class="abs" style="font-family:Inter;font-weight:600;font-size:200px;letter-spacing:-0.04em;color:#F3F3F5;white-space:nowrap;text-shadow:0 0 6px rgba(255,255,255,.55), 0 0 40px rgba(255,255,255,.25), 0 0 120px rgba(255,255,255,.18)">${P.name}</div>`);
+  const nat = word.scrollWidth, natH = word.offsetHeight;
+  const w = kf(f, [[301, 1650], [302, 1350], [303, 1110], [304, 1049], [309, 734], [311, 678], [320, 563], [342, 516], [350, 492], [355, 450], [359, 267]], f >= 350 ? E.inQuad : E.lin);
+  const s = w / nat;
+  word.style.transformOrigin = "0 0";
+  word.style.transform = `translate(${540 - (nat * s) / 2}px, ${540 - (natH * s) / 2}px) scale(${s})`;
+  const blur = kf(f, [[350, 0], [359, 3.5]], E.inQuad);
+  word.style.filter = f < 304 ? dirBlur("s8b", kf(f, [[301, 18], [304, 0]]), 0) : blurCss(blur);
+  // Zoom streaks on the first frames: scaled, faded copies.
+  for (let i = 0; i < 24; i++) {
+    const c = el(`s8z${i}`, `<div class="abs" style="font-family:Inter;font-weight:600;font-size:200px;letter-spacing:-0.04em;color:#F3F3F5;white-space:nowrap">${P.name}</div>`);
+    const k = 1 + (i + 1) * 0.012;
+    const a = f < 304 ? kf(f, [[301, 0.12], [304, 0]]) * (1 - i / 24) : 0;
+    c.style.opacity = a;
+    if (a <= 0.001) c.setAttribute("data-off", "");
+    c.style.transform = `translate(${540 - (nat * s * k) / 2}px, ${540 - (natH * s * k) / 2}px) scale(${s * k})`;
+  }
+});
+
+// ---------- seek ----------
+let lastShot = -1;
+window.seek = function (f) {
+  const i = shots.findIndex((s) => f >= s.f0 && f <= s.f1);
+  if (i !== lastShot) {
+    hideAll();
+    stage.style.filter = "none";
+    lastShot = i;
+  }
+  const s = shots[i];
+  if (s) s.render(f);
+};
+window.ready = document.fonts.ready.then(() =>
+  Promise.all([...new Set([P.icon, P.windowCard.image, P.answer.image, P.card.image, ...P.cards.map((c) => c.image)])].map(
+    (src) => new Promise((res) => { const im = new Image(); im.onload = im.onerror = res; im.src = src; }),
+  )),
+);
+</script>
+</body>
+</html>

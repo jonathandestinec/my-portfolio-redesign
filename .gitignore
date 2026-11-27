@@ -48,3 +48,5 @@ next-env.d.ts
 # screenshot script output (upload through the admin panel)
 captures/
 .data/
+video/out/
+film-stills/
