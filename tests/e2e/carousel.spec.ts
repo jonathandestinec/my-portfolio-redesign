@@ -13,10 +13,10 @@ async function ready(page: Page) {
 test("the frame and label stay put; the slides move under them", async ({ page }) => {
   await ready(page);
   const before = (await page.locator(".frame").boundingBox())!;
-  await expect(label(page)).toHaveText("Huddle");
+  await expect(label(page)).toHaveText("Royal Beads Edo");
   await page.locator(".track").focus();
   await page.keyboard.press("ArrowRight");
-  await expect(label(page)).toHaveText("AgroHub");
+  await expect(label(page)).toHaveText("Huddle");
   const after = (await page.locator(".frame").boundingBox())!;
   expect(after.x).toBe(before.x);
   // The newly current slide ends up exactly under the frame.
@@ -40,7 +40,7 @@ test("dragging moves to the next slide without navigating", async ({ page }) => 
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.1, box.y + 80, { steps: 10 });
   await page.mouse.up();
-  await expect(label(page)).toHaveText("AgroHub");
+  await expect(label(page)).toHaveText("Huddle");
   expect(page.url()).toBe(url);
 });
 
@@ -51,7 +51,7 @@ test("clicking a peeking slide only brings it in", async ({ page, isMobile }) =>
   const next = page.locator(".slide").nth(1);
   const b = (await next.boundingBox())!;
   await page.mouse.click(b.x + 30, b.y + 60);
-  await expect(label(page)).toHaveText("AgroHub");
+  await expect(label(page)).toHaveText("Huddle");
   expect(page.url()).toBe(url);
 });
 
@@ -64,11 +64,11 @@ test("non-current slides are dimmed", async ({ page }) => {
 test("clicking the current slide or its label opens the case study", async ({ page }) => {
   await ready(page);
   await label(page).click();
-  await expect(page).toHaveURL(/\/work\/huddle$/);
+  await expect(page).toHaveURL(/\/work\/royal-beads-edo$/);
   await ready(page);
   const f = (await page.locator(".frame").boundingBox())!;
   await page.mouse.click(f.x + f.width / 2, f.y + f.height / 2);
-  await expect(page).toHaveURL(/\/work\/huddle$/);
+  await expect(page).toHaveURL(/\/work\/royal-beads-edo$/);
 });
 
 test("a horizontal trackpad swipe moves one slide; vertical wheel scrolls the page", async ({ page, isMobile }) => {
@@ -78,14 +78,14 @@ test("a horizontal trackpad swipe moves one slide; vertical wheel scrolls the pa
   await page.mouse.move(f.x + f.width / 2, f.y + f.height / 2);
   // A long swipe with momentum still moves exactly one slide.
   for (let i = 0; i < 12; i++) await page.mouse.wheel(40, 0);
-  await expect(label(page)).toHaveText("AgroHub");
+  await expect(label(page)).toHaveText("Huddle");
   await page.waitForTimeout(300);
   for (let i = 0; i < 6; i++) await page.mouse.wheel(-40, 0);
-  await expect(label(page)).toHaveText("Huddle");
+  await expect(label(page)).toHaveText("Royal Beads Edo");
   const y0 = await page.evaluate(() => scrollY);
   await page.mouse.wheel(0, 300);
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(y0);
-  await expect(label(page)).toHaveText("Huddle");
+  await expect(label(page)).toHaveText("Royal Beads Edo");
 });
 
 test("there are no carousel buttons", async ({ page }) => {
