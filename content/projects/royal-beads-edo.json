@@ -1,0 +1,119 @@
+{
+  "name": "Royal Beads Edo",
+  "order": 0,
+  "blurb": "where a Benin City coral bead shop lets brides try a set on before they buy",
+  "tagline": "coral beads, tried on before they’re bought",
+  "context": "Live",
+  "summary": "A site for a coral bead shop in Benin City: sets by occasion, an in-browser try-on that puts a necklace and crown on the customer's face, a wedding set builder with prices, and enquiries sorted by AI and sent to the owner's phone.",
+  "cover": {
+    "image": "/work/royal-beads-edo/cover/image.jpg",
+    "alt": "Taoué by Royal Beads Edo home page: Coral beads and traditional attire from Benin City, beside a portrait of a woman wearing coral beads"
+  },
+  "story": [
+    "Royal Beads Edo strings coral beads and makes traditional attire for weddings, chieftaincy titles and festivals in Benin City. The owner’s biggest problem was simple: a set that looked right in a photo often looked different on the customer, and the only way to know was to come to the shop.",
+    "The site, under the brand Taoué, tells the story of Edo coral, shows sets by occasion with real price ranges, and lets a customer see a set on their own face before they enquire. Every enquiry lands in one place, sorted, with an alert on the owner’s phone.",
+    "I built it end to end as my capstone for the Tech4Youth AG Southern AI Class: the site, the in-browser try-on, the regalia builder, the enquiry automation and the chatbot. It’s live at royal-beads-edo.vercel.app."
+  ],
+  "chapters": [
+    {
+      "title": "Sets for every occasion",
+      "id": "occasions",
+      "text": "Sets are grouped the way customers think about them: weddings, chieftaincy, festivals. Each card shows what it’s for and a price range to buy or rent, and every Enquire button opens the shop’s form with the set already filled in. AI concept images are tagged as concepts, and real photographs carry their credit on the image, so nothing is passed off as the shop’s own work.",
+      "images": [
+        {
+          "image": "/work/royal-beads-edo/chapters/0/images/0/image.jpg",
+          "alt": "Sets for every occasion: Weddings, Chieftaincy and Festivals cards with buy and rent prices",
+          "phone": false
+        },
+        {
+          "image": "/work/royal-beads-edo/chapters/0/images/1/image.jpg",
+          "alt": "The occasion cards on a phone",
+          "phone": true
+        }
+      ]
+    },
+    {
+      "title": "See it on you before you buy",
+      "id": "try-on",
+      "text": "The try-on answers the shop’s real problem. It finds the face with MediaPipe Face Landmarker and places a coral necklace under the chin and a crown on the forehead, scaling and tilting with the head. It runs entirely in the browser, with the camera or an uploaded photo, so nothing leaves the phone. “Love this look?” opens an enquiry with the chosen set.",
+      "images": [
+        {
+          "image": "/work/royal-beads-edo/chapters/1/images/0/image.jpg",
+          "alt": "The try-on page: a bridal crown and coral collar placed on an uploaded portrait, with the necklace and crown pickers",
+          "phone": false
+        },
+        {
+          "image": "/work/royal-beads-edo/chapters/1/images/1/image.jpg",
+          "alt": "The try-on on a phone, with the crown and necklace on the portrait",
+          "phone": true
+        }
+      ]
+    },
+    {
+      "title": "Build your wedding set",
+      "id": "regalia",
+      "text": "The regalia builder lets a couple put a full set together: crown, neck piece, wrists and attire, for the bride, the groom or both, to buy or rent. The preview updates as they choose, and the price range adds up per piece and for the whole set. It never promises a ready date: only the workshop confirms those.",
+      "images": [
+        {
+          "image": "/work/royal-beads-edo/chapters/2/images/0/image.jpg",
+          "alt": "The regalia builder: a figure wearing the chosen crown, collar and attire, with the price range for the set",
+          "phone": false
+        }
+      ]
+    },
+    {
+      "title": "Every enquiry, sorted",
+      "id": "enquiries",
+      "text": "Every Enquire button on the site opens the shop’s n8n form. The workflow has AI sort each message as HOT (ready to buy), WARM (asking questions) or CHECK (needs a person), saves it to a sheet, emails the customer a reply that never promises a date, and sends HOT and CHECK straight to the owner on Telegram. A private dashboard shows the counts and the latest enquiries, refreshing every 20 seconds.",
+      "images": [
+        {
+          "image": "/work/royal-beads-edo/chapters/3/images/0/image.jpg",
+          "alt": "Tell us about your day: the five steps of a custom order and the Enquire button",
+          "phone": false
+        },
+        {
+          "image": "/work/royal-beads-edo/chapters/3/images/1/image.jpg",
+          "alt": "The enquiries dashboard: counts of HOT, WARM and CHECK enquiries and the latest messages, with contact details masked",
+          "phone": false
+        }
+      ]
+    },
+    {
+      "title": "The story, and how to tell real coral",
+      "id": "story",
+      "text": "The site walks through where coral comes from and what it means in Benin, how each set is strung by hand, and a guide to caring for coral and spotting fakes. The Taoué Assistant, a chatbot, answers the common questions in the shop’s voice and sends people to the form, under the same never-promise-a-date rule.",
+      "images": [
+        {
+          "image": "/work/royal-beads-edo/chapters/4/images/0/image.jpg",
+          "alt": "Is it real coral? The coral care and authenticity guide",
+          "phone": false
+        }
+      ]
+    }
+  ],
+  "role": "Solo, end to end",
+  "stack": [
+    "Next.js 16",
+    "TypeScript",
+    "Tailwind CSS 4",
+    "Framer Motion",
+    "MediaPipe Face Landmarker",
+    "n8n (AI sort, Sheets, email, Telegram)",
+    "Botpress",
+    "Vercel"
+  ],
+  "year": "2026",
+  "status": "shipped",
+  "links": {
+    "live": "https://royal-beads-edo.vercel.app",
+    "repo": "https://github.com/jonathandestinec/royal-beads-edo"
+  },
+  "tags": [
+    "ecommerce",
+    "automation",
+    "ai",
+    "dashboard",
+    "mobile-first",
+    "content-site"
+  ]
+}

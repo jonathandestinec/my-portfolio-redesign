@@ -6,15 +6,17 @@ import { site } from '@/content/site'
 import { stack } from '@/content/stack'
 import { rangeLabel, filterStack, getNextProject, getProject, groupPlayground, hasCustomDomain, heroStatements, homeSlides } from '@/lib/content'
 
-test('carousel shows one cover per project, Huddle first', () => {
+test('carousel shows one cover per project, newest (Royal Beads Edo) first', () => {
   const s = homeSlides()
   expect(s.map((x) => x.tag)).toEqual(projects.map((p) => p.name))
-  expect(s[0]).toMatchObject({ tag: 'Huddle', href: '/work/huddle', image: projects[0].cover })
-  expect(s[1]).toMatchObject({ tag: 'AgroHub', href: '/work/agrohub' })
+  expect(s[0]).toMatchObject({ tag: 'Royal Beads Edo', href: '/work/royal-beads-edo', image: projects[0].cover })
+  expect(s[1]).toMatchObject({ tag: 'Huddle', href: '/work/huddle' })
+  expect(s[2]).toMatchObject({ tag: 'AgroHub', href: '/work/agrohub' })
 })
 test('next project wraps around', () => {
+  expect(getNextProject('royal-beads-edo')?.slug).toBe('huddle')
   expect(getNextProject('huddle')?.slug).toBe('agrohub')
-  expect(getNextProject('agrohub')?.slug).toBe('huddle')
+  expect(getNextProject('agrohub')?.slug).toBe('royal-beads-edo')
 })
 test('every project image file exists', async () => {
   const { existsSync } = await import('node:fs')
@@ -77,8 +79,8 @@ test('hero names and links the two newest projects, then points at all work', ()
   expect(intro).toEqual([site.hero.intro])
   const links = lately.filter((x) => typeof x === 'object')
   expect(links).toEqual([
+    { text: 'Royal Beads Edo', href: '/work/royal-beads-edo' },
     { text: 'Huddle', href: '/work/huddle' },
-    { text: 'AgroHub', href: '/work/agrohub' },
   ])
   expect(lately.join('')).not.toContain('undefined')
   expect(more.at(-1)).toMatchObject({ href: '/works', note: 'check this out :)' })

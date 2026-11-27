@@ -1,6 +1,6 @@
 import { chromium, devices } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -9,10 +9,33 @@ const MAX_BYTES = 1_500_000
 // Desktop shots are downscaled to the largest width at which ALL of them fit.
 const WIDTHS = [2160, 1800, 1600]
 
-/** `scrollTo`: a #id, or the exact text of an element, to scroll to the top of the screen before the shot. */
-type Shot = { name: string; route: string; phone?: boolean; scrollTo?: string }
+/**
+ * `scrollTo`: a #id, or the exact text of an element, to scroll to the top of the screen before the shot.
+ * `upload`: a photo (path on the same site) to give the page's file input, e.g. for a try-on demo.
+ */
+type Shot = { name: string; route: string; phone?: boolean; scrollTo?: string; upload?: { photo: string; openWith?: string } }
 
-const projects: Record<string, { base: string; shots: Shot[] }> = {
+/** `jpg`: photo-heavy sites, where PNG screenshots are several MB. */
+const projects: Record<string, { base: string; shots: Shot[]; jpg?: boolean }> = {
+  'royal-beads-edo': {
+    base: 'https://royal-beads-edo.vercel.app',
+    jpg: true,
+    shots: [
+      { name: 'landing', route: '/' },
+      { name: 'opening', route: '/', scrollTo: '#opening' },
+      { name: 'occasions', route: '/', scrollTo: '#occasions' },
+      { name: 'try-on-teaser', route: '/', scrollTo: '#try-on' },
+      { name: 'care', route: '/', scrollTo: '#care' },
+      { name: 'gallery', route: '/', scrollTo: '#gallery' },
+      { name: 'enquire', route: '/', scrollTo: '#enquire' },
+      { name: 'dashboard', route: '/dashboard' },
+      { name: 'regalia', route: '/regalia' },
+      { name: 'try-on', route: '/try-on', upload: { photo: '/images/concept/1-hero-coral-necklace-portrait.jpg', openWith: 'Use a photo instead' } },
+      { name: 'landing-phone', route: '/', phone: true },
+      { name: 'try-on-phone', route: '/try-on', phone: true, upload: { photo: '/images/concept/1-hero-coral-necklace-portrait.jpg', openWith: 'Use a photo instead' } },
+      { name: 'occasions-phone', route: '/', phone: true, scrollTo: '#occasions' },
+    ],
+  },
   agrohub: {
     base: 'https://agro-hub.com.ng',
     shots: [
@@ -38,16 +61,18 @@ const projects: Record<string, { base: string; shots: Shot[] }> = {
   },
 }
 
-// Usage: bun scripts/capture-screenshots.ts <project>   (agrohub | huddle)
-const project = process.argv[2] ?? 'agrohub'
+// Usage: bun scripts/capture-screenshots.ts <project>   (royal-beads-edo | agrohub | huddle)
+const project = process.argv[2] ?? 'royal-beads-edo'
 if (!projects[project]) throw new Error(`unknown project "${project}"; use one of ${Object.keys(projects).join(', ')}`)
-const { base: BASE, shots } = projects[project]
+const { base: BASE, shots, jpg: JPG } = projects[project]
+const EXT = JPG ? 'jpg' : 'png'
 // Screenshots land in captures/<project>/ (gitignored); upload the ones you want
 // through the admin panel, which stores them under public/work/<project>/.
 const OUT = path.join(process.cwd(), 'captures', project)
 
 function downscale(src: string, dest: string, width: number) {
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', src, '-vf', `scale=${width}:-1`, dest])
+  const quality = dest.endsWith('.jpg') ? ['-q:v', '3'] : []
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', src, '-vf', `scale=${width}:-1`, ...quality, dest])
 }
 
 async function main() {
@@ -70,6 +95,18 @@ async function main() {
         }
         await page.waitForTimeout(1500)
         await page.addStyleTag({ content: HIDE_CSS })
+        if (shot.upload) {
+          const photo = path.join(work, path.basename(shot.upload.photo))
+          const res = await fetch(BASE + shot.upload.photo)
+          if (!res.ok) throw new Error(`${shot.upload.photo} returned ${res.status}`)
+          writeFileSync(photo, Buffer.from(await res.arrayBuffer()))
+          if (shot.upload.openWith) {
+            const open = page.getByRole('button', { name: shot.upload.openWith })
+            if (await open.count()) await open.first().click()
+          }
+          await page.locator('input[type=file]').first().setInputFiles(photo)
+          await page.waitForTimeout(6000) // face tracking runs in the browser
+        }
         if (shot.scrollTo) {
           const target = shot.scrollTo.startsWith('#')
             ? page.locator(shot.scrollTo)
@@ -81,9 +118,17 @@ async function main() {
           await page.waitForTimeout(1200)
         }
         if (shot.phone) {
-          const file = path.join(OUT, `${shot.name}.png`)
-          await page.screenshot({ path: file })
-          if (statSync(file).size > MAX_BYTES) throw new Error(`${shot.name}.png is over 1.5MB`)
+          const file = path.join(OUT, `${shot.name}.${EXT}`)
+          const raw = path.join(work, `${shot.name}.raw.png`)
+          await page.screenshot({ path: raw })
+          if (JPG) downscale(raw, file, 1170)
+          else copyFileSync(raw, file)
+          // Photo-heavy pages: step down from 3x until the shot fits.
+          for (const width of [900, 780, 640]) {
+            if (statSync(file).size <= MAX_BYTES) break
+            downscale(raw, file, width)
+          }
+          if (statSync(file).size > MAX_BYTES) throw new Error(`${shot.name}.${EXT} is over 1.5MB`)
         } else {
           const file = path.join(work, `${shot.name}.raw.png`)
           await page.screenshot({ path: file })
@@ -98,7 +143,7 @@ async function main() {
     let chosen: number | null = null
     for (const width of WIDTHS) {
       const fits = desktopRaw.every(({ name, file }) => {
-        const tmp = path.join(work, `${name}.${width}.png`)
+        const tmp = path.join(work, `${name}.${width}.${EXT}`)
         downscale(file, tmp, width)
         return statSync(tmp).size <= MAX_BYTES
       })
@@ -111,7 +156,7 @@ async function main() {
       throw new Error(`desktop shots do not fit in 1.5MB even at ${WIDTHS[WIDTHS.length - 1]}px wide`)
     }
     for (const { name } of desktopRaw) {
-      copyFileSync(path.join(work, `${name}.${chosen}.png`), path.join(OUT, `${name}.png`))
+      copyFileSync(path.join(work, `${name}.${chosen}.${EXT}`), path.join(OUT, `${name}.${EXT}`))
     }
     console.log(`desktop shots written at ${chosen}px wide`)
   } finally {
