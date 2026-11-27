@@ -25,14 +25,14 @@ test('every project image file exists', async () => {
     for (const src of srcs) expect(existsSync(`public${src}`), src).toBe(true)
   }
 })
-test('every project has a film and poster on disk, shown on its carousel slide', async () => {
+test('every project has a film and poster on disk; the carousel keeps still covers', async () => {
   const { existsSync } = await import('node:fs')
   for (const p of projects) {
     expect(p.film, p.slug).toBeDefined()
     expect(existsSync(`public${p.film!.src}`), p.film!.src).toBe(true)
     expect(existsSync(`public${p.film!.poster}`), p.film!.poster).toBe(true)
   }
-  expect(homeSlides().every((s) => s.film)).toBe(true)
+  expect(homeSlides().every((s) => !('film' in s))).toBe(true)
 })
 test('unknown slug', () => expect(getProject('nope')).toBeUndefined())
 test('stack filter', () => {

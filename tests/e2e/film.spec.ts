@@ -26,12 +26,10 @@ test("with reduced motion the film stays on its poster", async ({ browser }) => 
   await ctx.close();
 });
 
-test("only the current carousel slide plays", async ({ page }) => {
+test("the home carousel shows still covers, not films", async ({ page }) => {
   await page.goto("/");
   const region = page.getByRole("region", { name: "Selected work" });
   await region.scrollIntoViewIfNeeded();
-  const vids = region.locator("video[data-film]");
-  await expect(vids).toHaveCount(3);
-  await expect.poll(() => playing(vids.nth(0)), { timeout: 10_000 }).toBe(true);
-  expect(await vids.nth(1).evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
+  await expect(region.locator("video")).toHaveCount(0);
+  await expect(region.locator(".slide__cover img")).toHaveCount(3);
 });

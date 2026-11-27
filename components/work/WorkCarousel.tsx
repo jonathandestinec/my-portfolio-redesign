@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { FilmLoop } from "./FilmLoop";
 import Link from "next/link";
 import {
   useCallback,
@@ -209,9 +208,6 @@ export function WorkCarousel({
                 onClick={(e) => onSlideClick(e, i)}
               >
                 <div className="slide__cover">
-                  {s.film ? (
-                    <FilmLoop src={s.film.src} poster={s.film.poster} label={s.image.alt} active={i === index} className="slide__film" />
-                  ) : (
                   <Image
                     src={s.image.src}
                     alt={s.image.alt}
@@ -221,7 +217,6 @@ export function WorkCarousel({
                     sizes="(max-width: 679px) calc(100vw - 80px), (max-width: 1119px) calc(100vw - 112px), 960px"
                     className={s.phone ? "object-contain py-[6%]" : "object-cover object-top"}
                   />
-                  )}
                 </div>
               </Link>
             </div>

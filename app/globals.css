@@ -1921,13 +1921,6 @@ body {
 
 /* ---------- Project films ---------- */
 
-.slide__film {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 .case-film {
   width: min(640px, 100% - var(--gutter) * 2);
   margin: 48px auto 0;
