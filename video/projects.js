@@ -47,10 +47,10 @@ window.FILM_PROJECTS = {
     pill: "for cooperatives",
     host: "agro-hub.com.ng",
     icon: "../public/work/agrohub/film/icon.svg",
-    mark: "sprout",
+    mark: "leaves",
     palette: {
       page: "#FDFDFB", haze: "#E8F3B8", ice: "#F4FADB", floor: "#EEF7C8",
-      deepA: "#16261A", deepB: "#4E7A2E", navy: "#16261A",
+      deepA: "#173A2A", deepB: "#4E7A2E", navy: "#173A2A",
       a1: "#DCEF6A", a2: "#8BC34A", a3: "#2F6B3A",
     },
     windowCard: { image: "../public/work/agrohub/cover/image.png", title: "AgroHub", sub: "Live · agro-hub.com.ng" },
